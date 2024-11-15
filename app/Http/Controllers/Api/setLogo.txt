@@ -1,0 +1,67 @@
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+
+public function setLogo(Request $request)
+{
+    // Validation du fichier
+    $validator = $this->validateLogo($request);
+
+    if ($validator->fails()) {
+        return response()->json(['message' => $validator->messages()->first(), 'status' => 'error'], 400);
+    }
+
+    // Démarrer une transaction pour garantir l'intégrité
+    DB::beginTransaction();
+
+    try {
+        // Suppression de l'ancien logo
+        $this->deleteOldLogo();
+
+        // Vérification et enregistrement du nouveau logo
+        if ($request->hasFile('logo')) {
+            $path = $this->storeLogo($request);
+            // Mise à jour du modèle avec le nouveau logo
+            Abonnement::where('id', auth()->user()->id)->update(['logo' => $path]);
+
+            // Valider la transaction
+            DB::commit();
+
+            return response()->json(['status' => 'success', 'message' => 'Logo modifié avec succès', 'path' => $path]);
+        }
+
+        // Si aucun fichier n'est envoyé
+        return response()->json(['status' => 'echec', 'message' => 'Aucun fichier envoyé']);
+        
+    } catch (\Exception $e) {
+        // Annuler la transaction en cas d'erreur
+        DB::rollBack();
+        return response()->json(['status' => 'error', 'message' => 'Une erreur est survenue lors de l\'upload du logo', 'error' => $e->getMessage()]);
+    }
+}
+
+// Fonction de validation pour le logo
+protected function validateLogo(Request $request)
+{
+    return Validator::make($request->all(), [
+        'logo' => 'required|file|mimes:jpeg,png,jpg,webp|max:2048', // Types de fichiers et taille maximale
+    ]);
+}
+
+// Fonction pour supprimer l'ancien logo
+protected function deleteOldLogo()
+{
+    $oldLogo = Abonnement::getLogo();
+    
+    // Vérification et suppression de l'ancien logo
+    if (Storage::disk('local')->exists($oldLogo)) {
+        Storage::delete($oldLogo);
+    }
+}
+
+// Fonction pour stocker le nouveau logo
+protected function storeLogo(Request $request)
+{
+    // Stockage du logo dans le répertoire spécifique à l'utilisateur
+    return $request->file('logo')->store('public/banner/' . auth()->user()->id);
+}
