@@ -495,7 +495,6 @@ class NotificationController extends Controller
                     $errors = false;
 
                     foreach ($destinatairesEmail as $destinataire) {
-                        // Création de la notification
                         $notification = Notification::create([
                             'destinataire' => $destinataire,
                             'canal' => 'email',
@@ -503,69 +502,73 @@ class NotificationController extends Controller
                             'chrone' => 4,  // envoi direct #without cron
                             'message_id' => $message->id,
                         ]);
-                    
-                        // Récupérer les fichiers associés à ce message
+
                         $files = Fichier::where('message_id', $notification->message_id)->pluck('lien');
-                    
-                        // Données de l'email
-                        $data["email"] = $destinataire;
-                        $data["title"] = $message->title;  
-                        $data["from_email"] = $message->from_email; 
-                        $data["from_name"] = $message->from_name;
-                    
-                        try {
-                            Mail::send('mail.campagne', $data, function ($objet_mail) use ($data, $files, $message) {
-                                // Définir le destinataire, le sujet et l'expéditeur
-                                $objet_mail->to($data["email"])
-                                    ->subject($data["title"])
-                                    ->from($data['from_email'], $data['from_name']);
-                    
-                                // pièces jointes
-                                if (count($files) > 0) {
-                                    foreach ($files as $file) {
-                                        $url = route('files.show', ['folder' => $message->user_id, 'filename' => basename($file)]);
-                                        $file_path = public_path($url);  // Convertir l'URL en chemin absolu
-                    
-                                        if (file_exists($file_path)) {
-                                            $objet_mail->attach($file_path);
-                                        } else {
-                                            \Log::warning("Le fichier {$file} est introuvable.");
+     
+                        $data["email"] = $destinataire; 
+
+                        Mail::send('mail.campagne', $data, function ($objet_mail) use ($data, $files, $message) {
+                            $objet_mail->to($data["email"])
+                                ->subject($data["title"])
+                                ->from($data['from_email'], $data ['from_name']);
+                                
+                            // if (count($files) > 0) {
+                            //     foreach ($files as $file) 
+                            //     {
+                            //         $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($file)]); 
+                            //         $objet_mail->attach($url);
+                            //     }
+                            // }
+
+                             // Ajout des pièces jointes
+                            if ($files->count() > 0) {
+                                foreach ($files as $file) {
+                                    try {
+                                        // Génération du chemin temporaire
+                                        $tempPath = storage_path('app/temp/' . basename($file));
+
+                                        // Téléchargement du fichier distant
+                                        $content = @file_get_contents($file);
+                                        if ($content === false) {
+                                            throw new \Exception("Impossible de télécharger le fichier depuis l'URL : $file");
                                         }
+                                        file_put_contents($tempPath, $content);
+
+                                        // Attachement du fichier au mail
+                                        $objet_mail->attach($tempPath);
+
+                                        // Suppression du fichier temporaire après l'attachement
+                                        unlink($tempPath);
+                                    } catch (\Exception $e) {
+                                        \Log::error("Erreur lors du téléchargement ou de l'attachement du fichier : " . $e->getMessage());
                                     }
                                 }
-                            });
-                    
-                            if (Mail::failures()) 
-                            {
-                                throw new \Exception('Erreur lors de l\'envoi de l\'email.');
                             }
-                    
+
+                        });
+
+                        if (Mail::failures()) {
+                            $errors = true;
+                            $notification->delivery_status = 'echec';
+                            $notification->save();
+                            // credit
+                            Abonnement::creditEmail(1, $message->id);
+
+                            $responses[] = [
+                                'statut' => 'error',
+                                'message' => 'Erreur lors de l\'envoi de l\'email',
+                                'destinataire' => $destinataire,
+                            ];
+                        } else {
                             $notification->delivery_status = 'sent';
                             $notification->save();
-                    
                             $responses[] = [
                                 'status' => 'success',
                                 'message' => 'Email envoyé avec succès',
                                 'destinataire' => $destinataire,
                             ];
-                    
-                        } catch (\Exception $e) {
-                            $errors = true;
-                            $notification->delivery_status = 'echec';
-                            $notification->save();
-                    
-                            // Crédit (en cas d'échec)
-                            Abonnement::creditEmail(1, $message->id);
-                    
-                            // Réponse d'échec
-                            $responses[] = [
-                                'statut' => 'error',
-                                'message' => $e->getMessage(),
-                                'destinataire' => $destinataire,
-                            ];
                         }
                     }
-                    
 
                     if ($errors) {
                         $message->status = 5; // Modifier le statut du message à 5 en cas d'erreur
