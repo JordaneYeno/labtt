@@ -20,7 +20,7 @@ use App\Models\Param;
 use Illuminate\Support\Facades\Route;
 
 
-// Route::get('dw', [MessagesController::class, 'getMessagesByReferenceId']);
+Route::get('dw', [NotificationController::class, 'custumGateway']);
 
 // Route::group(['middleware' => ['jwt.verify']], function () {
  

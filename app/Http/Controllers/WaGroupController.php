@@ -132,7 +132,12 @@ class WaGroupController extends Controller
 
     public function sendAtGroups(SendMessage $request)
     {
-        $data = ["group" => $request->wid, "message" => $request->message];
+        $device = $this->checkDevice((new Abonnement)->getCurrentWassengerDevice());
+
+        if ($device instanceof \Illuminate\Http\JsonResponse) {
+            return $device;
+        }
+        $data = ["group" => $request->wid, "message" => $request->message, "device" => $device];
 
         $curl = curl_init();
         curl_setopt_array($curl, [

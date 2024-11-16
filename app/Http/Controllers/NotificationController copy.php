@@ -21,7 +21,6 @@ use App\Services\SmsCount;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use JWTAuth;
@@ -53,6 +52,27 @@ class NotificationController extends Controller
     // public function custumGateway(CustumGateway $request)
     public function custumGateway(Request $request)
     {
+        $API_KEY_WHATSAPP = Param::getTokenWhatsapp();
+        $data = ["url" => "https://api.hobotta.com/files/show/2/673859c33694c.jpg"];
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => "https://api.wassenger.com/v1/files",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HTTPHEADER => [
+                "Content-Type: application/json",
+                "Token: $API_KEY_WHATSAPP",
+            ],
+        ]);
+        $response = curl_exec($curl);
+        curl_close($curl);
+        echo $response;
+
+        exit();
+
+
+
         $perPage = $request->perPage ? $request->perPage : 9;
         $paginate = new PaginationService();
 

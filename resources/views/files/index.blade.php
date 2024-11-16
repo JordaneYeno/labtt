@@ -1,25 +1,15 @@
 @php
     function renderFileLink($path, $extension, $fileName) {
-        // Afficher l'image si c'est une image
         if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif'])) {
-            return '<img src="' . route('files.show', ['folder' => $path, 'filename' => $fileName]) . '" alt="' . $fileName . '" style="max-width: 200px;">';
-        }
-        // Afficher la vidéo si c'est une vidéo
-        elseif (in_array($extension, ['mp4', 'webm', 'ogg'])) {
-            return '<video controls style="max-width: 200px;">
-                        <source src="' . route('files.show', ['folder' => $path, 'filename' => $fileName]) . '" type="video/' . $extension . '">
-                        Your browser does not support the video tag.
-                    </video>';
-        }
-        // Afficher un lien pour télécharger d'autres types de fichiers
-        elseif (in_array($extension, ['mp3', 'pdf', 'doc', 'xls', 'txt'])) {
-            return '<a href="' . route('files.show', ['folder' => $path, 'filename' => $fileName]) . '" target="_blank">' . $fileName . '</a>';
+            return '<img src="' . route('files.show', ['path' => $path]) . '" alt="' . $fileName . '" style="max-width: 200px;">';
+        } elseif (in_array($extension, ['mp4', 'webm', 'ogg'])) {
+            return '<video controls style="max-width: 200px;"><source src="' . route('files.show', ['path' => $path]) . '" type="video/' . $extension . '">Your browser does not support the video tag.</video>';
         } else {
-            // Pour les autres types de fichiers (si nécessaire)
-            return '<a href="' . route('files.show', ['folder' => $path, 'filename' => $fileName]) . '" target="_blank">' . $fileName . '</a>';
+            return '<a href="' . route('files.download', ['path' => $path]) . '" target="_blank">' . $fileName . '</a>';
         }
     }
 @endphp
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -41,7 +31,7 @@
                                 @php
                                     $extension = pathinfo($subfile, PATHINFO_EXTENSION);
                                 @endphp
-                                {!! renderFileLink($folder, $extension, $subfile) !!}
+                                {!! renderFileLink($folder . '/' . $subfile, $extension, $subfile) !!}
                             </li>
                         @endforeach
                     </ul>
@@ -51,7 +41,7 @@
                     @php
                         $extension = pathinfo($fileOrSubfolder, PATHINFO_EXTENSION);
                     @endphp
-                    {!! renderFileLink($folder, $extension, $fileOrSubfolder) !!}
+                    {!! renderFileLink($fileOrSubfolder, $extension, $fileOrSubfolder) !!}
                 </li>
             @endif
         @endforeach
