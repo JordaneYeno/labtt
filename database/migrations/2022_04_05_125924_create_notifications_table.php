@@ -22,11 +22,11 @@ class CreateNotificationsTable extends Migration
                 ->on('messages')
                 ->onDelete('cascade');
             $table->string('canal', 300)->nullable()->default(null);
-            $table->boolean('notify')->default(0);
-            $table->boolean('chrone')->default(0);
+            $table->integer('notify')->default(0);
+            $table->integer('chrone')->default(0);
             $table->string('delivery_status', 300);
             $table->string('wassenger_id');
-            $table->boolean('has_final_status');
+            $table->integer('has_final_status');
             $table->timestamps();
         });
     }

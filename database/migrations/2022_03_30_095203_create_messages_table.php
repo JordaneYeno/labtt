@@ -27,8 +27,8 @@ class CreateMessagesTable extends Migration
                 $table->string('expediteur')->nullable();
                 $table->dateTime('finish')->nullable();
                 $table->dateTime('start')->nullable();
-                $table->boolean('status')->default(0);
-                $table->boolean('credit')->default(0);
+                $table->integer('status')->default(0);
+                $table->integer('credit')->default(0);
                 $table->string('verify')->nullable();
                 $table->string('destinataires')->nullable();
                 $table->unsignedBigInteger('user_id');

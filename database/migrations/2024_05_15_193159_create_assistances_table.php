@@ -18,8 +18,8 @@ class CreateAssistancesTable extends Migration
             $table->id();
             $table->string('agent');
             $table->string('phone')->unique();
-            $table->boolean('role')->default(0);
-            $table->boolean('status')->default(0);
+            $table->integer('role')->default(0);
+            $table->integer('status')->default(0);
             $table->timestamps();
         });
 

@@ -717,7 +717,10 @@ class NotificationController extends Controller
                     ], 400);
             }
         } catch (Exception $th) {
-            $message->status = 5; // Modifier le statut du message à 5 en cas d'erreur //le status 5 indiques le message non envoyé
+            if($message) 
+            {
+                $message->status = 5; // Modifier le statut du message à 5 en cas d'erreur //le status 5 indiques le message non envoyé
+            }
 
             return response()->json([
                 'status' => 'error',
