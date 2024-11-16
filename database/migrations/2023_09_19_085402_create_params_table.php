@@ -17,7 +17,7 @@ class CreateParamsTable extends Migration
 
         Schema::create('params', function (Blueprint $table) {
             $table->id();
-            $table->string('secret');
+            $table->text('secret');
             $table->string('ref');
             $table->timestamps();
         });
