@@ -243,7 +243,7 @@ class NotificationController extends Controller
                                 if ($err) {
                                     echo "cURL Error #:" . $err;
                                 } else {
-                                    $reponse_banner = json_decode($response); dd($reponse_banner);
+                                    $reponse_banner = json_decode($response); //dd($reponse_banner);
 
                                     if (is_array($reponse_banner) == true) {
                                         $itemsList = array("file" => $reponse_banner[0]->id);
@@ -1435,8 +1435,8 @@ class NotificationController extends Controller
                     $url = '';
                     $tokenWhatsapp = Param::all()->first();
                     Message::where('id', $message->id)->update(['start' => date("Y-m-d H:i:s")]);
-                    sleep(3);
-                    dd($message->banner);
+                    sleep(2);// sleep(3);
+                    //dd($message->banner);
                     if ($message->banner) {
                         foreach ($message->file('banner') as $file) {
                             $data = ["url" => $file];
@@ -1504,7 +1504,7 @@ class NotificationController extends Controller
                                 ]);
                             }
                         } else {
-                            sleep(3);
+                            sleep(2);//sleep(3);
                             $this->update_msg_finish($message->id);
                         }
                     } else {
@@ -1551,7 +1551,7 @@ class NotificationController extends Controller
                                 'message' => 'Message envoyé avec succes',
                             ], Response::HTTP_OK);
                         } else {
-                            sleep(3);
+                            sleep(2);// sleep(3);
                             $this->update_msg_finish($message->id);
                         }
                     }
@@ -1711,7 +1711,7 @@ class NotificationController extends Controller
                     // $allmessages->where('id', $message->id)->first()->update(['start' => date("Y-m-d H:i:s")]);
 
                     if (count($files) > 0) {
-                        sleep(3);
+                        sleep(2);// sleep(3);
 
                         if (strpos($files, '.mp4') != false) {
                             $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]); 
@@ -1803,7 +1803,7 @@ class NotificationController extends Controller
                                 } else {
                                     $itemsList = array("file" => $reponse_banner->meta->file);
                                 }
-                                sleep(3);
+                                sleep(2);//sleep(3);
 
                                 $data = ["phone" => $interphone, "message" => strip_tags($message->message), "media" => $itemsList, "device" => $userDeviceId];
                                 $curl = curl_init();
@@ -1853,7 +1853,7 @@ class NotificationController extends Controller
                             }
                         }
                     } else if (count($files) == 0) {
-                        sleep(3);
+                        sleep(2); // sleep(3);
                         $data = ["phone" => $interphone, "message" => strip_tags($message->message), "device" => $userDeviceId];
                         $curl = curl_init();
                         curl_setopt_array($curl, [

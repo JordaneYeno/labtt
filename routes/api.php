@@ -20,10 +20,10 @@ use App\Models\Param;
 use Illuminate\Support\Facades\Route;
 
 
+
 Route::post('add', [WaGroupController::class, 'addMembers']);
 Route::get('oauth', [SocialiteController::class, 'authenticate']);
 Route::post('/facebook/page-information', [FacebookPageController::class, 'getPageInformation']);
-
 
 // Route::group([
 //     'middleware' => 'api',
