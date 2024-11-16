@@ -60,13 +60,13 @@ class NotificationController extends Controller
         $origineurl = Param::apiUrl();
 
         if ($request->canalkey === null) {
-            return response()->json([
+            return response()->json([ 
                 'status' => 'error',
                 'message' => 'Veuillez indiquer le canal de diffusion.',
             ], 400);
         }
 
-        try {
+        // try {
             $allAbonnements = Abonnement::get();
             $user = auth()->user();
             $solde = $allAbonnements->where('user_id', $user->id)->pluck('solde')->first();
@@ -716,7 +716,7 @@ class NotificationController extends Controller
                         'message' => 'Canal invalide',
                     ], 400);
             }
-        } catch (Exception $th) {
+        /*} catch (Exception $th) {
             if($message) 
             {
                 $message->status = 5; // Modifier le statut du message à 5 en cas d'erreur //le status 5 indiques le message non envoyé
@@ -727,7 +727,7 @@ class NotificationController extends Controller
                 'message' => 'Une erreur est survenue',
                 'ex' => $th,
             ], 500);
-        }
+        }*/
     }
 
     public function getAllGroupInfo(/*GetAllGroupInfo*/Request $request)
