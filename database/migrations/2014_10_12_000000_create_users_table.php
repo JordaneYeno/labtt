@@ -26,7 +26,7 @@ class CreateUsersTable extends Migration
             $table->string('otp')->nullable();
             $table->string('password');
             $table->boolean('is_notify')->nullable();
-            $table->boolean('status')->default(0);
+            $table->integer('status')->default(0);
             $table->boolean('delete_status')->default(0);
             $table->boolean('is_valid')->nullable();
             $table->string('slug')->nullable();
