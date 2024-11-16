@@ -519,7 +519,7 @@ class NotificationController extends Controller
                                     
                                     $filename = basename($file);
                                     $folder = $message->user_id;
-                                    $file_path = public_path("banner/{$folder}/{$filename}");
+                                    $file_path = public_path("storage/banner/{$folder}/{$filename}");
                                     $objet_mail->attach($file_path);
                                 }
                             }
