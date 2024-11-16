@@ -507,15 +507,15 @@ class NotificationController extends Controller
      
                         $data["email"] = $destinataire; 
 
-                        Mail::send('mail.campagne', $data, function ($message) use ($data, $files) {
-                            $message->to($data["email"])
+                        Mail::send('mail.campagne', $data, function ($objet_mail) use ($data, $files, $message) {
+                            $objet_mail->to($data["email"])
                                 ->subject($data["title"])
-                                ->from($data['from_email'], $data['from_name']);
+                                ->from($data['from_email'], $data ['from_name']);
                             if (count($files) > 0) {
                                 foreach ($files as $file) 
                                 {
                                     $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($file)]); 
-                                    $message->attach($url);
+                                    $objet_mail->attach($url);
                                 }
                             }
                         });

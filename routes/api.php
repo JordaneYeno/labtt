@@ -20,20 +20,9 @@ use App\Models\Param;
 use Illuminate\Support\Facades\Route;
 
 
-Route::get('dw', [NotificationController::class, 'custumGateway']);
-
-// Route::group(['middleware' => ['jwt.verify']], function () {
- 
-//     Route::get('dw', [WaGroupController::class, 'getStore']);
-
-// });
-
-
 Route::post('add', [WaGroupController::class, 'addMembers']);
 Route::get('oauth', [SocialiteController::class, 'authenticate']);
 Route::post('/facebook/page-information', [FacebookPageController::class, 'getPageInformation']);
-
-// Route::post('searchbyname', [WaGroupController::class, 'getStoreByName']);
 
 
 // Route::group([
