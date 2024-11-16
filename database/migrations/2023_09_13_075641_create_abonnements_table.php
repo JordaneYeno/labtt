@@ -25,11 +25,11 @@ class CreateAbonnementsTable extends Migration
             $table->string('whatsapp')->nullable();
             $table->string('sms')->nullable();
             $table->string('email')->nullable();
-            $table->boolean('whatsapp_status')->default(0);
-            $table->boolean('sms_status')->default(0);
-            $table->boolean('email_status')->default(0);
+            $table->integer('whatsapp_status')->default(0);
+            $table->integer('sms_status')->default(0);
+            $table->integer('email_status')->default(0);
             $table->integer('solde')->default(0);
-            $table->boolean('status')->default(0);
+            $table->integer('status')->default(0);
             $table->string('logo')->nullable();
             $table->string('wa_device_secret')->nullable();
             $table->string('cs_color')->default('#252f3d');
