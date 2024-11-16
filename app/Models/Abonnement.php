@@ -19,7 +19,11 @@ class Abonnement extends Model
     use HasFactory;
 
     protected $casts = [
-        'created_at' => 'datetime:d M Y à h:i:s',
+        'created_at' => 'datetime:d M Y à h:i:s', 
+        'status' => 'integer',
+        'whatsapp_status' => 'integer',
+        'email_status' => 'integer',
+        'sms_status' => 'integer',
     ];
 
     protected $fillable = ['user_id'];
