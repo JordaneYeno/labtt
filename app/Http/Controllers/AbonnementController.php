@@ -458,17 +458,6 @@ class AbonnementController extends Controller
         ], 200);
     }
 
-    // public function deleteFolderContents($subDir)
-    // {
-    //     $dir = 'public/banner/logo/' . $subDir;
-    //     if (Storage::exists($dir)) 
-    //     {
-    //         Storage::deleteDirectory($dir);      // Supprime le répertoire et son contenu
-    //         Storage::makeDirectory($dir);        // Le recrée vide si nécessaire
-    //     }
-    //     return true;
-    // }
-
     public function getLogo()
     {
         return response()->json([
@@ -477,59 +466,6 @@ class AbonnementController extends Controller
             'lien' => Abonnement::getLogo()
         ]);
     }
-
-    // public function setLogo(Request $request)
-    // {
-    //     $this->deleteFolderContents(auth()->user()->id);
-
-    //     $validator = Validator::make($request->all(), [
-    //         'logo' => 'required|file|mimes:jpeg,png,jpg,webp|max:2048', // Types de fichiers autorisés et taille maximale de 2 Mo (2048 kilo-octets)
-    //     ]);
-
-    //     if ($validator->fails()) {
-    //         return response()->json(['message' => $validator->messages()->first(), 'status' => 'error'], 400);
-    //     }
-
-    //     if ($request->hasFile('logo')) {
-    //         Storage::disk('local')->exists(Abonnement::getLogo()) ? Storage::delete(Abonnement::getLogo()) : null;
-    //         $path = $request->file('logo')->store('public/banner/' . auth()->user()->id);
-    //         // $path = env('APP_URL') . '/storage/app/' . $path;
-    //         // $url = config('app.url');
-
-
-
-    //         // if (strpos($url, 'test') != false) {
-    //         //     $url = $url . '/' . $path;
-    //         //     $url = asset(str_replace('public', 'public/storage', $url));
-    //         // } else {
-    //         //     $url = $url . '/' . $path;
-    //         //     $url = asset(str_replace('public', 'storage', $url));
-    //         // }
-
-
-    //         // $extension = $file->getClientOriginalExtension();
-    //         // $originalName = $file->getClientOriginalName();
-    //         // $size = $file->getSize();
-    //         // $mimeType = $file->getMimeType();
-    //         // $filename = uniqid() . '.' . $extension;
-    //         // $path = $file->storeAs('public/banner/' . $user, $filename);
-
-    //         // // Génération du chemin relatif à partir du chemin de stockage
-    //         // $lien = str_replace('public/banner/', '/', $path);
-    //         // $file = Fichier::create([
-    //         //     'lien' => $lien,
-    //         //     'nom' => $originalName,
-    //         //     'extension' => $extension,
-    //         //     'mime_type' => $mimeType,
-    //         //     'taille' => $size,
-    //         //     'message_id' => $messageId,
-    //         // ]);
-
-    //         $abonnement = Abonnement::where('id', auth()->user()->id)->update(['logo' => $path]);
-    //         return response()->json(['status' => 'success', 'message' => 'logo modifié avec succès', 'path' => $path]);
-    //     }
-    //     return response()->json(['status' => 'echec', 'message' => 'aucun fichier envoyé']);
-    // }
 
     public function getContact()
     {

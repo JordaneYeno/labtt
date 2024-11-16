@@ -33,73 +33,19 @@ class Abonnement extends Model
         $id = $request->id ? $request->id : auth()->user()->id;
         return Abonnement::where('user_id', $id)->firstOrFail();
     }
-
-    // public static function getLogo()
-    // {
-    //     $logo = Abonnement::where('user_id', auth()->user()->id)->pluck('logo')->first();
-    //     $path = '/' . Param::getApp() . '/banner' . $logo;
-    //     $path = Param::apiUrl() .  $path;
-    //     return $logo === null ? $logo : $path;
-    // }
     
-    public function getLogo()
+    public static function getLogo()
     {
         $logo = Abonnement::where('user_id', auth()->user()->id)->pluck('logo')->first();
         $url = route('users.profile', ['id' => auth()->user()->id]);
         return $logo === null ? $logo : $url;
-    }
-    
-    // public static function getLogo()
-    // {
-    //     $logo = Abonnement::where('user_id', auth()->user()->id)->pluck('logo')->first();
-    //     $path = '/' . Param::getApp() . '/banner' . $logo;
-    //     $path = Param::apiUrl() .  $path;
-    //     return $logo === null ? $logo : $path;
-    // }
-    
-    // public static function getLogo($key)
-    // {
-    //     $val=null; if($val==null || !isset($val)) {$val==auth()->user()->id;} else {$val=$key;}
-    //     $logo = Abonnement::where('user_id', $val)->pluck('logo')->first();
-    //     $path = '/' . Param::getApp() . '/banner' . $logo;
-    //     $path = Param::apiUrl() .  $path;
-    //     return $logo === null ? $logo : $path;
-    // }
+    } 
     
     public static function getCurrentWassengerDevice()
     {
         $deviceSecret = Abonnement::where('user_id', auth()->user()->id)->pluck('wa_device_secret')->first();
         return $deviceSecret;
-    }
-    
-    // public static function getCurrentWassengerDevice()
-    // {$user = auth()->user();
-    //     $deviceSecret = Abonnement::where('user_id', $user->id)->pluck('wa_device_secret')->first(); dd($deviceSecret);
-            
-    //     try {
-    //         $user = auth()->user();
-    //         if (!$user) { throw new \Exception('Utilisateur non authentifié'); }
-            
-    //         $deviceSecret = Abonnement::where('user_id', $user->id)->pluck('wa_device_secret')->first(); dd($deviceSecret);
-    //         return $deviceSecret;
-    //     } catch (\Exception $e) {
-    //         // set log
-    //         \Log::error('Erreur dans la récupération du device wa_id : ' . $e->getMessage());
-    //         return null; // null
-    //     }
-
-    //     // $user = auth()->user(); dd($user);
-    
-    //     // // Vérifiez si l'utilisateur est authentifié
-    //     // if ($user === null) {
-    //     //     // Gérer le cas où l'utilisateur n'est pas authentifié
-    //     //     throw new \Exception('Utilisateur non authentifié');
-    //     // }
-        
-    //     // $deviceSecret = Abonnement::where('user_id', $user->id)->pluck('wa_device_secret')->first();
-    //     // return $deviceSecret;
-    // }
-
+    } 
 
     public function getWaDeviceClient()
     {
