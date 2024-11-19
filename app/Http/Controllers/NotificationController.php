@@ -57,7 +57,6 @@ class NotificationController extends Controller
         $paginate = new PaginationService();
 
         $contacts = $request->recipients;
-        $origineurl = Param::apiUrl();
 
         if ($request->canalkey === null) {
             return response()->json([ 
@@ -301,8 +300,9 @@ class NotificationController extends Controller
 
                         if ($err) {
                             $errors = true;
+
                             $responses[] = [
-                                'statut' => 'error',
+                                'status' => 'error',
                                 'message' => 'Erreur lors de l\'envoi du message',
                                 'destinataire' => $destinataire,
                             ];
@@ -326,15 +326,126 @@ class NotificationController extends Controller
                                 $notification->save();
                                 // credit
                                 Abonnement::creditWhatsapp(1, $message->id);
+                                
+                                if ($errors == true && $request->rescue == 'sms_fallback') 
+                                {
+                                    if (Param::getStatusSms() == 0) {
+                                        return response()->json([
+                                            'status' => 'échec',
+                                            'message' => 'Service SMS désactivé',
+                                        ], 422);
+                                    }
+                
+                                    $smsCount = (new SmsCount)->countSmsSend(strip_tags($request->message));
+                                    $destinatairesSms = explode(',', $destinataire);
+                                    $total += $smsTotal = ((new Tarifications)->getSmsPrice() * $smsCount) * count($destinatairesSms);
+                
+                                    //______??_______//
+                                    
+                                        foreach ($destinatairesSms as $destinataire) {
+                                            if (!is_numeric($destinataire)) {
+                                                return response()->json([
+                                                    'statut' => 'error',
+                                                    'message' => 'Numéro invalide',
+                                                    'destinataire' => $destinataire,
+                                                ], 400);
+                                            }
+                                        }
+
+                                        if ($total > $solde) {
+                                            return response()->json([
+                                                'status' => 'échec',
+                                                'message' => 'Votre solde est insuffisant pour effectuer cette campagne',
+                                                'prix_campagne' => $total,
+                                                'solde' => $solde,
+                                            ], 400);
+                                        }
+
+                                    //______??_______//
+
+                                    Abonnement::factureSms(count($destinatairesSms), $smsTotal, $message->id, $message->message);
+                                    // (new Transaction)->__addTransactionAfterSendMessage($user->id, 'debit', $total, $message->id, count($destinatairesSms), Abonnement::__getSolde($user->id), null, 'sms');
+                
+                                    $rescue = Message::where('id', $message->id)->first();  //______ disable !
+                                    $rescue->canal = $rescue->canal .= ' rescue sms+ '; $rescue->save();  //______ disable !
+
+                                    $notification = Notification::create([
+                                        'destinataire' => $destinataire,
+                                        'canal' => 'sms+',
+                                        'notify' => 4,  // api direct #without cron 
+                                        'chrone' => 4,  // envoi direct #without cron
+                                        'message_id' => $message->id,
+                                    ]);
+                                    // send sms if error sent whatsapp
+                                    
+                                    // $conv = new Convertor();
+                                    // $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
+        
+                                    $data =
+                                        [
+                                            "message" => strip_tags($message->message),
+                                            'receiver' => $interphone,
+                                            'sender' => $allAbonnements->where('user_id', $user->id)->pluck('sms')->first() === 'default' ? strtoupper(Param::getSmsSender())  : strtoupper($allAbonnements->where('user_id', $user->id)->pluck('sms')->first()),
+
+                                            // 'sender' => $request->sender_name === 'default' ? Param::getSmsSender()  : $request->sender_name, //
+                                        ];
+
+                                    $curl = curl_init();
+                                    curl_setopt_array($curl, [
+                                        CURLOPT_URL => 'https://devdocks.bakoai.pro/api/smpp/send',
+                                        CURLOPT_RETURNTRANSFER => true,
+                                        CURLOPT_SSL_VERIFYPEER => false, // off ssl
+                                        CURLOPT_ENCODING => '',
+                                        CURLOPT_MAXREDIRS => 10,
+                                        CURLOPT_TIMEOUT => 0,
+                                        CURLOPT_FOLLOWLOCATION => true,
+                                        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                                        CURLOPT_CUSTOMREQUEST => 'POST',
+                                        CURLOPT_POSTFIELDS => json_encode($data),
+                                        CURLOPT_HTTPHEADER =>
+                                        [
+                                            'Authorization: Basic ' . base64_encode('hobotta:hobotta'),
+                                            'Content-Type: application/json',
+                                        ],
+                                    ]);
+
+                                    $response = curl_exec($curl); //dd($response);
+                                    $err = curl_error($curl);
+                                    curl_close($curl);
+
+                                    sleep(1);
+                                    if ($err) {
+                                        $errors = true;
+                                        $notification->delivery_status = 'echec';
+                                        $notification->save();
+
+                                        // credit
+                                        Abonnement::creditSms(1, $message->id);
+                                        $responses[] = [
+                                            'statut' => 'error',
+                                            'message' => "Erreur lors de l'envoi du message à $destinataire",
+                                        ];
+                                    } else {
+                                        $notification->delivery_status = 'sent';
+                                        $notification->save();
+                                        $responses[] = [
+                                            'status' => 'success',
+                                            'message' => 'Message envoyé avec succès',
+                                            'destinataire' => $destinataire,
+                                        ];
+                                    }
+                    
+                                }
 
                                 $responses[] = [
-                                    'statut' => 'error',
+                                    'status' => 'error',
                                     'message' => 'Message non envoyé',
                                     'destinataire' => $destinataire,
                                     'encode' => $reponse->errorCode ?? null
                                 ];
                             }
                         }
+
                     }
 
                     if ($errors) {
@@ -348,6 +459,17 @@ class NotificationController extends Controller
                         // ], 500);
                     }
 
+                    $myAbonnements = Abonnement::get(); $addCredit = $myAbonnements->where('user_id', $message->user_id)->first();
+                    $mydebit = Transaction::get(); $debitClient = $mydebit->where('message_id', $message->id)->first();
+                    $current_credit = Message::get()->where('id', $message->id)->pluck('credit')->first();
+
+                    if ($addCredit && $current_credit) 
+                    {
+                        $message->credit = 0; $message->save();
+                        $addCredit->solde += $current_credit; $addCredit->save(); 
+                        $debitClient->montant = $total-$current_credit; $debitClient->save();
+                    }
+
                     $message->status = 6; // Modifier le statut du message à 6 en cas de succès //le status 6 indiques le message est bien envoyé
                     $message->save();
                     $paginator = $paginate->paginate_resp($responses, $perPage, request('page', 1));
@@ -358,7 +480,7 @@ class NotificationController extends Controller
                         'message' => 'Votre campagne a été lancée avec succès',
                         'idx' => $message->ed_reference,
                         'details' => $paginator,
-                        'total_paye' => $total,
+                        'total_paye' => $total-$current_credit,
                         'ancien_solde' => $solde,
                         'nouveau_solde' => Abonnement::__getSolde($user->id),
                     ], 200);
@@ -559,6 +681,17 @@ class NotificationController extends Controller
                         // ], 500);
                     }
 
+                    $myAbonnements = Abonnement::get(); $addCredit = $myAbonnements->where('user_id', $message->user_id)->first();
+                    $mydebit = Transaction::get(); $debitClient = $mydebit->where('message_id', $message->id)->first();
+                    $current_credit = Message::get()->where('id', $message->id)->pluck('credit')->first();
+            
+                    if ($addCredit && $current_credit) 
+                    {
+                        $message->credit = 0; $message->save();
+                        $addCredit->solde += $current_credit; $addCredit->save(); 
+                        $debitClient->montant = $total-$current_credit; $debitClient->save();
+                    }
+
                     $message->status = 6; // Modifier le statut du message à 6 en cas de succès //le status 6 indiques le message est bien envoyé
                     $message->save();
                     $paginator = $paginate->paginate_resp($responses, $perPage, request('page', 1));
@@ -569,7 +702,7 @@ class NotificationController extends Controller
                         'message' => 'Votre campagne a été lancée avec succès',
                         'idx' => $message->ed_reference,
                         'details' => $paginator,
-                        'total_paye' => $total,
+                        'total_paye' => $total-$current_credit,
                         'ancien_solde' => $solde,
                         'nouveau_solde' => Abonnement::__getSolde($user->id),
                     ], 200);
@@ -632,7 +765,6 @@ class NotificationController extends Controller
                         $conv = new Convertor();
                         $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
 
-                        // dd($interphone);
                         $data =
                             [
                                 "message" => strip_tags($message->message),
@@ -700,6 +832,17 @@ class NotificationController extends Controller
                         // ], 500);
                     }
 
+                    $myAbonnements = Abonnement::get(); $addCredit = $myAbonnements->where('user_id', $message->user_id)->first();
+                    $mydebit = Transaction::get(); $debitClient = $mydebit->where('message_id', $message->id)->first();
+                    $current_credit = Message::get()->where('id', $message->id)->pluck('credit')->first();
+            
+                    if ($addCredit && $current_credit) 
+                    {
+                        $message->credit = 0; $message->save();
+                        $addCredit->solde += $current_credit; $addCredit->save(); 
+                        $debitClient->montant = $total-$current_credit; $debitClient->save();
+                    }
+
                     $message->status = 6; // Modifier le statut du message à 6 en cas de succès //le status 6 indiques le message est bien envoyé
                     $message->save();
                     $paginator = $paginate->paginate_resp($responses, $perPage, request('page', 1));
@@ -710,7 +853,7 @@ class NotificationController extends Controller
                         'message' => 'Votre campagne a été lancée avec succès',
                         'idx' => $message->ed_reference,
                         'details' => $paginator,
-                        'total_paye' => $total,
+                        'total_paye' => $total-$current_credit,
                         'ancien_solde' => $solde,
                         'nouveau_solde' => Abonnement::__getSolde($user->id),
                     ], 200);
@@ -872,6 +1015,17 @@ class NotificationController extends Controller
                     ];
                 }
             }
+        } 
+
+        $myAbonnements = Abonnement::get(); $addCredit = $myAbonnements->where('user_id', $message->user_id)->first();
+        $mydebit = Transaction::get(); $debitClient = $mydebit->where('message_id', $message->id)->first();
+        $current_credit = Message::get()->where('id', $message->id)->pluck('credit')->first();
+
+        if ($addCredit && $current_credit) 
+        {
+            $message->credit = 0; $message->save();
+            $addCredit->solde += $current_credit; $addCredit->save(); 
+            $debitClient->montant = $total-$current_credit; $debitClient->save();
         }
 
         $message->status = 6; // Modifier le statut du message à 6 en cas de succès //le status 6 indiques le message est bien envoyé
@@ -883,7 +1037,7 @@ class NotificationController extends Controller
             'message' => 'Message envoyé avec succès',
             'idx' => $message->ed_reference,
             'responses' => $paginator,
-            'total_paye' => $total,
+            'total_paye' => $total-$current_credit,
             'ancien_solde' => $solde,
             'nouveau_solde' => Abonnement::__getSolde($user->id),
         ], 200);

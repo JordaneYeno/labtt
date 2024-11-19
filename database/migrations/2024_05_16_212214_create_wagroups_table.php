@@ -19,8 +19,8 @@ class CreateWagroupsTable extends Migration
             $table->string('user_id')->nullable();
             $table->integer('total')->length(2)->default(0);
             $table->string('name');
-            $table->string('kwid')->unique();
-            $table->string('kid')->unique();
+            $table->string('kwid')->nullable();
+            $table->string('kid')->nullable();
             $table->timestamps();
         });
     }
