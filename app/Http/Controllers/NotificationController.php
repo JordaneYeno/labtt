@@ -71,7 +71,7 @@ class NotificationController extends Controller
             $responses = [];
             $total = 0;
             $colorTheme = $allAbonnements->where('user_id', $user->id)->pluck('cs_color')->first();
-            $userDeviceId = (new Abonnement)->getCurrentWassengerDevice($user->id);
+            $userDeviceId = (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($user->id);
 
             switch ($request->canalkey) {
                 case "whatsapp":
@@ -896,8 +896,8 @@ class NotificationController extends Controller
         $solde = $allAbonnements->where('user_id', $user->id)->pluck('solde')->first();
         $responses = [];
         $total = 0;
-        // $userDeviceId = (new Abonnement)->getCurrentWassengerDevice();
-        $userDeviceId = (new Abonnement)->getCurrentWassengerDevice($user->id);
+        // $userDeviceId = (new Abonnement)->getCurrentWassengerDeviceWithoutAuth();
+        $userDeviceId = (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($user->id);
 
 
         if (Param::getStatusWhatsapp() == 0) {
@@ -1199,7 +1199,7 @@ class NotificationController extends Controller
 
         $allabonnements = Abonnement::get();
         $signature = $allabonnements->where('user_id', $message->user_id);
-        $userDeviceId = (new Abonnement)->getCurrentWassengerDevice($message->user_id);
+        $userDeviceId = (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id);
 
         try {
             $destinatairesWhatsapp = explode(',', $contacts['whatsapp']);
@@ -1766,7 +1766,6 @@ class NotificationController extends Controller
         $allnotifications = Notification::orderBy('created_at', 'asc')->get();
         $API_KEY_WHATSAPP = Param::getTokenWhatsapp();
         $origineurl = Param::apiUrl();
-        // $userDeviceId = (new Abonnement)->getCurrentWassengerDevice();
 
         $relance = $allnotifications->where('notify', 0)->where('chrone', 1)->take(80); //dd($relance);
 
@@ -1870,7 +1869,7 @@ class NotificationController extends Controller
                         if (strpos($files, '.mp4') != false) {
                             $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]); 
                         
-                            $data = ["phone" => $interphone, "message" => strip_tags($message->message), "media" => ["url" => $url], "device" => (new Abonnement)->getCurrentWassengerDevice($message->user_id)];
+                            $data = ["phone" => $interphone, "message" => strip_tags($message->message), "media" => ["url" => $url], "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
                             $curl = curl_init();
                             curl_setopt_array($curl, [
                                 CURLOPT_URL => "https://api.wassenger.com/v1/messages",
@@ -1959,7 +1958,7 @@ class NotificationController extends Controller
                                 }
                                 sleep(2);//sleep(3);
 
-                                $data = ["phone" => $interphone, "message" => strip_tags($message->message), "media" => $itemsList, "device" => (new Abonnement)->getCurrentWassengerDevice($message->user_id)];
+                                $data = ["phone" => $interphone, "message" => strip_tags($message->message), "media" => $itemsList, "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
                                 $curl = curl_init();
                                 curl_setopt_array($curl, [
                                     CURLOPT_URL => "https://api.wassenger.com/v1/messages",
@@ -2008,7 +2007,7 @@ class NotificationController extends Controller
                         }
                     } else if (count($files) == 0) {
                         sleep(2); 
-                        $data = ["phone" => $interphone, "message" => strip_tags($message->message), "device" => (new Abonnement)->getCurrentWassengerDevice($message->user_id)];
+                        $data = ["phone" => $interphone, "message" => strip_tags($message->message), "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
                         $curl = curl_init();
                         curl_setopt_array($curl, [
                             CURLOPT_URL => "https://api.wassenger.com/v1/messages",
