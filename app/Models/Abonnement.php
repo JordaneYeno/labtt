@@ -41,9 +41,11 @@ class Abonnement extends Model
         return $logo === null ? $logo : $url;
     } 
     
-    public static function getCurrentWassengerDevice()
+    public static function getCurrentWassengerDevice($userId)
     {
-        $deviceSecret = Abonnement::where('user_id', auth()->user()->id)->pluck('wa_device_secret')->first();
+        $userId === null ? auth()->user()->id : $userId;
+        // $deviceSecret = Abonnement::where('user_id', auth()->user()->id)->pluck('wa_device_secret')->first();
+        $deviceSecret = Abonnement::where('user_id', $userId)->pluck('wa_device_secret')->first();
         return $deviceSecret;
     } 
 

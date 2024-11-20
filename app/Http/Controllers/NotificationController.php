@@ -1766,7 +1766,7 @@ class NotificationController extends Controller
         $allnotifications = Notification::orderBy('created_at', 'asc')->get();
         $API_KEY_WHATSAPP = Param::getTokenWhatsapp();
         $origineurl = Param::apiUrl();
-        $userDeviceId = (new Abonnement)->getCurrentWassengerDevice();
+        // $userDeviceId = (new Abonnement)->getCurrentWassengerDevice();
 
         $relance = $allnotifications->where('notify', 0)->where('chrone', 1)->take(80); //dd($relance);
 
@@ -1870,7 +1870,7 @@ class NotificationController extends Controller
                         if (strpos($files, '.mp4') != false) {
                             $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]); 
                         
-                            $data = ["phone" => $interphone, "message" => strip_tags($message->message), "media" => ["url" => $url], "device" => $userDeviceId];
+                            $data = ["phone" => $interphone, "message" => strip_tags($message->message), "media" => ["url" => $url], "device" => (new Abonnement)->getCurrentWassengerDevice($message->user_id)];
                             $curl = curl_init();
                             curl_setopt_array($curl, [
                                 CURLOPT_URL => "https://api.wassenger.com/v1/messages",
@@ -1959,7 +1959,7 @@ class NotificationController extends Controller
                                 }
                                 sleep(2);//sleep(3);
 
-                                $data = ["phone" => $interphone, "message" => strip_tags($message->message), "media" => $itemsList, "device" => $userDeviceId];
+                                $data = ["phone" => $interphone, "message" => strip_tags($message->message), "media" => $itemsList, "device" => (new Abonnement)->getCurrentWassengerDevice($message->user_id)];
                                 $curl = curl_init();
                                 curl_setopt_array($curl, [
                                     CURLOPT_URL => "https://api.wassenger.com/v1/messages",
@@ -2008,7 +2008,7 @@ class NotificationController extends Controller
                         }
                     } else if (count($files) == 0) {
                         sleep(2); // sleep(3);
-                        $data = ["phone" => $interphone, "message" => strip_tags($message->message), "device" => $userDeviceId];
+                        $data = ["phone" => $interphone, "message" => strip_tags($message->message), "device" => (new Abonnement)->getCurrentWassengerDevice($message->user_id)];
                         $curl = curl_init();
                         curl_setopt_array($curl, [
                             CURLOPT_URL => "https://api.wassenger.com/v1/messages",
