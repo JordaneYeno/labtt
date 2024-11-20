@@ -89,7 +89,7 @@ class PaymentConroller extends Controller
         $abonnementID = $paiement->abonnement_id;
         if ($paiement->final_status == 0) {
             if ($xmlData->STATUT == 200) {
-                (new Abonnement)->crementSolde($abonnementID, $xmlData->AMOUNT);
+                (new Abonnement)->crementSolde($abonnementID, $paiement->amount);
                 $paiementUpdated = $paiement->update([
                     // 'amount' => $xmlData->AMOUNT,
                     'amount' => $paiement->amount,
