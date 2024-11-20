@@ -50,8 +50,7 @@ class NotificationController extends Controller
 
     // start cusumer Hobotta API
 
-    // public function custumGateway(CustumGateway $request)
-    public function custumGateway(Request $request)
+    public function custumGateway(CustumGateway $request)
     {
         
         $perPage = $request->perPage ? $request->perPage : 9;
