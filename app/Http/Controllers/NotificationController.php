@@ -1589,7 +1589,7 @@ class NotificationController extends Controller
                     $url = '';
                     $tokenWhatsapp = Param::all()->first();
                     Message::where('id', $message->id)->update(['start' => date("Y-m-d H:i:s")]);
-                    sleep(2);// sleep(3);
+                    sleep(2);
                     //dd($message->banner);
                     if ($message->banner) {
                         foreach ($message->file('banner') as $file) {
@@ -1705,7 +1705,7 @@ class NotificationController extends Controller
                                 'message' => 'Message envoyé avec succes',
                             ], Response::HTTP_OK);
                         } else {
-                            sleep(2);// sleep(3);
+                            sleep(2);
                             $this->update_msg_finish($message->id);
                         }
                     }
@@ -1865,7 +1865,7 @@ class NotificationController extends Controller
                     // $allmessages->where('id', $message->id)->first()->update(['start' => date("Y-m-d H:i:s")]);
 
                     if (count($files) > 0) {
-                        sleep(2);// sleep(3);
+                        sleep(2);
 
                         if (strpos($files, '.mp4') != false) {
                             $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]); 
@@ -2007,7 +2007,7 @@ class NotificationController extends Controller
                             } 
                         }
                     } else if (count($files) == 0) {
-                        sleep(2); // sleep(3);
+                        sleep(2); 
                         $data = ["phone" => $interphone, "message" => strip_tags($message->message), "device" => (new Abonnement)->getCurrentWassengerDevice($message->user_id)];
                         $curl = curl_init();
                         curl_setopt_array($curl, [
