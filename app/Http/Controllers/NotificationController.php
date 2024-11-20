@@ -50,8 +50,7 @@ class NotificationController extends Controller
 
     // start cusumer Hobotta API
 
-    // public function custumGateway(CustumGateway $request)
-    public function custumGateway(Request $request)
+    public function custumGateway(CustumGateway $request)
     {
         $perPage = $request->perPage ? $request->perPage : 9;
         $paginate = new PaginationService();
@@ -72,7 +71,6 @@ class NotificationController extends Controller
             $responses = [];
             $total = 0;
             $colorTheme = $allAbonnements->where('user_id', $user->id)->pluck('cs_color')->first();
-            // $userDeviceId = (new Abonnement)->getCurrentWassengerDevice();
             $userDeviceId = (new Abonnement)->getCurrentWassengerDevice($user->id);
 
             switch ($request->canalkey) {
