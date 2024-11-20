@@ -72,7 +72,8 @@ class NotificationController extends Controller
             $responses = [];
             $total = 0;
             $colorTheme = $allAbonnements->where('user_id', $user->id)->pluck('cs_color')->first();
-            $userDeviceId = (new Abonnement)->getCurrentWassengerDevice();
+            // $userDeviceId = (new Abonnement)->getCurrentWassengerDevice();
+            $userDeviceId = (new Abonnement)->getCurrentWassengerDevice($user->id);
 
             switch ($request->canalkey) {
                 case "whatsapp":
@@ -897,7 +898,8 @@ class NotificationController extends Controller
         $solde = $allAbonnements->where('user_id', $user->id)->pluck('solde')->first();
         $responses = [];
         $total = 0;
-        $userDeviceId = (new Abonnement)->getCurrentWassengerDevice();
+        // $userDeviceId = (new Abonnement)->getCurrentWassengerDevice();
+        $userDeviceId = (new Abonnement)->getCurrentWassengerDevice($user->id);
 
 
         if (Param::getStatusWhatsapp() == 0) {
@@ -1199,7 +1201,7 @@ class NotificationController extends Controller
 
         $allabonnements = Abonnement::get();
         $signature = $allabonnements->where('user_id', $message->user_id);
-        $userDeviceId = (new Abonnement)->getCurrentWassengerDevice();
+        $userDeviceId = (new Abonnement)->getCurrentWassengerDevice($message->user_id);
 
         try {
             $destinatairesWhatsapp = explode(',', $contacts['whatsapp']);
