@@ -169,8 +169,7 @@ class NotificationController extends Controller
                     foreach ($destinatairesWhatsapp as $destinataire) {
                         $conv = new Convertor();
                         $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
-                        // dd((new WaGroupController)->isExistOnWa($interphone)); //check phone wa_number!
-                        $isWa = (new WaGroupController())->isExistOnWa($request->recipients); //check phone wa_number!
+                        $isWa = (new WaGroupController())->isExistOnWa($destinataire); //check phone wa_number!
 
                         $notification = Notification::create([
                             'destinataire' => $destinataire,
