@@ -43,7 +43,7 @@ class Transaction extends Model
         }
     }
 
-    public function     __addTransactionAfterSendMessage($userId, $type, $amount, $messageId = null, $totalSend, $newSolde, $paiementId = null, $canal)
+    public function __addTransactionAfterSendMessage($userId, $type, $amount, $messageId = null, $totalSend, $newSolde, $paiementId = null, $canal)
     {
         try {
             $abonnementId = Abonnement::where('user_id', $userId)->select('id')->first();
@@ -64,4 +64,10 @@ class Transaction extends Model
             throw $th;
         }
     }
+
+    // public function getTransactionClient($reference)
+    // {       
+    //     $montant = Tarifications::where('reference', $reference)->pulk('')->first(); 
+    //     return $montant;
+    // }
 }

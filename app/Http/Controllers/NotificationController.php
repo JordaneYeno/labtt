@@ -50,8 +50,10 @@ class NotificationController extends Controller
 
     // start cusumer Hobotta API
 
-    public function custumGateway(CustumGateway $request)
+    // public function custumGateway(CustumGateway $request)
+    public function custumGateway(Request $request)
     {
+        
         $perPage = $request->perPage ? $request->perPage : 9;
         $paginate = new PaginationService();
 
@@ -169,8 +171,7 @@ class NotificationController extends Controller
                     foreach ($destinatairesWhatsapp as $destinataire) {
                         $conv = new Convertor();
                         $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
-                        $isWa = (new WaGroupController())->isExistOnWa($destinataire); //check phone wa_number!
-
+                        
                         $notification = Notification::create([
                             'destinataire' => $destinataire,
                             'canal' => 'whatsapp',
@@ -178,79 +179,25 @@ class NotificationController extends Controller
                             'chrone' => 4,  // envoi direct #without cron
                             'message_id' => $message->id,
                         ]);
-
+                        
+                        $isWa = (new WaGroupController())->isExistOnWa($destinataire); //check phone wa_number! 
                         $files = Fichier::where('message_id', $notification->message_id)->pluck('lien'); 
+                        
+                        if ($isWa != false) 
+                        {
 
-                        if (count($files) >= 1) { 
-                            sleep(1);
-                            $fileUrl = route('files.show', ['folder' => $user->id, 'filename'=> basename($files[0])]); //url
-                            
-                            if (strpos($files[0], '.mp4') !== false) {
-                                $data = [
-                                    "phone" => $interphone,
-                                    "message" => strip_tags($message->message),
-                                    "media" => ["url" => $fileUrl],
-                                    "device" => $userDeviceId, // Spécification du deviceId
-                                ];
+                            if (count($files) >= 1) { 
+                                sleep(1);
+                                $fileUrl = route('files.show', ['folder' => $user->id, 'filename'=> basename($files[0])]); //url
+                                
+                                if (strpos($files[0], '.mp4') !== false) {
+                                    $data = [
+                                        "phone" => $interphone,
+                                        "message" => strip_tags($message->message),
+                                        "media" => ["url" => $fileUrl],
+                                        "device" => $userDeviceId, // Spécification du deviceId
+                                    ];
 
-                                $curl = curl_init();
-                                curl_setopt_array($curl, [
-                                    CURLOPT_URL => "https://api.wassenger.com/v1/messages",
-                                    CURLOPT_RETURNTRANSFER => true,
-                                    CURLOPT_SSL_VERIFYPEER => false, //ssl off
-                                    CURLOPT_ENCODING => "",
-                                    CURLOPT_MAXREDIRS => 10,
-                                    CURLOPT_TIMEOUT => 30,
-                                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                    CURLOPT_CUSTOMREQUEST => "POST",
-                                    CURLOPT_POSTFIELDS => json_encode($data),
-                                    CURLOPT_HTTPHEADER => [
-                                        "Content-Type: application/json",
-                                        "Token: $API_KEY_WHATSAPP",
-                                    ],
-                                ]);
-
-                                $response = curl_exec($curl);
-                                $err = curl_error($curl);
-                                curl_close($curl);
-                            } else {
-                                // $data = ["url" => 'https://picsum.photos/seed/picsum/500/500'];
-                                $data = ["url" => $fileUrl];
-
-                                $curl = curl_init();
-                                curl_setopt_array($curl, [
-                                    CURLOPT_URL => "https://api.wassenger.com/v1/files",
-                                    CURLOPT_RETURNTRANSFER => true,
-                                    CURLOPT_SSL_VERIFYPEER => false, //ssl off
-                                    CURLOPT_ENCODING => "",
-                                    CURLOPT_MAXREDIRS => 10,
-                                    CURLOPT_TIMEOUT => 30,
-                                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                    CURLOPT_CUSTOMREQUEST => "POST",
-                                    CURLOPT_POSTFIELDS => json_encode($data),
-                                    CURLOPT_HTTPHEADER => [
-                                        "Content-Type: application/json",
-                                        "Token: $API_KEY_WHATSAPP",
-                                    ],
-                                ]);
-
-                                $response = curl_exec($curl);
-                                $err = curl_error($curl);
-                                curl_close($curl);
-
-                                if ($err) {
-                                    echo "cURL Error #:" . $err;
-                                } else {
-                                    $reponse_banner = json_decode($response); //dd($reponse_banner);
-
-                                    if (is_array($reponse_banner) == true) {
-                                        $itemsList = array("file" => $reponse_banner[0]->id);
-                                    } else {
-                                        $itemsList = array("file" => $reponse_banner->meta->file);
-                                    }
-                                    sleep(3);
-
-                                    $data = ["phone" => $interphone, "message" => strip_tags($message->message), "media" => $itemsList, "device" => $userDeviceId];
                                     $curl = curl_init();
                                     curl_setopt_array($curl, [
                                         CURLOPT_URL => "https://api.wassenger.com/v1/messages",
@@ -269,181 +216,352 @@ class NotificationController extends Controller
                                     ]);
 
                                     $response = curl_exec($curl);
-                                    $reponse = json_decode($response);
                                     $err = curl_error($curl);
                                     curl_close($curl);
-                                }
-                            }
-                        } else if (count($files) == 0) {
-                            // Envoyer le message WhatsApp
-                            $data = ["phone" => $interphone, "message" => strip_tags($request->message), "device" => $userDeviceId];
-                            $curl = curl_init();
-                            curl_setopt_array($curl, [
-                                CURLOPT_URL => "https://api.wassenger.com/v1/messages",
-                                CURLOPT_RETURNTRANSFER => true,
-                                CURLOPT_ENCODING => "",
-                                CURLOPT_MAXREDIRS => 10,
-                                CURLOPT_TIMEOUT => 30,
-                                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                CURLOPT_CUSTOMREQUEST => "POST",
-                                CURLOPT_POSTFIELDS => json_encode($data),
-                                CURLOPT_HTTPHEADER => [
-                                    "Content-Type: application/json",
-                                    "Token: $API_KEY_WHATSAPP",
-                                ],
-                            ]);
-                            $response = curl_exec($curl);
-                            $err = curl_error($curl);
-                            curl_close($curl);
-                        }
-
-                        if ($err) {
-                            $errors = true;
-
-                            $responses[] = [
-                                'status' => 'error',
-                                'message' => 'Erreur lors de l\'envoi du message',
-                                'destinataire' => $destinataire,
-                            ];
-                        } else {
-                            $reponse = json_decode($response);
-
-                            if (!empty($reponse->id)) {
-                                $notification->delivery_status = $reponse->deliveryStatus;
-                                $notification->save();
-                                $notification->wassenger_id = $reponse->id;
-                                $notification->save();
-
-                                $responses[] = [
-                                    'status' => 'success',
-                                    'message' => 'Message envoyé avec succès',
-                                    'destinataire' => $destinataire,
-                                ];
-                            } else {
-                                $errors = true;
-                                $notification->delivery_status = 'echec';
-                                $notification->save();
-                                // credit
-                                Abonnement::creditWhatsapp(1, $message->id);
-                                
-                                if ($errors == true && $request->rescue == 'sms_fallback' && $isWa == false) 
-                                {
-                                    if (Param::getStatusSms() == 0) {
-                                        return response()->json([
-                                            'status' => 'échec',
-                                            'message' => 'Service SMS désactivé',
-                                        ], 422);
-                                    }
-                
-                                    $smsCount = (new SmsCount)->countSmsSend(strip_tags($request->message));
-                                    $destinatairesSms = explode(',', $destinataire);
-                                    $total += $smsTotal = ((new Tarifications)->getSmsPrice() * $smsCount) * count($destinatairesSms);
-                
-                                    //______??_______//
-                                    
-                                        foreach ($destinatairesSms as $destinataire) {
-                                            if (!is_numeric($destinataire)) {
-                                                return response()->json([
-                                                    'statut' => 'error',
-                                                    'message' => 'Numéro invalide',
-                                                    'destinataire' => $destinataire,
-                                                ], 400);
-                                            }
-                                        }
-
-                                        if ($total > $solde) {
-                                            return response()->json([
-                                                'status' => 'échec',
-                                                'message' => 'Votre solde est insuffisant pour effectuer cette campagne',
-                                                'prix_campagne' => $total,
-                                                'solde' => $solde,
-                                            ], 400);
-                                        }
-
-                                    //______??_______//
-
-                                    Abonnement::factureSms(count($destinatairesSms), $smsTotal, $message->id, $message->message);
-                                    
-                                    $rescue = Message::where('id', $message->id)->first();  //______ disable !
-                                    $rescue->canal = $rescue->canal .= ' rescue sms+ '; $rescue->save();  //______ disable !
-
-                                    $notification = Notification::create([
-                                        'destinataire' => $destinataire,
-                                        'canal' => 'sms+',
-                                        'notify' => 4,  // api direct #without cron 
-                                        'chrone' => 4,  // envoi direct #without cron
-                                        'message_id' => $message->id,
-                                    ]);
-                                    // send sms if error sent whatsapp
-                                    
-                                    // $conv = new Convertor();
-                                    // $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
-        
-                                    $data =
-                                        [
-                                            "message" => strip_tags($message->message),
-                                            'receiver' => $interphone,
-                                            'sender' => $allAbonnements->where('user_id', $user->id)->pluck('sms')->first() === 'default' ? strtoupper(Param::getSmsSender())  : strtoupper($allAbonnements->where('user_id', $user->id)->pluck('sms')->first()),
-
-                                            // 'sender' => $request->sender_name === 'default' ? Param::getSmsSender()  : $request->sender_name, //
-                                        ];
+                                } else {
+                                    // $data = ["url" => 'https://picsum.photos/seed/picsum/500/500'];
+                                    $data = ["url" => $fileUrl];
 
                                     $curl = curl_init();
                                     curl_setopt_array($curl, [
-                                        CURLOPT_URL => 'https://devdocks.bakoai.pro/api/smpp/send',
+                                        CURLOPT_URL => "https://api.wassenger.com/v1/files",
                                         CURLOPT_RETURNTRANSFER => true,
-                                        CURLOPT_SSL_VERIFYPEER => false, // off ssl
-                                        CURLOPT_ENCODING => '',
+                                        CURLOPT_SSL_VERIFYPEER => false, //ssl off
+                                        CURLOPT_ENCODING => "",
                                         CURLOPT_MAXREDIRS => 10,
-                                        CURLOPT_TIMEOUT => 0,
-                                        CURLOPT_FOLLOWLOCATION => true,
+                                        CURLOPT_TIMEOUT => 30,
                                         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                        CURLOPT_CUSTOMREQUEST => 'POST',
+                                        CURLOPT_CUSTOMREQUEST => "POST",
                                         CURLOPT_POSTFIELDS => json_encode($data),
-                                        CURLOPT_HTTPHEADER =>
-                                        [
-                                            'Authorization: Basic ' . base64_encode('hobotta:hobotta'),
-                                            'Content-Type: application/json',
+                                        CURLOPT_HTTPHEADER => [
+                                            "Content-Type: application/json",
+                                            "Token: $API_KEY_WHATSAPP",
                                         ],
                                     ]);
 
-                                    $response = curl_exec($curl); //dd($response);
+                                    $response = curl_exec($curl);
                                     $err = curl_error($curl);
                                     curl_close($curl);
 
-                                    sleep(1);
                                     if ($err) {
-                                        $errors = true;
-                                        $notification->delivery_status = 'echec';
-                                        $notification->save();
-
-                                        // credit
-                                        Abonnement::creditSms(1, $message->id);
-                                        $responses[] = [
-                                            'statut' => 'error',
-                                            'message' => "Erreur lors de l'envoi du message à $destinataire",
-                                        ];
+                                        echo "cURL Error #:" . $err;
                                     } else {
-                                        $notification->delivery_status = 'sent';
-                                        $notification->save();
-                                        $responses[] = [
-                                            'status' => 'success',
-                                            'message' => 'Message envoyé avec succès',
-                                            'destinataire' => $destinataire,
-                                        ];
+                                        $reponse_banner = json_decode($response);
+
+                                        if (is_array($reponse_banner) == true) {
+                                            $itemsList = array("file" => $reponse_banner[0]->id);
+                                        } else {
+                                            $itemsList = array("file" => $reponse_banner->meta->file);
+                                        }
+                                        sleep(3);
+
+                                        $data = ["phone" => $interphone, "message" => strip_tags($message->message), "media" => $itemsList, "device" => $userDeviceId];
+                                        $curl = curl_init();
+                                        curl_setopt_array($curl, [
+                                            CURLOPT_URL => "https://api.wassenger.com/v1/messages",
+                                            CURLOPT_RETURNTRANSFER => true,
+                                            CURLOPT_SSL_VERIFYPEER => false, //ssl off
+                                            CURLOPT_ENCODING => "",
+                                            CURLOPT_MAXREDIRS => 10,
+                                            CURLOPT_TIMEOUT => 30,
+                                            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                                            CURLOPT_CUSTOMREQUEST => "POST",
+                                            CURLOPT_POSTFIELDS => json_encode($data),
+                                            CURLOPT_HTTPHEADER => [
+                                                "Content-Type: application/json",
+                                                "Token: $API_KEY_WHATSAPP",
+                                            ],
+                                        ]);
+
+                                        $response = curl_exec($curl);
+                                        $reponse = json_decode($response);
+                                        $err = curl_error($curl);
+                                        curl_close($curl);
                                     }
-                    
                                 }
+                            } else if (count($files) == 0) {
+                                // Envoyer le message WhatsApp
+                                $data = ["phone" => $interphone, "message" => strip_tags($request->message), "device" => $userDeviceId];
+                                $curl = curl_init();
+                                curl_setopt_array($curl, [
+                                    CURLOPT_URL => "https://api.wassenger.com/v1/messages",
+                                    CURLOPT_RETURNTRANSFER => true,
+                                    CURLOPT_ENCODING => "",
+                                    CURLOPT_MAXREDIRS => 10,
+                                    CURLOPT_TIMEOUT => 30,
+                                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                                    CURLOPT_CUSTOMREQUEST => "POST",
+                                    CURLOPT_POSTFIELDS => json_encode($data),
+                                    CURLOPT_HTTPHEADER => [
+                                        "Content-Type: application/json",
+                                        "Token: $API_KEY_WHATSAPP",
+                                    ],
+                                ]);
+                                $response = curl_exec($curl);
+                                $err = curl_error($curl);
+                                curl_close($curl);
+                            }
+
+                            if ($err) {
+                                $errors = true;
 
                                 $responses[] = [
                                     'status' => 'error',
-                                    'message' => 'Message non envoyé',
+                                    'message' => 'Erreur lors de l\'envoi du message',
                                     'destinataire' => $destinataire,
-                                    'encode' => $reponse->errorCode ?? null
                                 ];
-                            }
-                        }
+                            } else {
+                                $reponse = json_decode($response);
 
+                                if (!empty($reponse->id)) {
+                                    $notification->delivery_status = $reponse->deliveryStatus;
+                                    $notification->save();
+                                    $notification->wassenger_id = $reponse->id;
+                                    $notification->save();
+
+                                    $responses[] = [
+                                        'status' => 'success',
+                                        'message' => 'Message envoyé avec succès',
+                                        'destinataire' => $destinataire,
+                                    ];
+                                } else {
+                                    $errors = true;
+                                    $notification->delivery_status = 'echec';
+                                    $notification->save();
+                                    // credit
+                                    Abonnement::creditWhatsapp(1, $message->id);
+                                    
+                                    if ($errors == true && $request->rescue == 'sms_fallback' && $isWa == false) 
+                                    {
+                                        if (Param::getStatusSms() == 0) {
+                                            return response()->json([
+                                                'status' => 'échec',
+                                                'message' => 'Service SMS désactivé',
+                                            ], 422);
+                                        }
+                    
+                                        $smsCount = (new SmsCount)->countSmsSend(strip_tags($request->message));
+                                        $destinatairesSms = explode(',', $destinataire);
+                                        $total += $smsTotal = ((new Tarifications)->getSmsPrice() * $smsCount) * count($destinatairesSms);
+                    
+                                        //______??_______//
+                                        
+                                            foreach ($destinatairesSms as $destinataire) {
+                                                if (!is_numeric($destinataire)) {
+                                                    return response()->json([
+                                                        'statut' => 'error',
+                                                        'message' => 'Numéro invalide',
+                                                        'destinataire' => $destinataire,
+                                                    ], 400);
+                                                }
+                                            }
+
+                                            if ($total > $solde) {
+                                                return response()->json([
+                                                    'status' => 'échec',
+                                                    'message' => 'Votre solde est insuffisant pour effectuer cette campagne',
+                                                    'prix_campagne' => $total,
+                                                    'solde' => $solde,
+                                                ], 400);
+                                            }
+
+                                        //______??_______//
+
+                                        Abonnement::factureSms(count($destinatairesSms), $smsTotal, $message->id, $message->message);
+                                        
+                                        $rescue = Message::where('id', $message->id)->first();  //______ disable !
+                                        $rescue->canal = $rescue->canal .= ' rescue sms+ '; $rescue->save();  //______ disable !
+
+                                        $notification = Notification::create([
+                                            'destinataire' => $destinataire,
+                                            'canal' => 'sms+',
+                                            'notify' => 4,  // api direct #without cron 
+                                            'chrone' => 4,  // envoi direct #without cron
+                                            'message_id' => $message->id,
+                                        ]);
+                                        // send sms if error sent whatsapp
+                                        
+                                        // $conv = new Convertor();
+                                        // $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
+            
+                                        $data =
+                                            [
+                                                "message" => strip_tags($message->message),
+                                                'receiver' => $interphone,
+                                                'sender' => $allAbonnements->where('user_id', $user->id)->pluck('sms')->first() === 'default' ? strtoupper(Param::getSmsSender())  : strtoupper($allAbonnements->where('user_id', $user->id)->pluck('sms')->first()),
+
+                                                // 'sender' => $request->sender_name === 'default' ? Param::getSmsSender()  : $request->sender_name, //
+                                            ];
+
+                                        $curl = curl_init();
+                                        curl_setopt_array($curl, [
+                                            CURLOPT_URL => 'https://devdocks.bakoai.pro/api/smpp/send',
+                                            CURLOPT_RETURNTRANSFER => true,
+                                            CURLOPT_SSL_VERIFYPEER => false, // off ssl
+                                            CURLOPT_ENCODING => '',
+                                            CURLOPT_MAXREDIRS => 10,
+                                            CURLOPT_TIMEOUT => 0,
+                                            CURLOPT_FOLLOWLOCATION => true,
+                                            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                                            CURLOPT_CUSTOMREQUEST => 'POST',
+                                            CURLOPT_POSTFIELDS => json_encode($data),
+                                            CURLOPT_HTTPHEADER =>
+                                            [
+                                                'Authorization: Basic ' . base64_encode('hobotta:hobotta'),
+                                                'Content-Type: application/json',
+                                            ],
+                                        ]);
+
+                                        $response = curl_exec($curl); //dd($response);
+                                        $err = curl_error($curl);
+                                        curl_close($curl);
+
+                                        sleep(1);
+                                        if ($err) {
+                                            $errors = true;
+                                            $notification->delivery_status = 'echec';
+                                            $notification->save();
+
+                                            // credit
+                                            Abonnement::creditSms(1, $message->id);
+                                            $responses[] = [
+                                                'statut' => 'error',
+                                                'message' => "Erreur lors de l'envoi du message à $destinataire",
+                                            ];
+                                        } else {
+                                            $notification->delivery_status = 'sent';
+                                            $notification->save();
+                                            $responses[] = [
+                                                'status' => 'success',
+                                                'message' => 'Message envoyé avec succès',
+                                                'destinataire' => $destinataire,
+                                            ];
+                                        }
+                        
+                                    }
+
+                                    $responses[] = [
+                                        'status' => 'error',
+                                        'message' => 'Message non envoyé',
+                                        'destinataire' => $destinataire,
+                                        'encode' => $reponse->errorCode ?? null
+                                    ];
+                                }
+                            }
+
+                        } 
+                        else 
+                        {
+                            if ($errors == true && $request->rescue == 'sms_fallback' && $isWa == false) 
+                            {
+                                if (Param::getStatusSms() == 0) {
+                                    return response()->json([
+                                        'status' => 'échec',
+                                        'message' => 'Service SMS désactivé',
+                                    ], 422);
+                                }
+            
+                                $smsCount = (new SmsCount)->countSmsSend(strip_tags($request->message));
+                                $destinatairesSms = explode(',', $destinataire);
+                                $total += $smsTotal = ((new Tarifications)->getSmsPrice() * $smsCount) * count($destinatairesSms);
+            
+                                //______??_______//
+                                
+                                    foreach ($destinatairesSms as $destinataire) {
+                                        if (!is_numeric($destinataire)) {
+                                            return response()->json([
+                                                'statut' => 'error',
+                                                'message' => 'Numéro invalide',
+                                                'destinataire' => $destinataire,
+                                            ], 400);
+                                        }
+                                    }
+
+                                    if ($total > $solde) {
+                                        return response()->json([
+                                            'status' => 'échec',
+                                            'message' => 'Votre solde est insuffisant pour effectuer cette campagne',
+                                            'prix_campagne' => $total,
+                                            'solde' => $solde,
+                                        ], 400);
+                                    }
+
+                                //______??_______//
+
+                                Abonnement::factureSms(count($destinatairesSms), $smsTotal, $message->id, $message->message);
+                                
+                                $rescue = Message::where('id', $message->id)->first();  //______ disable !
+                                $rescue->canal = $rescue->canal .= ' rescue sms+ '; $rescue->save();  //______ disable !
+
+                                $notification = Notification::create([
+                                    'destinataire' => $destinataire,
+                                    'canal' => 'sms+',
+                                    'notify' => 4,  // api direct #without cron 
+                                    'chrone' => 4,  // envoi direct #without cron
+                                    'message_id' => $message->id,
+                                ]);
+                                // send sms if error sent whatsapp
+                                
+                                // $conv = new Convertor();
+                                // $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
+    
+                                $data =
+                                    [
+                                        "message" => strip_tags($message->message),
+                                        'receiver' => $interphone,
+                                        'sender' => $allAbonnements->where('user_id', $user->id)->pluck('sms')->first() === 'default' ? strtoupper(Param::getSmsSender())  : strtoupper($allAbonnements->where('user_id', $user->id)->pluck('sms')->first()),
+
+                                        // 'sender' => $request->sender_name === 'default' ? Param::getSmsSender()  : $request->sender_name, //
+                                    ];
+
+                                $curl = curl_init();
+                                curl_setopt_array($curl, [
+                                    CURLOPT_URL => 'https://devdocks.bakoai.pro/api/smpp/send',
+                                    CURLOPT_RETURNTRANSFER => true,
+                                    CURLOPT_SSL_VERIFYPEER => false, // off ssl
+                                    CURLOPT_ENCODING => '',
+                                    CURLOPT_MAXREDIRS => 10,
+                                    CURLOPT_TIMEOUT => 0,
+                                    CURLOPT_FOLLOWLOCATION => true,
+                                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                                    CURLOPT_CUSTOMREQUEST => 'POST',
+                                    CURLOPT_POSTFIELDS => json_encode($data),
+                                    CURLOPT_HTTPHEADER =>
+                                    [
+                                        'Authorization: Basic ' . base64_encode('hobotta:hobotta'),
+                                        'Content-Type: application/json',
+                                    ],
+                                ]);
+
+                                $response = curl_exec($curl); //dd($response);
+                                $err = curl_error($curl);
+                                curl_close($curl);
+
+                                sleep(1);
+                                if ($err) {
+                                    $errors = true;
+                                    $notification->delivery_status = 'echec';
+                                    $notification->save();
+
+                                    // credit
+                                    Abonnement::creditSms(1, $message->id);
+                                    $responses[] = [
+                                        'statut' => 'error',
+                                        'message' => "Erreur lors de l'envoi du message à $destinataire",
+                                    ];
+                                } else {
+                                    $notification->delivery_status = 'sent';
+                                    $notification->save();
+                                    $responses[] = [
+                                        'status' => 'success',
+                                        'message' => 'Message envoyé avec succès',
+                                        'destinataire' => $destinataire,
+                                    ];
+                                }
+                
+                            }
+
+                        }
                     }
 
                     if ($errors) {

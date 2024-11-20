@@ -6,6 +6,7 @@ use App\Http\Requests\PaymentRequest;
 use App\Models\Abonnement;
 use App\Models\Paiement;
 use App\Models\Param;
+use App\Models\Transaction;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -84,13 +85,14 @@ class PaymentConroller extends Controller
         $xml = $request->getContent();
         $xmlData = simplexml_load_string($xml);
         $paiement = Paiement::where('ref', trim($xmlData->REF))->first();
+        
         $abonnementID = $paiement->abonnement_id;
         if ($paiement->final_status == 0) {
             if ($xmlData->STATUT == 200) {
-                // return response()->json([$paiement]);
                 (new Abonnement)->crementSolde($abonnementID, $xmlData->AMOUNT);
                 $paiementUpdated = $paiement->update([
-                    'amount' => $xmlData->AMOUNT,
+                    // 'amount' => $xmlData->AMOUNT,
+                    'amount' => $paiement->amount,
                     'token' => $xmlData->TOKEN,
                     'fees' => $xmlData->FEES,
                     'final_status' => $xmlData->STATUT,
