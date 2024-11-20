@@ -52,6 +52,8 @@ class NotificationController extends Controller
 
     public function custumGateway(CustumGateway $request)
     {
+        dd((new WaGroupController())->isExistOnWa($request->recipients)); exit();
+
         $perPage = $request->perPage ? $request->perPage : 9;
         $paginate = new PaginationService();
 
@@ -170,7 +172,6 @@ class NotificationController extends Controller
                         $conv = new Convertor();
                         $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
                         // dd((new WaGroupController)->isExistOnWa($interphone)); //check phone wa_number!
-                        $isWa = (new WaGroupController())->isExistOnWa($request->recipients); //check phone wa_number!
 
                         $notification = Notification::create([
                             'destinataire' => $destinataire,
@@ -327,7 +328,7 @@ class NotificationController extends Controller
                                 // credit
                                 Abonnement::creditWhatsapp(1, $message->id);
                                 
-                                if ($errors == true && $request->rescue == 'sms_fallback' && $isWa == false) 
+                                if ($errors == true && $request->rescue == 'sms_fallback') 
                                 {
                                     if (Param::getStatusSms() == 0) {
                                         return response()->json([
@@ -364,7 +365,8 @@ class NotificationController extends Controller
                                     //______??_______//
 
                                     Abonnement::factureSms(count($destinatairesSms), $smsTotal, $message->id, $message->message);
-                                    
+                                    // (new Transaction)->__addTransactionAfterSendMessage($user->id, 'debit', $total, $message->id, count($destinatairesSms), Abonnement::__getSolde($user->id), null, 'sms');
+                
                                     $rescue = Message::where('id', $message->id)->first();  //______ disable !
                                     $rescue->canal = $rescue->canal .= ' rescue sms+ '; $rescue->save();  //______ disable !
 
