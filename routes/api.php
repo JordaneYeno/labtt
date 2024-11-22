@@ -76,6 +76,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         });
         Route::get('search/ref', [MessagesController::class, 'getMessagesByReferenceId']);
     });
+
     Route::get('export', [ExportController::class, 'storeExcel']);
     Route::post('import/contact', [ContactController::class, 'getContacts']);
     Route::post('verify', [NotificationController::class, 'verifySolde']);
@@ -199,6 +200,8 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     });
 
     Route::prefix('/wagroup')->group(function () {
+        Route::get('mywadevice', [Abonnement::class, 'getCurrentWassengerDevice']); //check device wa
+
         Route::get('getAssistance', [WaGroupController::class, 'getAssistance']);
         Route::post('crgroup', [WaGroupController::class, 'createGroup']);
         Route::get('allgroups', [WaGroupController::class, 'getAllGroups']);
