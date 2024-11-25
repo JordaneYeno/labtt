@@ -899,11 +899,11 @@ class NotificationController extends Controller
         }*/
     }
 
-    public function getAllGroupInfo(/*GetAllGroupInfo*/Request $request)
+    public function getAllGroupInfo(GetAllGroupInfo $request)
     {
         // $waGroupController = new WaGroupController(); 
         // $groups = $waGroupController->getAllGroups($request);
-
+        
         $groups = (new WaGroupController)->getAllGroups($request); // instance
         return $groups;
     }
@@ -918,7 +918,6 @@ class NotificationController extends Controller
         $solde = $allAbonnements->where('user_id', $user->id)->pluck('solde')->first();
         $responses = [];
         $total = 0;
-        // $userDeviceId = (new Abonnement)->getCurrentWassengerDeviceWithoutAuth();
         $userDeviceId = (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($user->id);
 
 
@@ -1066,7 +1065,6 @@ class NotificationController extends Controller
     }
 
     // end cusumer Hobotta API
-
     public function createNotification($isNumeric, $dests, $message, $roleUser, $usrId, $canal) //see
     {
         foreach ($dests as $dest) {
