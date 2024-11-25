@@ -899,7 +899,9 @@ class NotificationController extends Controller
         }*/
     }
 
-    public function getAllGroupInfo(GetAllGroupInfo $request)
+    
+    // public function getAllGroupInfo(GetAllGroupInfo $request)
+    public function getAllGroupInfo(/*GetAllGroupInfo*/Request $request)
     {
         // $waGroupController = new WaGroupController(); 
         // $groups = $waGroupController->getAllGroups($request);
