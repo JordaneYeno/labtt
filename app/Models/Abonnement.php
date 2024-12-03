@@ -75,6 +75,50 @@ class Abonnement extends Model
         ], 200);
     }
 
+    public function isAdminGetWaDeviceClient($id)
+    {
+        $user = Abonnement::where('user_id', $id)->pluck('wa_device_secret')->first();
+        return $user;
+    }
+
+    public function isAdminSetWaDeviceClient($id, Request $request)
+    {
+        $device = Abonnement::where('user_id', $id)->update(['wa_device_secret' => $request->value]);
+        if ($device) {
+            return response()->json([
+                'status' => 'success',
+                'update' => 1,
+                'message' => 'device mis à jour'
+            ], 200);
+        }
+        return response()->json([
+            'status' => 'echec',
+            'message' => 'erreur lors de la mise à jour'
+        ], 200);
+    }
+
+    public function isAdminGetCashClient($id)
+    {
+        $user = Abonnement::where('user_id', $id)->pluck('solde')->first();
+        return $user;
+    }
+
+    public function isAdminSetCashClient($id, Request $request)
+    {
+        $device = Abonnement::where('user_id', $id)->update(['solde' => $request->value]);
+        if ($device) {
+            return response()->json([
+                'status' => 'success',
+                'update' => 1,
+                'message' => 'solde mis à jour'
+            ], 200);
+        }
+        return response()->json([
+            'status' => 'echec',
+            'message' => 'erreur lors de la mise à jour'
+        ], 200);
+    }
+
     public static function getSolde($abonnementId = null)
     {
         $solde = Abonnement::where('user_id', auth()->user()->id)->pluck('solde')->first();
