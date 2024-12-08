@@ -119,6 +119,13 @@ class Abonnement extends Model
         ], 200);
     }
 
+    public static function getInternaltional($userId)
+    {
+        $userId === null ? auth()->user()->id : $userId;
+        $international = Abonnement::where('user_id', $userId)->pluck('international')->first();
+        return $international;
+    }
+
     public static function getSolde($abonnementId = null)
     {
         $solde = Abonnement::where('user_id', auth()->user()->id)->pluck('solde')->first();

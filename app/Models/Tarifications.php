@@ -37,6 +37,12 @@ class Tarifications extends Model
         return $whatsappPrice;
     }
 
+    public function getWhatsappMediaPrice($key)
+    {        
+        $whatsappPrice = Tarifications::where('nom', $key)->pluck("prix_whatsapp")->firstOrFail();
+        return $whatsappPrice;
+    }
+
     public function setEmailPrice($prixEmail, $id)
     {        
         $emailPrice = Tarifications::where('id', $id)->firstOrFail()->update(['prix_email' => $prixEmail]);

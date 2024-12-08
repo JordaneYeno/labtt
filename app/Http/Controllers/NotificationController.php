@@ -104,14 +104,19 @@ class NotificationController extends Controller
                             ], 400);
                         }
 
-                        $conv = new Convertor();
-                        $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
-                        if ($interphone == null) {
-                            return response()->json([
-                                'status' => 'error',
-                                'message' => 'Numéro de téléphone invalide',
-                                'destinataire' => $destinataire,
-                            ], 400);
+                        if((new Abonnement)->getInternaltional($user->id) == 0)
+                        {
+
+                            $conv = new Convertor();
+                            $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
+                            if ($interphone == null) {
+                                return response()->json([
+                                    'status' => 'error',
+                                    'message' => 'Numéro de téléphone invalide',
+                                    'destinataire' => $destinataire,
+                                ], 400);
+                            }
+                        
                         }
                     }
 
@@ -168,8 +173,11 @@ class NotificationController extends Controller
                     $errors = false;
 
                     foreach ($destinatairesWhatsapp as $destinataire) {
-                        $conv = new Convertor();
-                        $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
+                        if((new Abonnement)->getInternaltional($user->id) == 0) 
+                        {
+                            $conv = new Convertor();
+                            $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
+                        }
                         
                         $notification = Notification::create([
                             'destinataire' => $destinataire,
@@ -188,10 +196,13 @@ class NotificationController extends Controller
                             if (count($files) >= 1) { 
                                 sleep(1);
                                 $fileUrl = route('files.show', ['folder' => $user->id, 'filename'=> basename($files[0])]); //url
+                               
+                                // $total = count($files) * (new Tarifications)->getWhatsappMediaPrice('media');
                                 
                                 if (strpos($files[0], '.mp4') !== false) {
                                     $data = [
-                                        "phone" => $interphone,
+                                        // "phone" => $interphone,
+                                        "phone" => ((new Abonnement)->getInternaltional($user->id) == 0) ?$interphone :$destinataire,
                                         "message" => strip_tags($message->message),
                                         "media" => ["url" => $fileUrl],
                                         "device" => $userDeviceId, // Spécification du deviceId
@@ -253,7 +264,7 @@ class NotificationController extends Controller
                                         }
                                         sleep(2); // sleep(3);
 
-                                        $data = ["phone" => $interphone, "message" => strip_tags($message->message), "media" => $itemsList, "device" => $userDeviceId];
+                                        $data = ["phone" => ((new Abonnement)->getInternaltional($user->id) == 0) ?$interphone :$destinataire, "message" => strip_tags($message->message), "media" => $itemsList, "device" => $userDeviceId];
                                         $curl = curl_init();
                                         curl_setopt_array($curl, [
                                             CURLOPT_URL => "https://api.wassenger.com/v1/messages",
@@ -279,7 +290,7 @@ class NotificationController extends Controller
                                 }
                             } else if (count($files) == 0) {
                                 // Envoyer le message WhatsApp
-                                $data = ["phone" => $interphone, "message" => strip_tags($request->message), "device" => $userDeviceId];
+                                $data = ["phone" => ((new Abonnement)->getInternaltional($user->id) == 0) ?$interphone :$destinataire, "message" => strip_tags($request->message), "device" => $userDeviceId];
                                 $curl = curl_init();
                                 curl_setopt_array($curl, [
                                     CURLOPT_URL => "https://api.wassenger.com/v1/messages",
@@ -408,14 +419,17 @@ class NotificationController extends Controller
                                 ]);
                                 // send sms if error sent whatsapp
                             
-                                $conv = new Convertor();
-                                $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
+                                if((new Abonnement)->getInternaltional($user->id) == 0) 
+                                {
+                                    $conv = new Convertor();
+                                    $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
+                                }
                                         
                                 $text = strip_tags($message->message);
                                 $data =
                                     [
                                         'message' => (new SmsCount)->removeAccents(str_replace('&nbsp;', ' ', $text)),
-                                        'receiver' => $interphone,
+                                        'receiver' => ((new Abonnement)->getInternaltional($user->id) == 0) ?$interphone :$destinataire,
                                         'sender' => $allAbonnements->where('user_id', $user->id)->pluck('sms')->first() === 'default' ?  strtoupper(Param::getSmsSender() /*'bakoai'*/) : strtoupper($allAbonnements->where('user_id', $user->id)->pluck('sms')->first()),
                                 ];
 
@@ -782,15 +796,17 @@ class NotificationController extends Controller
                             'message_id' => $message->id,
                         ]);
 
-                        // $number = $this->convertNumbert($destinataire);
-                        $conv = new Convertor();
-                        $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
+                        if((new Abonnement)->getInternaltional($user->id) == 0) 
+                        {
+                            $conv = new Convertor();
+                            $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
+                        }
 
                         $text = strip_tags($message->message);
                         $data =
                             [
                                 'message' => (new SmsCount)->removeAccents(str_replace('&nbsp;', ' ', $text)),
-                                'receiver' => $interphone,
+                                'receiver' => ((new Abonnement)->getInternaltional($user->id) == 0) ?$interphone :$destinataire,
                                 'sender' => $allAbonnements->where('user_id', $user->id)->pluck('sms')->first() === 'default' ?  strtoupper(Param::getSmsSender() /*'bakoai'*/)  : strtoupper($allAbonnements->where('user_id', $user->id)->pluck('sms')->first()),
                            ];
 
@@ -1210,13 +1226,14 @@ class NotificationController extends Controller
         $total = 0;
         $contacts = $request->contacts;
         $whatsapp = $email = $sms = false;
-        $smsTotal = $emailTotal = $whatsappTotal = 0;
+        $smsTotal = $emailTotal = $whatsappTotal = $totalMedia = 0;
         $user = User::getCurrentUSer();
         $canal = '';
 
 
         $message = $this->createMessage($user->id, $request->title, $request->message, $request->canal, $request->date_envoie);
 
+        // $request->hasFile('banner') ? $totalMedia = count($files) * (new Tarifications)->getWhatsappMediaPrice('media') : null;
         $request->hasFile('banner') ? $this->storeFile($message->id, $request->file('banner'), $user->id, false) : null;
 
         $allabonnements = Abonnement::get();
@@ -1880,12 +1897,16 @@ class NotificationController extends Controller
 
                     $this->update_notification($notification->id);
                 } else if (strpos($message->canal, 'whatsapp') != false && $notification->canal == 'whatsapp') {
-                    $conv = new Convertor();
-                    $interphone = $conv->internationalisation($notification->destinataire, request('country', 'GA'));
-
-                    if ($interphone === 'invalid number') {
-                        $notification->destinataire = '0' . $notification->destinataire;
-                        $notification->save();
+                    if((new Abonnement)->getInternaltional($message->user_id) == 0)
+                    {
+                        $conv = new Convertor();
+                        $interphone = $conv->internationalisation($notification->destinataire, request('country', 'GA'));
+    
+                        if ($interphone === 'invalid number') 
+                        {
+                            $notification->destinataire = '0' . $notification->destinataire;
+                            $notification->save();
+                        }
                     }
 
                     // $allmessages->where('id', $message->id)->first()->update(['start' => date("Y-m-d H:i:s")]);
@@ -1896,7 +1917,7 @@ class NotificationController extends Controller
                         if (strpos($files, '.mp4') != false) {
                             $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]); 
                         
-                            $data = ["phone" => $interphone, "message" => strip_tags($message->message), "media" => ["url" => $url], "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
+                            $data = ["phone" => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire, "message" => strip_tags($message->message), "media" => ["url" => $url], "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
                             $curl = curl_init();
                             curl_setopt_array($curl, [
                                 CURLOPT_URL => "https://api.wassenger.com/v1/messages",
@@ -1938,9 +1959,10 @@ class NotificationController extends Controller
                                 $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron 
                                 $notification->save();
 
+                                $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire;
                                 $responses[] = [
                                     'statut' => 'error',
-                                    'message' => "Erreur lors de l'envoi du message à $interphone",
+                                    'message' => "Erreur lors de l'envoi du message à $tel",
                                 ];
                                 // echo "cURL Error #:" . $err;
                             } else {
@@ -1985,7 +2007,7 @@ class NotificationController extends Controller
                                 }
                                 sleep(2);//sleep(3);
 
-                                $data = ["phone" => $interphone, "message" => strip_tags($message->message), "media" => $itemsList, "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
+                                $data = ["phone" => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire, "message" => strip_tags($message->message), "media" => $itemsList, "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
                                 $curl = curl_init();
                                 curl_setopt_array($curl, [
                                     CURLOPT_URL => "https://api.wassenger.com/v1/messages",
@@ -2017,12 +2039,14 @@ class NotificationController extends Controller
                                     // credit
                                     Abonnement::creditWhatsapp(1, $message->id);
 
+                                    $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire; 
                                     $responses[] = [
                                         'statut' => 'error',
-                                        'message' => "Erreur lors de l'envoi du message à $interphone",
+                                        'message' => "Erreur lors de l'envoi du message à $tel",
                                     ];
                                     // echo "cURL Error #:" . $err;
                                 } else {
+                                    // $totalMedia = count($files) * (new Tarifications)->getWhatsappMediaPrice('media');
                                     $reponse = json_decode($response);
                                     if (!empty($reponse->id)) {
                                         $notification->delivery_status = $reponse->deliveryStatus;
@@ -2034,7 +2058,7 @@ class NotificationController extends Controller
                         }
                     } else if (count($files) == 0) {
                         sleep(2); 
-                        $data = ["phone" => $interphone, "message" => strip_tags($message->message), "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
+                        $data = ["phone" => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire, "message" => strip_tags($message->message), "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
                         $curl = curl_init();
                         curl_setopt_array($curl, [
                             CURLOPT_URL => "https://api.wassenger.com/v1/messages",
@@ -2065,9 +2089,10 @@ class NotificationController extends Controller
                             // credit
                             Abonnement::creditWhatsapp(1, $message->id);
 
+                            $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire;
                             $responses[] = [
                                 'statut' => 'error',
-                                'message' => "Erreur lors de l'envoi du message à $interphone",
+                                'message' => "Erreur lors de l'envoi du message à $tel",
                             ];
                             // echo "cURL Error #:" . $err;
                         } else {
@@ -2082,13 +2107,15 @@ class NotificationController extends Controller
                         return 'nulled';
                     }
                 } else if (strpos($message->canal, 'sms') !== false && $notification->canal === 'sms') { // Utilise `!== false` pour éviter les erreurs avec des positions `0`.
-
-                    $conv = new Convertor();
-                    $interphone = $conv->internationalisation($notification->destinataire, request('country', 'GA'));
-
-                    if ($interphone === 'invalid number') {
-                        $notification->destinataire = '0' . $notification->destinataire;
-                        $notification->save();
+                    if((new Abonnement)->getInternaltional($message->user_id) == 0)
+                    {
+                        $conv = new Convertor();
+                        $interphone = $conv->internationalisation($notification->destinataire, request('country', 'GA'));
+    
+                        if ($interphone === 'invalid number') {
+                            $notification->destinataire = '0' . $notification->destinataire;
+                            $notification->save();
+                        }
                     }
 
                     $smsSender = $allabonnements->where('user_id', $message->user_id)->pluck('sms')->first();
@@ -2097,7 +2124,7 @@ class NotificationController extends Controller
                     $text = strip_tags($message->message);
                     $messageData = [
                         'message' => (new SmsCount)->removeAccents(str_replace('&nbsp;', ' ', $text)),
-                        'receiver' => $interphone,
+                        'receiver' => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire,
                         'sender' => $sender,
                     ];
 
@@ -2134,9 +2161,10 @@ class NotificationController extends Controller
                             // credit
                             Abonnement::creditSms(1, $message->id);
 
+                            $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone : $notification->destinataire;
                             $responses[] = [
                                 'statut' => 'error',
-                                'message' => "Erreur lors de l'envoi du message à $interphone",
+                                'message' => "Erreur lors de l'envoi du message à $tel",
                             ];
                         } else {
                             $reponse = json_decode($response);

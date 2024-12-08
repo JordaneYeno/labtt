@@ -14,8 +14,6 @@ class CreateAbonnementsTable extends Migration
      */
     public function up()
     {
-        // if (Schema::hasTable('abonnements')) { Schema::dropIfExists('abonnements'); }
-
         Schema::create('abonnements', function (Blueprint $table) {
             $table->id();
             $table->string('entreprese_name')->nullable();

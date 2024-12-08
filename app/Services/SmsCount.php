@@ -41,7 +41,7 @@ class SmsCount{
     public function countSmsSend($text)
     {
         // return intdiv($this->countSmsCharacters($text), 120) + 1 ;
-        return intdiv($this->countSmsCharacters($text), 150) + 1 ;
+        return intdiv($this->countSmsCharacters($text), 155) + 1 ;
     }
     
     public function index () 
