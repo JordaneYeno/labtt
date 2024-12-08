@@ -2194,7 +2194,7 @@ class NotificationController extends Controller
                         'status' => 'error',
                         'message' => 'Des erreurs sont survenues lors de l\'envoi de certains messages.',
                         'details' => $responses,
-                    ], 500);
+                    ], 500); 
                 }
             }
             sleep(1);
