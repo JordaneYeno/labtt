@@ -2180,7 +2180,7 @@ class NotificationController extends Controller
         $API_KEY_WHATSAPP = Param::all()->first();
         return $API_KEY_WHATSAPP;
     }
-
+ 
     public function update_msg_finish($id)
     {
         Message::where('id', $id)->update(['status' => 1, 'finish' => date("Y-m-d H:i:s")]);
