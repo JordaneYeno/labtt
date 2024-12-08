@@ -252,6 +252,10 @@ Route::group(['middleware' => ['jwt.verify']], function () {
                 Route::put('color', [AbonnementController::class, 'setThemeColor']);
             });
         });
+        
+        
+        Route::get('region', [AbonnementController::class, 'getInternational']);
+        Route::put('region', [AbonnementController::class, 'setInternational']);
     });
 
     Route::prefix('abonnement')->group(function () {
@@ -264,9 +268,6 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         // Route::put('logo', [AbonnementController::class, 'setLogo']);
         Route::get('logo', [AbonnementController::class, 'getLogo']);
         Route::put('logo', [FileController::class, 'setLogo']);
-        
-        Route::get('region', [AbonnementController::class, 'getInternational']);
-        Route::put('region', [AbonnementController::class, 'setInternational']);
 
         Route::prefix('info')->group(function () {
             Route::get('contact', [AbonnementController::class, 'getContact']);
