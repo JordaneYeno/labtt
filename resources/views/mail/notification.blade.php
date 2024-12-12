@@ -39,9 +39,9 @@
             line-height: 140%;
           ">
 
-        <div style="height: 111px; margin-bottom: 31px;"><img style="height: 100%;" class='center fixedwidth' align='center' border='0'
+        <div style="height: 111px; height: 180px; margin-bottom: 31px;"><img style="height: 100%; width: 100%;" class='center fixedwidth' align='center' border='0'
             src="{{ asset('images/logoHobotta.png') }}"></div> 
-            
+
                 <div style='color:#454562;font-family:' Montserrat ', ' Trebuchet MS ', ' Lucida Grande ', ' Lucida Sans
                     Unicode ', ' Lucida
                     Sans ', Tahoma, sans-serif;line-height:1.2;padding-top:0px;padding-right:5px;padding-bottom:0px;padding-left:5px;'>
