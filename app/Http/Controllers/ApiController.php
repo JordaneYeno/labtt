@@ -172,7 +172,7 @@ class ApiController extends Controller
 
         try {
             $data["email"] = $request->email;
-            $data["title"] = 'Validation du compte';
+            $data["title"] = 'création de compte';
             $data["body"] = $template;
             $data["from"] = Param::getEmailAwt();
             $data['from_name'] = 'Hobotta';
