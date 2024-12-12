@@ -27,6 +27,11 @@ class Abonnement extends Model
     ];
 
     protected $fillable = ['user_id'];
+    
+    public static function getAbo($id)
+    {
+        return Abonnement::where('user_id', $id)->first();
+    }
 
     public static function getAbonnement(Request $request)
     {

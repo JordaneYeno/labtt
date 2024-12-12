@@ -520,7 +520,7 @@ class NotificationController extends Controller
                     ], 200);
 
                 case "email":
-                    if ((User::getUser($user->id))->email_status == 0) {
+                    if ((Abonnement::getAbo($user->id))->email_status == 0) {
                         return response()->json([
                             'status' => 'échec',
                             'message' => 'Service email désactivé',
@@ -1299,9 +1299,7 @@ class NotificationController extends Controller
             }
 
             if ($contacts['emails'] != '') {
-
-                // if (Param::getStatusEmail() == 0) {
-                if ((User::getUser($message->user_id))->email_status == 0) {
+                if ((Abonnement::getAbo($user->id))->email_status == 0) {
                     $this->deleteMessage($message->id);
                     return response()->json([
                         'status' => 'echec',
