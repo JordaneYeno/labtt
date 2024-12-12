@@ -37,7 +37,11 @@
             color: #444;
             font-size: 14px;
             line-height: 140%;
-          ">                
+          ">  
+
+          
+        <div style="height: 111px; margin-bottom: 31px;"><img style="height: 100%;" class='center fixedwidth' align='center' border='0'
+            src="{{ asset('images/logoHobotta.png') }}"></div>            
 
             <div style='color:#454562;font-family:' Montserrat ', ' Trebuchet MS ', '
             Lucida Grande ', ' Lucida Sans Unicode ', ' Lucida
