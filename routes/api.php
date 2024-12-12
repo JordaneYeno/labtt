@@ -139,6 +139,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
                         Route::put('whatsapp', [AdminAbonnementController::class, 'enableWhatsapp']);
                     });
                 });
+                // mail accept and reject  
                 Route::prefix('service')->group(function () {
                     Route::get('/request', [AdminAbonnementController::class, 'listRequest']);
                     Route::put('accept/sms', [AdminAbonnementController::class, 'acceptSms']);

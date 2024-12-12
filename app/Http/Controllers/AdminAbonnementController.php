@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
-class AdminAbonnementController extends Controller
+class AdminAbonnementController extends Controller 
 {
     protected $abonnement;
 
@@ -146,6 +146,9 @@ class AdminAbonnementController extends Controller
                 "message" => "the user id is required"
             ]);
         }
+
+        // return response()->json('rep',$request->userId);
+        
         $result = $this->abonnement->$serviceUpdate($request->userId);
         return response()->json($result);
     }

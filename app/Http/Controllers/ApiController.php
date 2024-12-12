@@ -101,7 +101,7 @@ class ApiController extends Controller
         $isEmail = filter_var($useremail, FILTER_VALIDATE_EMAIL);
         if (!$isEmail) {
             return response()->json([
-                'status' => 'error',
+                'status' => 'error', 
                 'message' => 'Email non valide',
             ], Response::HTTP_OK);
         }
@@ -117,11 +117,12 @@ class ApiController extends Controller
             $data["title"] = 'Validation du compte';
             $data["body"] = $template;
             $data["from"] = Param::getEmailAwt();
+            $data['from_name'] = 'Hobotta';
 
             Mail::send('mail.notify', $data, function ($message) use ($data) {
                 $message->to($data["email"])
                     ->subject($data["title"])
-                    ->from($data['from']);
+                    ->from($data['from'], $data['from_name']);
             });
 
             return response()->json([
@@ -174,11 +175,12 @@ class ApiController extends Controller
             $data["title"] = 'Validation du compte';
             $data["body"] = $template;
             $data["from"] = Param::getEmailAwt();
+            $data['from_name'] = 'Hobotta';
 
             Mail::send('mail.notify', $data, function ($message) use ($data) {
                 $message->to($data["email"], $data["email"])
                     ->subject($data["title"])
-                    ->from($data['from']);
+                    ->from($data['from'], $data['from_name']);
             });
 
 

@@ -1871,7 +1871,7 @@ class NotificationController extends Controller
                         // $file_path = public_path("storage/banner/{$folder}/{$filename}");
                         // $objet_mail->attach($file_path);
                     }
-
+ 
                     try {
                         Mail::send('mail.campagne', $data, function ($message) use ($data, $files) {
                             $message->to($data["email"])
