@@ -180,7 +180,6 @@ class NotificationController extends Controller
                         }
 
                         $notification = Notification::create([
-                            // 'destinataire' => (new Abonnement)->getInternaltional($user->id) == 0 ? $interphone : $destinataire,
                             'destinataire' => $destinataire,
                             'canal' => 'whatsapp',
                             'notify' => 4,  // api direct #without cron 
@@ -263,7 +262,6 @@ class NotificationController extends Controller
                                         }
                                         sleep(2); // sleep(3);
 
-                                        // $data = ["phone" => ((new Abonnement)->getInternaltional($user->id) == 0) ?$interphone :$destinataire, "message" => strip_tags($message->message), "media" => $itemsList, "device" => $userDeviceId];
                                         $data = ["phone" => (new Abonnement)->getInternaltional($user->id) == 0 ? $interphone : $destinataire, "message" => strip_tags($message->message), "media" => $itemsList, "device" => $userDeviceId];
                                         $curl = curl_init();
                                         curl_setopt_array($curl, [
@@ -289,8 +287,6 @@ class NotificationController extends Controller
                                     }
                                 }
                             } else if (count($files) == 0) {
-                                // Envoyer le message WhatsApp
-                                // $data = ["phone" => ((new Abonnement)->getInternaltional($user->id) == 0) ?$interphone :$destinataire, "message" => strip_tags($request->message), "device" => $userDeviceId];
                                 $data = ["phone" => (new Abonnement)->getInternaltional($user->id) == 0 ? $interphone : $destinataire, "message" => strip_tags($request->message), "device" => $userDeviceId];
                                 $curl = curl_init();
                                 curl_setopt_array($curl, [

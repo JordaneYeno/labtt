@@ -27,7 +27,7 @@ class CreateTarificationsTable extends Migration
         $grilles = [
             [
                 'nom' => 'default',
-                'prix_sms' => 60.00,
+                'prix_sms' => 50.00,
                 'prix_email' => 0.10,
                 'prix_whatsapp' => 15.00,
                 'created_at' => now(),
@@ -35,7 +35,7 @@ class CreateTarificationsTable extends Migration
             ],
             [
                 'nom' => 'media',
-                'prix_sms' => 60.00,
+                'prix_sms' => 50.00,
                 'prix_email' => 0.10,
                 'prix_whatsapp' => 20.00,
                 'created_at' => now(),
