@@ -175,11 +175,12 @@ class NotificationController extends Controller
                     foreach ($destinatairesWhatsapp as $destinataire) {
                         if((new Abonnement)->getInternaltional($user->id) == 0) 
                         {
-                            $conv = new Convertor();
+                            $conv = new Convertor();                        
                             $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
                         }
-                        
+
                         $notification = Notification::create([
+                            // 'destinataire' => (new Abonnement)->getInternaltional($user->id) == 0 ? $interphone : $destinataire,
                             'destinataire' => $destinataire,
                             'canal' => 'whatsapp',
                             'notify' => 4,  // api direct #without cron 
@@ -187,12 +188,11 @@ class NotificationController extends Controller
                             'message_id' => $message->id,
                         ]);
                         
-                        $isWa = (new WaGroupController())->isExistOnWa($destinataire); //check phone wa_number! 
+                        $isWa = (new WaGroupController())->isExistOnWa(((new Abonnement)->getInternaltional($user->id) == 0) ? $interphone :$destinataire); //check phone wa_number! 
                         $files = Fichier::where('message_id', $notification->message_id)->pluck('lien'); 
                         
                         if ($isWa != false) 
                         {
-                            // $responses[] = ['iswa' => $isWa,'status' => null];
                             if (count($files) >= 1) { 
                                 sleep(1);
                                 $fileUrl = route('files.show', ['folder' => $user->id, 'filename'=> basename($files[0])]); //url
@@ -201,8 +201,7 @@ class NotificationController extends Controller
                                 
                                 if (strpos($files[0], '.mp4') !== false) {
                                     $data = [
-                                        // "phone" => $interphone,
-                                        "phone" => ((new Abonnement)->getInternaltional($user->id) == 0) ?$interphone :$destinataire,
+                                        "phone" => (new Abonnement)->getInternaltional($user->id) == 0 ? $interphone : $destinataire,
                                         "message" => strip_tags($message->message),
                                         "media" => ["url" => $fileUrl],
                                         "device" => $userDeviceId, // Spécification du deviceId
@@ -264,7 +263,8 @@ class NotificationController extends Controller
                                         }
                                         sleep(2); // sleep(3);
 
-                                        $data = ["phone" => ((new Abonnement)->getInternaltional($user->id) == 0) ?$interphone :$destinataire, "message" => strip_tags($message->message), "media" => $itemsList, "device" => $userDeviceId];
+                                        // $data = ["phone" => ((new Abonnement)->getInternaltional($user->id) == 0) ?$interphone :$destinataire, "message" => strip_tags($message->message), "media" => $itemsList, "device" => $userDeviceId];
+                                        $data = ["phone" => (new Abonnement)->getInternaltional($user->id) == 0 ? $interphone : $destinataire, "message" => strip_tags($message->message), "media" => $itemsList, "device" => $userDeviceId];
                                         $curl = curl_init();
                                         curl_setopt_array($curl, [
                                             CURLOPT_URL => "https://api.wassenger.com/v1/messages",
@@ -290,7 +290,8 @@ class NotificationController extends Controller
                                 }
                             } else if (count($files) == 0) {
                                 // Envoyer le message WhatsApp
-                                $data = ["phone" => ((new Abonnement)->getInternaltional($user->id) == 0) ?$interphone :$destinataire, "message" => strip_tags($request->message), "device" => $userDeviceId];
+                                // $data = ["phone" => ((new Abonnement)->getInternaltional($user->id) == 0) ?$interphone :$destinataire, "message" => strip_tags($request->message), "device" => $userDeviceId];
+                                $data = ["phone" => (new Abonnement)->getInternaltional($user->id) == 0 ? $interphone : $destinataire, "message" => strip_tags($request->message), "device" => $userDeviceId];
                                 $curl = curl_init();
                                 curl_setopt_array($curl, [
                                     CURLOPT_URL => "https://api.wassenger.com/v1/messages",
@@ -520,6 +521,13 @@ class NotificationController extends Controller
                     ], 200);
 
                 case "email":
+                    if (Param::getStatusEmail() == 0) {
+                        return response()->json([
+                            'status' => 'échec',
+                            'message' => 'Service email désactivé',
+                        ], 422);
+                    }
+
                     if ((Abonnement::getAbo($user->id))->email_status == 0) {
                         return response()->json([
                             'status' => 'échec',
@@ -1299,6 +1307,15 @@ class NotificationController extends Controller
             }
 
             if ($contacts['emails'] != '') {
+                if (Param::getStatusEmail() == 0) {
+                    $this->deleteMessage($message->id);
+                    return response()->json([
+                        'status' => 'echec',
+                        'service' => 'error',
+                        'message' => 'Service email désactivé',
+                    ]);
+                }
+
                 if ((Abonnement::getAbo($user->id))->email_status == 0) {
                     $this->deleteMessage($message->id);
                     return response()->json([

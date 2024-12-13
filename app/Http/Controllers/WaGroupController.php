@@ -357,14 +357,13 @@ class WaGroupController extends Controller
 
     public function isExistOnWa($phone)
     {
-
         $device = $this->checkDevice((new Abonnement)->getCurrentWassengerDevice());
 
         if ($device instanceof \Illuminate\Http\JsonResponse) {
             return $device;
         }
 
-        $data = ["phone" => trim('241'.$phone)];
+        $data = ["phone" => trim($phone)];
         $curl = curl_init();
         curl_setopt_array($curl, [
             CURLOPT_URL => "https://api.wassenger.com/v1/numbers/exists",
