@@ -163,7 +163,7 @@ class NotificationController extends Controller
 
                 // Facturer les media WhatsApp
                 $totalMedia = count($destinatairesWhatsapp) * (count(Fichier::where('message_id', $message->id)->pluck('lien')) * (new Tarifications)->getWhatsappMediaPrice('media')); 
-
+                dd($totalMedia);
                 // Facturer la campagne WhatsApp
                 Abonnement::__factureWhatsapp(count($destinatairesWhatsapp), $total,$totalMedia, $message->id);
 
@@ -1019,7 +1019,7 @@ class NotificationController extends Controller
                         $notification->save();
                         $name = 'invalid key';
                         // credit
-                        Abonnement::creditWhatsapp(1, $message->id, );
+                        Abonnement::creditGroupWhatsapp(1, $message->id);
                     } else {
                         $notification->delivery_status = $reponse->deliveryStatus;
                         $notification->save();

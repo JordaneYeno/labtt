@@ -418,6 +418,20 @@ class Abonnement extends Model
             $credit->save();
         }
     }
+    
+    public static function creditGroupWhatsapp($destinataires, $messageId)
+    {
+        if (User::isSuperAdmin()) : return  null;
+        endif;
+        $user = auth()->user();
+        $totalcredit = (new Tarifications)->getWhatsappPrice() * $destinataires;
+        $credit = Message::where('user_id', $user->id)->where('id', $messageId)->first();
+
+        if ($credit) {
+            $credit->credit += $totalcredit;
+            $credit->save();
+        }
+    }
 
     public static function creditEmail($destinataires, $messageId)
     {
@@ -488,12 +502,13 @@ class Abonnement extends Model
         return $solde;
     }   
 
-    public static function factureGroupWhatsapp($destinataires, $totalSold, $factureMedia,$messageId)
+    // public static function factureGroupWhatsapp($destinataires, $totalSold, $factureMedia,$messageId)
+    public static function factureGroupWhatsapp($destinataires, $totalSold,$messageId)
     {
         if (User::isSuperAdmin()) : return  null;
         endif;
         $user = auth()->user();
-        $totalSold = (new Tarifications)->getWhatsappPrice() * $destinataires + $factureMedia;
+        $totalSold = (new Tarifications)->getWhatsappPrice() * $destinataires;
         $solde = Abonnement::where('user_id', $user->id)->decrement('solde', $totalSold);
         return $solde;
     }   
