@@ -44,7 +44,7 @@ class Transaction extends Model
     }
 
     public function __addTransactionAfterSendMessage($userId, $type, $amount, $messageId = null, $totalSend, $newSolde, $paiementId = null, $canal)
-    {
+    { dd($amount);
         try {
             $abonnementId = Abonnement::where('user_id', $userId)->select('id')->first();
             $paiement = Transaction::create([
