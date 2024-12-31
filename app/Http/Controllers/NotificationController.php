@@ -169,8 +169,7 @@ class NotificationController extends Controller
                 // Débiter le solde de l'utilisateur
                 $Pprice = $total + $totalMedia;
                 (new Transaction)->__addTransactionAfterSendMessage($user->id, 'debit', $Pprice, $message->id, count($destinatairesWhatsapp), Abonnement::__getSolde($user->id), null, 'whatsapp');
-                dd($Pprice);
-
+                
                 $errors = false;
 
                 foreach ($destinatairesWhatsapp as $destinataire) {
