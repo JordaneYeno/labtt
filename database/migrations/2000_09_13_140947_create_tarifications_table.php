@@ -51,7 +51,6 @@ class CreateTarificationsTable extends Migration
             ],
         ];
         
-        
         Tarifications::insert($grilles);
     }
 

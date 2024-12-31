@@ -221,7 +221,10 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         Route::put('changerole', [WaGroupController::class, 'switchStatus']);
         Route::delete('revoke', [WaGroupController::class, 'revokeMembers']);
         Route::get('wagroups', [WaGroupController::class, 'getStore']);
-        Route::post('sendmessage', [WaGroupController::class, 'sendAtGroups']);
+        Route::post('sendmessage', [WaGroupController::class, 'sendAtGroups']); //send message in a group
+        
+        Route::post('send', [NotificationController::class, 'multiSendAtGroups']); //bulk 
+
         Route::get('searchbyname', [WaGroupController::class, 'getStoreByName']);
         Route::post('addxmembers', [WaGroupController::class, 'addMembers']);
     });

@@ -117,7 +117,7 @@ class ApiController extends Controller
             $data["title"] = 'Récupération du compte';
             $data["body"] = $template;
             $data["from"] = Param::getEmailAwt();
-            $data['from_name'] = 'Hobotta';
+        $data['from_name'] = 'Hobotta';
 
             Mail::send('mail.notify', $data, function ($message) use ($data) {
                 $message->to($data["email"])
