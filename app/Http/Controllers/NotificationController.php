@@ -165,7 +165,7 @@ class NotificationController extends Controller
                 $totalMedia = count($destinatairesWhatsapp) * (count(Fichier::where('message_id', $message->id)->pluck('lien')) * (new Tarifications)->getWhatsappMediaPrice('media')); 
 
                 // Facturer la campagne WhatsApp
-                Abonnement::factureWhatsapp(count($destinatairesWhatsapp), $total,$totalMedia, $message->id);
+                Abonnement::__factureWhatsapp(count($destinatairesWhatsapp), $total,$totalMedia, $message->id);
 
                 // Débiter le solde de l'utilisateur
                 $Pprice = $total + $totalMedia;
@@ -344,7 +344,7 @@ class NotificationController extends Controller
                                 $notification->delivery_status = 'echec';
                                 $notification->save();
                                 // credit
-                                Abonnement::creditWhatsapp(1, $message->id);
+                                Abonnement::creditWhatsapp(1, $message->id, count($files));
                                                             
                                 $responses[] = [
                                     'status' => 'error',
@@ -368,7 +368,7 @@ class NotificationController extends Controller
                         $notification->delivery_status = 'echec';
                         $notification->save();
                         // credit
-                        Abonnement::creditWhatsapp(1, $message->id);
+                        Abonnement::creditWhatsapp(1, $message->id, count($files));
                                 
                         if ($request->rescue == 'sms_fallback' && $isWa == false) {
                                                             
@@ -516,7 +516,7 @@ class NotificationController extends Controller
                     'message' => 'Votre campagne a été lancée avec succès',
                     'idx' => $message->ed_reference,
                     'details' => $paginator,
-                    'total_paye' => $total-$current_credit-$totalMedia,
+                    'total_paye' => $total-$current_credit+$totalMedia,
                     'ancien_solde' => $solde,
                     'nouveau_solde' => Abonnement::__getSolde($user->id), 
                 ], 200);
@@ -744,7 +744,7 @@ class NotificationController extends Controller
                     'message' => 'Votre campagne a été lancée avec succès',
                     'idx' => $message->ed_reference,
                     'details' => $paginator,
-                    'total_paye' => $total-$current_credit-$totalMedia,
+                    'total_paye' => $total-$current_credit+$totalMedia,
                     'ancien_solde' => $solde,
                     'nouveau_solde' => Abonnement::__getSolde($user->id),
                 ], 200);
@@ -966,7 +966,7 @@ class NotificationController extends Controller
         ]);
 
         // Facturer la campagne WhatsApp
-        Abonnement::factureWhatsapp(count($groupes), $total, $message->id);
+        Abonnement::factureGroupWhatsapp(count($groupes), $total, $message->id);
 
         // Débiter le solde de l'utilisateur
         (new Transaction)->__addTransactionAfterSendMessage($user->id, 'debit', $total, $message->id, count($groupes), Abonnement::__getSolde($user->id), null, 'whatsapp');
@@ -1019,7 +1019,7 @@ class NotificationController extends Controller
                         $notification->save();
                         $name = 'invalid key';
                         // credit
-                        Abonnement::creditWhatsapp(1, $message->id);
+                        Abonnement::creditWhatsapp(1, $message->id, );
                     } else {
                         $notification->delivery_status = $reponse->deliveryStatus;
                         $notification->save();
@@ -2035,7 +2035,7 @@ class NotificationController extends Controller
                                     $notification->save();
 
                                     // credit
-                                    Abonnement::creditWhatsapp(1, $message->id);
+                                    Abonnement::creditWhatsapp(1, $message->id, count($files));
 
                                     $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire; 
                                     $responses[] = [
@@ -2085,7 +2085,7 @@ class NotificationController extends Controller
                             $notification->save();
 
                             // credit
-                            Abonnement::creditWhatsapp(1, $message->id);
+                            Abonnement::creditWhatsapp(1, $message->id, count($files));
 
                             $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire;
                             $responses[] = [
