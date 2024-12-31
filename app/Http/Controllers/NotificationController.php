@@ -344,7 +344,7 @@ class NotificationController extends Controller
                                 $notification->delivery_status = 'echec';
                                 $notification->save();
                                 // credit
-                                Abonnement::creditWhatsapp(1, $message->id, count($files));
+                                Abonnement::creditMediaWhatsapp(1, $message->id, count($files));
                                                             
                                 $responses[] = [
                                     'status' => 'error',
@@ -368,7 +368,7 @@ class NotificationController extends Controller
                         $notification->delivery_status = 'echec';
                         $notification->save();
                         // credit
-                        Abonnement::creditWhatsapp(1, $message->id, count($files));
+                        Abonnement::creditMediaWhatsapp(1, $message->id, count($files));
                                 
                         if ($request->rescue == 'sms_fallback' && $isWa == false) {
                                                             
@@ -2035,7 +2035,7 @@ class NotificationController extends Controller
                                     $notification->save();
 
                                     // credit
-                                    Abonnement::creditWhatsapp(1, $message->id, count($files));
+                                    Abonnement::creditMediaWhatsapp(1, $message->id, count($files));
 
                                     $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire; 
                                     $responses[] = [
@@ -2085,7 +2085,7 @@ class NotificationController extends Controller
                             $notification->save();
 
                             // credit
-                            Abonnement::creditWhatsapp(1, $message->id, count($files));
+                            Abonnement::creditMediaWhatsapp(1, $message->id, count($files));
 
                             $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire;
                             $responses[] = [

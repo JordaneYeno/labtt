@@ -14,7 +14,7 @@ use Throwable;
 
 use function PHPUnit\Framework\isNull;
 
-class Abonnement extends Model
+class Abonnement2 extends Model
 {
     use HasFactory;
 
@@ -402,21 +402,7 @@ class Abonnement extends Model
         ];
     }
 
-    public static function creditWhatsapp($destinataires, $messageId)
-    {
-        if (User::isSuperAdmin()) : return  null;
-        endif;
-        $user = auth()->user();
-        $totalcredit = (new Tarifications)->getWhatsappPrice() * $destinataires;
-        $credit = Message::where('user_id', $user->id)->where('id', $messageId)->first();
-
-        if ($credit) {
-            $credit->credit += $totalcredit;
-            $credit->save();
-        }
-    }
-    
-    public static function creditMediaWhatsapp($destinataires, $messageId, $files)
+    public static function creditWhatsapp($destinataires, $messageId, $files)
     {
         if (User::isSuperAdmin()) : return  null;
         endif;
@@ -433,6 +419,19 @@ class Abonnement extends Model
         }
     }
     
+    public static function creditGroupWhatsapp($destinataires, $messageId)
+    {
+        if (User::isSuperAdmin()) : return  null;
+        endif;
+        $user = auth()->user();
+        $totalcredit = (new Tarifications)->getWhatsappPrice() * $destinataires;
+        $credit = Message::where('user_id', $user->id)->where('id', $messageId)->first();
+
+        if ($credit) {
+            $credit->credit += $totalcredit;
+            $credit->save();
+        }
+    }
 
     public static function creditEmail($destinataires, $messageId)
     {
@@ -483,7 +482,17 @@ class Abonnement extends Model
         return $solde;
     }
 
-    public static function factureWhatsapp($destinataires, $totalSold, $messageId)
+    public static function __factureWhatsapp($destinataires, $totalSold, $factureMedia,$messageId)
+    {
+        if (User::isSuperAdmin()) : return  null;
+        endif;
+        $user = auth()->user();
+        $totalSold = (new Tarifications)->getWhatsappPrice() * $destinataires + $factureMedia;
+        $solde = Abonnement::where('user_id', $user->id)->decrement('solde', $totalSold);
+        return $solde;
+    }   
+
+    public static function factureWhatsapp($destinataires, $totalSold,$messageId)
     {
         if (User::isSuperAdmin()) : return  null;
         endif;
@@ -491,11 +500,22 @@ class Abonnement extends Model
         $totalSold = (new Tarifications)->getWhatsappPrice() * $destinataires;
         $solde = Abonnement::where('user_id', $user->id)->decrement('solde', $totalSold);
         return $solde;
-    }
+    }   
+
+    // public static function factureGroupWhatsapp($destinataires, $totalSold, $factureMedia,$messageId)
+    public static function factureGroupWhatsapp($destinataires, $totalSold,$messageId)
+    {
+        if (User::isSuperAdmin()) : return  null;
+        endif;
+        $user = auth()->user();
+        $totalSold = (new Tarifications)->getWhatsappPrice() * $destinataires;
+        $solde = Abonnement::where('user_id', $user->id)->decrement('solde', $totalSold);
+        return $solde;
+    }   
 
     public static function __factureNotification($destinataires, $totalSold, $messageId, $roleUser, $userID, $tarifId, $pricing, $myMessage, $isSms)
     {
-        if (User::__isSuperAdmin($roleUser)) : return  null;
+        if (User::__isSuperAdmin(usr_role: $roleUser)) : return  null;
         endif;
         $smsCount = (new SmsCount)->countSmsSend(strip_tags($myMessage));
         $totalSold = (new Tarifications)->getTransactionPrice($tarifId, $pricing) * $destinataires;
