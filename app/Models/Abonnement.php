@@ -465,8 +465,8 @@ class Abonnement extends Model
         return $solde;
     }
 
-    public static function factureWhatsapp($destinataires, $totalSold, $messageId)
-    {
+    public static function factureWhatsapp($destinataires, $totalSold, $factureMedia,$messageId)
+    { dd($factureMedia);
         if (User::isSuperAdmin()) : return  null;
         endif;
         $user = auth()->user();

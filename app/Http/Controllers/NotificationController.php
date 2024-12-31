@@ -165,10 +165,10 @@ class NotificationController extends Controller
                 $totalMedia = count($destinatairesWhatsapp) * (count(Fichier::where('message_id', $message->id)->pluck('lien')) * (new Tarifications)->getWhatsappMediaPrice('media')); 
 
                 // Facturer la campagne WhatsApp
-                Abonnement::factureWhatsapp(count($destinatairesWhatsapp), $total+ $totalMedia, $message->id);
+                Abonnement::factureWhatsapp(count($destinatairesWhatsapp), $total,$totalMedia, $message->id);
 
                 // Débiter le solde de l'utilisateur
-                (new Transaction)->__addTransactionAfterSendMessage($user->id, 'debit', $total+ $totalMedia, $message->id, count($destinatairesWhatsapp), Abonnement::__getSolde($user->id), null, 'whatsapp');
+                (new Transaction)->__addTransactionAfterSendMessage($user->id, 'debit', $total,$totalMedia, $message->id, count($destinatairesWhatsapp), Abonnement::__getSolde($user->id), null, 'whatsapp');
 
                 $errors = false;
 
