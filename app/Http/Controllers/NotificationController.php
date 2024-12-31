@@ -163,13 +163,13 @@ class NotificationController extends Controller
 
                 // Facturer les media WhatsApp
                 $totalMedia = count($destinatairesWhatsapp) * (count(Fichier::where('message_id', $message->id)->pluck('lien')) * (new Tarifications)->getWhatsappMediaPrice('media')); 
-                
                 // Facturer la campagne WhatsApp
                 Abonnement::__factureWhatsapp(count($destinatairesWhatsapp), $total,$totalMedia, $message->id);
-
+                
                 // Débiter le solde de l'utilisateur
                 $Pprice = $total + $totalMedia;
                 (new Transaction)->__addTransactionAfterSendMessage($user->id, 'debit', $Pprice, $message->id, count($destinatairesWhatsapp), Abonnement::__getSolde($user->id), null, 'whatsapp');
+                dd($Pprice);
 
                 $errors = false;
 
