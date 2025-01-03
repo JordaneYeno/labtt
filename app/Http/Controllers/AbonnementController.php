@@ -329,7 +329,7 @@ class AbonnementController extends Controller
                 'messages.status',
                 'messages.finish',
                 'messages.created_at',
-                'transactions.montant',
+                'transactions.montant', 
                 'transactions.nouveau_solde',
                 'messages.message',
                 'transactions.created_at', 'transactions.message_id'
