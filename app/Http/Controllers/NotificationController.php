@@ -195,15 +195,7 @@ class NotificationController extends Controller
                         if (count($files) >= 1) { // isExistFile
                             sleep(1);
                             $fileUrl = route('files.show', ['folder' => $user->id, 'filename'=> basename($files[0])]); //url
-                            // $totalMedia = /*count($files)*/ 1 * (new Tarifications)->getWhatsappMediaPrice('media'); 
-
                             
-                            // Facturer la campagne WhatsApp
-                            // Abonnement::factureWhatsapp(count($destinatairesWhatsapp), $total, $message->id);
-
-                            // Débiter le solde de l'utilisateur
-                            // (new Transaction)->__addTransactionAfterSendMessage($user->id, 'debit', $total, $message->id, count($destinatairesWhatsapp), Abonnement::__getSolde($user->id), null, 'whatsapp');
-
                             if (strpos($files[0], '.mp4') !== false) {
                                 $data = [
                                     "phone" => (new Abonnement)->getInternaltional($user->id) == 0 ? $interphone : $destinataire,
@@ -1120,9 +1112,7 @@ class NotificationController extends Controller
         if ($service === false) {
 
             // Si $files n'est pas un tableau, le convertir en tableau
-            if (!is_array($files)) {
-                $files = [$files];
-            }
+            if (!is_array($files)) {$files = [$files];}
 
             if (count($files) > 2) {
                 return response()->json(['status' => 'echec', 'message' => 'vous ne pouvez uploader que 2 fichiers maximum']);
@@ -1155,17 +1145,14 @@ class NotificationController extends Controller
 
             $url = config('app.url');
             if (strpos($url, 'test') != false) {
-                // $url = $url . '/' . $path;
                 $url = '/' . $path;
                 $url = asset(str_replace('public', 'public/storage', $url));
             } else {
-                // $url = $url . '/' . $path;
                 $url = '/' . $path;
                 $url = asset(str_replace('public', 'storage', $url));
             }
 
             $file = Fichier::create([
-                // 'lien' => $url,
                 'lien' => $path,
                 'nom' => $originalName,
                 'extension' => $extension,
@@ -1175,7 +1162,6 @@ class NotificationController extends Controller
             ]);
         }
     }
-
 
     public function createMessage($userId, $title, $message, $canal, $dateEnvoie)
     {
@@ -1206,6 +1192,7 @@ class NotificationController extends Controller
     {
         Message::where('id', $messageId)->delete();
     }
+
     public function verifySolde(Request $request)
     {
         if (!User::isActivate() && !User::isSuperAdmin()) :
@@ -1219,20 +1206,21 @@ class NotificationController extends Controller
         $user = User::getCurrentUSer();
         $canal = '';
 
-
         $message = $this->createMessage($user->id, $request->title, $request->message, $request->canal, $request->date_envoie);
-
-        // $request->hasFile('banner') ? $totalMedia = count($files) * (new Tarifications)->getWhatsappMediaPrice('media') : null;
         $request->hasFile('banner') ? $this->storeFile($message->id, $request->file('banner'), $user->id, false) : null;
 
         $allabonnements = Abonnement::get();
         $signature = $allabonnements->where('user_id', $message->user_id);
         $userDeviceId = (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id);
-
+        
         try {
             $destinatairesWhatsapp = explode(',', $contacts['whatsapp']);
             $destinatairesEmail = explode(',', $contacts['emails']);
             $destinatairesSms = explode(',', $contacts['sms']);
+            
+            // Facturer les media WhatsApp
+            $totalMedia = count($destinatairesWhatsapp) * (count(Fichier::where('message_id', $message->id)->pluck('lien')) * (new Tarifications)->getWhatsappMediaPrice('media')); 
+            
             if ($contacts['whatsapp'] != '') {
 
                 if (Param::getStatusWhatsapp() == 0) {
@@ -1251,7 +1239,8 @@ class NotificationController extends Controller
                     ]);
                 }
 
-                $total += $whatsappTotal = count($destinatairesWhatsapp) * (new Tarifications)->getWhatsappPrice();
+                // $total += $whatsappTotal = count($destinatairesWhatsapp) * (new Tarifications)->getWhatsappPrice();
+                $total += $whatsappTotal = count($destinatairesWhatsapp) * (new Tarifications)->getWhatsappPrice() + $totalMedia;
                 $isSendWhatsapp = $this->createWhatsapp($destinatairesWhatsapp, $message);
                 if (gettype($isSendWhatsapp) == 'boolean') :
                     $canal .= ' whatsapp ';

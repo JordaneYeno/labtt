@@ -25,8 +25,7 @@ class WaGroupController extends Controller
 
     public function __construct()
     {
-        $this->API_KEY_WHATSAPP =  Param::getTokenWhatsapp();
-        // $this->WA_DEVICE =  Abonnement::getCurrentWassengerDevice();
+        $this->API_KEY_WHATSAPP =  Param::getTokenWhatsapp();   
     }
 
     public function checkDevice($device)
