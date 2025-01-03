@@ -167,8 +167,8 @@ class NotificationController extends Controller
                 Abonnement::__factureWhatsapp(count($destinatairesWhatsapp), $total,$totalMedia, $message->id);
                 
                 // Débiter le solde de l'utilisateur
-                $Pprice = $total + $totalMedia; dd($total, $totalMedia);
-                (new Transaction)->__addTransactionAfterSendMessage_with_media($user->id, 'debit', $Pprice, $message->id, count($destinatairesWhatsapp), Abonnement::__getSolde($user->id), null, 'whatsapp');
+                $Pprice = $total + $totalMedia;
+                (new Transaction)->__addTransactionAfterSendMessage($user->id, 'debit', $Pprice, $message->id, count($destinatairesWhatsapp), Abonnement::__getSolde($user->id), null, 'whatsapp');
                 
                 $errors = false;
 
@@ -494,7 +494,7 @@ class NotificationController extends Controller
                 {
                     $message->credit = 0; $message->save();
                     $addCredit->solde += $current_credit; $addCredit->save(); 
-                    $debitClient->montant = $total-$current_credit-$totalMedia; $debitClient->save();
+                    $debitClient->montant = $total-$current_credit; $debitClient->save();
                 }
 
                 $message->status = 6; // Modifier le statut du message à 6 en cas de succès //le status 6 indiques le message est bien envoyé

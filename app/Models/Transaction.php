@@ -43,28 +43,6 @@ class Transaction extends Model
         }
     }
 
-    public function __addTransactionAfterSendMessage_with_media($userId, $type, $amount, $messageId = null, $totalSend, $newSolde, $paiementId = null, $canal)
-    { 
-        try {
-            $abonnementId = Abonnement::where('user_id', $userId)->select('id')->first();
-            $paiement = Transaction::create([
-                'type' => $type,
-                'abonnement_id' => $abonnementId->id,
-                'montant' => $amount,
-                'reference' => Str::uuid(),
-                'message_id' => $messageId,
-                'paiement_id' => $paiementId,
-                'total_whatsapp' => $canal == 'whatsapp' ? $totalSend : null,
-                'total_email' => $canal == 'email' ? $totalSend : null,
-                'total_sms' =>  $canal == 'sms' ? $totalSend : null,
-                'nouveau_solde' =>  $newSolde
-            ]);
-            return $paiement;
-        } catch (Throwable $th) {
-            throw $th;
-        }
-    }
-
     public function __addTransactionAfterSendMessage($userId, $type, $amount, $messageId = null, $totalSend, $newSolde, $paiementId = null, $canal)
     {
         try {
