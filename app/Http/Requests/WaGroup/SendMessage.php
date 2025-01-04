@@ -41,7 +41,7 @@ class SendMessage extends FormRequest
     {
         return [
             'wid.required' => 'L\'id du groupe est obligatoire',
-            'wid.min' => 'Le clé du groupe doit avoir au moins 3 caractères',
+            'wid.min' => 'Le clé du groupe doit avoir au moins 8 caractères',
             'message.required' => 'Veuillez écrire un message correct.',
         ];
     }

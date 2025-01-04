@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddGoogleIdColumn extends Migration
+class AddInternationalAbonnements extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,8 @@ class AddGoogleIdColumn extends Migration
      */
     public function up()
     {
-        Schema::table('fichiers', function (Blueprint $table) {
-            $table->string('meta_file');
+        Schema::table('abonnements', function (Blueprint $table) {
+            $table->boolean('international')->default(false);
         });
     }
 
@@ -25,8 +25,8 @@ class AddGoogleIdColumn extends Migration
      */
     public function down()
     {
-        Schema::table('fichiers', function (Blueprint $table) {
-            $table->dropColumn('meta_file');
+        Schema::table('abonnements', function (Blueprint $table) {
+            $table->dropColumn('international');
         });
     }
 }

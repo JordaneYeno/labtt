@@ -101,7 +101,7 @@ class ApiController extends Controller
         $isEmail = filter_var($useremail, FILTER_VALIDATE_EMAIL);
         if (!$isEmail) {
             return response()->json([
-                'status' => 'error',
+                'status' => 'error', 
                 'message' => 'Email non valide',
             ], Response::HTTP_OK);
         }
@@ -114,14 +114,15 @@ class ApiController extends Controller
             $template = "<p>Information de connexion &nbsp;!<br><br>Login: $useremail<br>Password: $initToken<br> Vous pouvez changer votre mot de passe dans les paramètres";
 
             $data["email"] = $request->email;
-            $data["title"] = 'Validation du compte';
+            $data["title"] = 'Récupération du compte';
             $data["body"] = $template;
             $data["from"] = Param::getEmailAwt();
+            $data['from_name'] = 'Hobotta';
 
             Mail::send('mail.notify', $data, function ($message) use ($data) {
                 $message->to($data["email"])
                     ->subject($data["title"])
-                    ->from($data['from']);
+                    ->from($data['from'], $data['from_name']);
             });
 
             return response()->json([
@@ -146,8 +147,8 @@ class ApiController extends Controller
         $userphone = $request->phone;
         $originalUrl =  Param::getBaseurlFront() . "/verify-otp/" . $initToken;
 
-        // $template = "<p>Bonjour $username&nbsp;!<br><br>Votre compte à bien été crée avec succès il vous suffit maintenant de cliquer sur le lien ci-dessous et entrer le code de vérification.<br><br><a href= $originalUrl>Suive ce lien</a><br>Code de vérification: <strong>$otp</strong><br><br>Si vous n'êtes pas le destinataire de ce mail merci de l'ignorer et de contacter notre support.</p><p>Merci,<br>API-NOTIFS.</p>";
-        $template = "<p>Bonjour $username&nbsp;!<br><br>Votre compte à bien été crée avec succès.<br><br>Si vous n'êtes pas le destinataire de ce mail merci de l'ignorer et de contacter notre support.</p><p>Merci,<br>API-NOTIFS.</p>";
+        // $template = "<p>Bonjour $username&nbsp;!<br><br>Votre compte à bien été crée avec succès il vous suffit maintenant de cliquer sur le lien ci-dessous et entrer le code de vérification.<br><br><a href= $originalUrl>Suive ce lien</a><br>Code de vérification: <strong>$otp</strong><br><br>Si vous n'êtes pas le destinataire de ce mail merci de l'ignorer et de contacter notre support.</p><p>Merci,<br><br>Cordialement.</p>";
+        $template = "<p>Bonjour $username&nbsp;!<br><br>Votre compte à bien été crée avec succès.<br><br>Si vous n'êtes pas le destinataire de ce mail merci de l'ignorer et de contacter notre support.</p><p>Merci,<br><br>Cordialement.</p>";
 
         $isEmail = filter_var($useremail, FILTER_VALIDATE_EMAIL);
         if (!$isEmail) {
@@ -171,14 +172,15 @@ class ApiController extends Controller
 
         try {
             $data["email"] = $request->email;
-            $data["title"] = 'Validation du compte';
+            $data["title"] = 'Création de compte';
             $data["body"] = $template;
             $data["from"] = Param::getEmailAwt();
+            $data['from_name'] = 'Hobotta';
 
             Mail::send('mail.notify', $data, function ($message) use ($data) {
                 $message->to($data["email"], $data["email"])
                     ->subject($data["title"])
-                    ->from($data['from']);
+                    ->from($data['from'], $data['from_name']);
             });
 
 
@@ -267,8 +269,8 @@ class ApiController extends Controller
         $userphone = $request->phone;
         $originalUrl =  Param::getBaseurlFront() . "/verify-otp/" . $initToken;
 
-        // $template = "<p>Bonjour $username&nbsp;!<br><br>Votre compte à bien été crée avec succès il vous suffit maintenant de cliquer sur le lien ci-dessous et entrer le code de vérification.<br><br><a href= $originalUrl>Suive ce lien</a><br>Code de vérification: <strong>$otp</strong><br><br>Si vous n'êtes pas le destinataire de ce mail merci de l'ignorer et de contacter notre support.</p><p>Merci,<br>API-NOTIFS.</p>";
-        $template = "<p>Bonjour $username&nbsp;!<br><br>Votre compte à bien été crée avec succès.<br><br>Si vous n'êtes pas le destinataire de ce mail merci de l'ignorer et de contacter notre support.</p><p>Merci,<br>API-NOTIFS.</p>";
+        // $template = "<p>Bonjour $username&nbsp;!<br><br>Votre compte à bien été crée avec succès il vous suffit maintenant de cliquer sur le lien ci-dessous et entrer le code de vérification.<br><br><a href= $originalUrl>Suive ce lien</a><br>Code de vérification: <strong>$otp</strong><br><br>Si vous n'êtes pas le destinataire de ce mail merci de l'ignorer et de contacter notre support.</p><p>Merci,<br><br>Cordialement.</p>";
+        $template = "<p>Bonjour $username&nbsp;!<br><br>Votre compte à bien été crée avec succès.<br><br>Si vous n'êtes pas le destinataire de ce mail merci de l'ignorer et de contacter notre support.</p><p>Merci,<br><br>Cordialement.</p>";
         $user = User::create([
             'name' => $username,
             'email' => $useremail,

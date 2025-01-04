@@ -39,7 +39,7 @@ class ClientMessagesController extends Controller
             $messages->transform(function ($mess) {
                 $recipients = DB::table('notifications')
                     ->where('message_id', $mess->id)
-                    ->select('destinataire', 'delivery_status')->get();
+                    ->select('destinataire', 'delivery_status', 'canal')->get();
                 $mess->destinataires = $recipients;
                 return $mess;
             });
@@ -205,7 +205,7 @@ class ClientMessagesController extends Controller
             }
             $recipients = DB::table('notifications')
                 ->where('message_id', $request->idMessage)
-                ->select('message_id', 'destinataire', 'notify', 'delivery_status')
+                ->select('message_id', 'destinataire', 'notify', 'delivery_status', 'canal')
                 ->orderBy('created_at', 'DESC')
                 ->paginate(25);
             return response()->json([

@@ -76,6 +76,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         });
         Route::get('search/ref', [MessagesController::class, 'getMessagesByReferenceId']);
     });
+
     Route::get('export', [ExportController::class, 'storeExcel']);
     Route::post('import/contact', [ContactController::class, 'getContacts']);
     Route::post('verify', [NotificationController::class, 'verifySolde']);
@@ -138,6 +139,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
                         Route::put('whatsapp', [AdminAbonnementController::class, 'enableWhatsapp']);
                     });
                 });
+                // mail accept and reject  
                 Route::prefix('service')->group(function () {
                     Route::get('/request', [AdminAbonnementController::class, 'listRequest']);
                     Route::put('accept/sms', [AdminAbonnementController::class, 'acceptSms']);
@@ -162,6 +164,15 @@ Route::group(['middleware' => ['jwt.verify']], function () {
             });
             
             Route::prefix('params')->group(function () {
+
+                Route::prefix('client')->group(function () {
+                    Route::prefix('wa')->group(function () {                
+                        Route::get('device/{id}', [Abonnement::class, 'isAdminGetWaDeviceClient']);
+                        Route::put('device/{id}', [Abonnement::class, 'isAdminSetWaDeviceClient']);
+                        Route::get('cash/{id}', [Abonnement::class, 'isAdminGetCashClient']);
+                        Route::put('cash/{id}', [Abonnement::class, 'isAdminSetCashClient']);
+                    });
+                });
 
                 Route::get('location', [Param::class, 'getApp']);
                 Route::put('location', [Param::class, 'setApp']);
@@ -199,6 +210,8 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     });
 
     Route::prefix('/wagroup')->group(function () {
+        Route::get('mywadevice', [Abonnement::class, 'getCurrentWassengerDevice']); //check device wa
+
         Route::get('getAssistance', [WaGroupController::class, 'getAssistance']);
         Route::post('crgroup', [WaGroupController::class, 'createGroup']);
         Route::get('allgroups', [WaGroupController::class, 'getAllGroups']);
@@ -240,6 +253,10 @@ Route::group(['middleware' => ['jwt.verify']], function () {
                 Route::put('color', [AbonnementController::class, 'setThemeColor']);
             });
         });
+        
+        
+        Route::get('region', [AbonnementController::class, 'getInternational']);
+        Route::put('region', [AbonnementController::class, 'setInternational']);
     });
 
     Route::prefix('abonnement')->group(function () {

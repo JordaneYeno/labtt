@@ -40,6 +40,28 @@ class AbonnementController extends Controller
             'solde' => $abonnement->getSolde()
         ]);
     }
+    
+    public function getInternational()
+    {
+        $region = Abonnement::where('user_id', auth()->user()->id)->pluck('international')->first();
+        return $region;
+    }
+
+    public function setInternational(Request $request)
+    {
+        $region = Abonnement::where('user_id', auth()->user()->id)->update(['international' => $request->value]);
+        if ($region) {
+            return response()->json([
+                'status' => 'success',
+                'update' => 1,
+                'message' => 'region mis à jour'
+            ], 200);
+        }
+        return response()->json([
+            'status' => 'echec',
+            'message' => 'erreur lors de la mise à jour'
+        ], 200);
+    }
 
     public function setSoldeAfterSendMessage(Request $request)
     {

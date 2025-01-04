@@ -57,6 +57,15 @@ class Convertor
         }
     }
 
+    private function isValidGabonPhoneNumber($phone)
+    {
+        $pattern = '/^(\+241|00241|241)([0-9]{9})$/';
+        // $pattern = '/^(0[0-9]{6})$/';
+
+        // Vérifier si le numéro correspond au pattern
+        return preg_match($pattern, $phone);
+    }
+
     public static function kinternationalisation($number, $pays = 'GA')
     {
         $rr = International::where('country', $pays)->select('country', 'sub')->first();
