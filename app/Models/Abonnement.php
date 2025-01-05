@@ -497,9 +497,10 @@ class Abonnement extends Model
         if (User::isSuperAdmin()) : return  null;
         endif;
         $user = auth()->user();
-        $totalSold = (new Tarifications)->getWhatsappPrice() * $destinataires + $factureMedia;
+        $totalSold = (new Tarifications)->getWhatsappPrice() * $destinataires + $factureMedia; 
+        dd((new Tarifications)->getWhatsappPrice() * $destinataires, $factureMedia);
         $solde = Abonnement::where('user_id', $user->id)->decrement('solde', $totalSold);
-    dd($solde);    return $solde;
+        return $solde;
     }   
 
     public static function __factureNotification($destinataires, $totalSold, $messageId, $roleUser, $userID, $tarifId, $pricing, $myMessage, $isSms)
