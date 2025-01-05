@@ -416,7 +416,7 @@ class Abonnement extends Model
         }
     }
     
-    public static function creditMediaWhatsapp($destinataires, $messageId, $files)
+    public static function creditMessageAndMediaWhatsapp($destinataires, $messageId, $files)
     {
         if (User::isSuperAdmin()) : return  null;
         endif;

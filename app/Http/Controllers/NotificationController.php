@@ -360,8 +360,8 @@ class NotificationController extends Controller
                         $notification->delivery_status = 'echec';
                         $notification->save();
                         // credit
-                        Abonnement::creditWhatsapp(1, $message->id);
-                        // Abonnement::creditMediaWhatsapp(1, $message->id, count($files));
+                        // Abonnement::creditWhatsapp(1, $message->id);
+                        Abonnement::creditMessageAndMediaWhatsapp(1, $message->id, count($files)); //rembourse en cas d'echec
                                 
                         if ($request->rescue == 'sms_fallback' && $isWa == false) {
                                                             

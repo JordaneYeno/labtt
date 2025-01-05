@@ -50,7 +50,7 @@ class Transaction extends Model
             $paiement = Transaction::create([
                 'type' => $type,
                 'abonnement_id' => $abonnementId->id,
-                'montant' => 2,
+                'montant' => $amount,
                 'reference' => Str::uuid(),
                 'message_id' => $messageId,
                 'paiement_id' => $paiementId,
