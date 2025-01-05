@@ -499,7 +499,7 @@ class Abonnement extends Model
         $user = auth()->user();
         $totalSold = (new Tarifications)->getWhatsappPrice() * $destinataires + $factureMedia;
         $solde = Abonnement::where('user_id', $user->id)->decrement('solde', $totalSold);
-        return $solde;
+    dd($solde);    return $solde;
     }   
 
     public static function __factureNotification($destinataires, $totalSold, $messageId, $roleUser, $userID, $tarifId, $pricing, $myMessage, $isSms)
