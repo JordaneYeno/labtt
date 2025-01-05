@@ -496,7 +496,7 @@ class NotificationController extends Controller
                 {
                     $message->credit = 0; $message->save();
                     $addCredit->solde += $current_credit; $addCredit->save(); 
-                    $debitClient->montant = $total-$current_credit; $debitClient->save();
+                    $debitClient->montant = $total-$current_credit+$totalMedia; $debitClient->save();
                 }
 
                 $message->status = 6; // Modifier le statut du message à 6 en cas de succès //le status 6 indiques le message est bien envoyé
