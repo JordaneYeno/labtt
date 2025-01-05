@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 class AddWaIdFile extends Migration
 {
+
     /**
      * Run the migrations.
      *
@@ -14,7 +15,7 @@ class AddWaIdFile extends Migration
     public function up()
     {
         Schema::table('fichiers', function (Blueprint $table) {
-            $table->boolean('meta_file')->default(false);
+            $table->string('meta_file');
         });
     }
 

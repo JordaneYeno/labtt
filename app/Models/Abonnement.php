@@ -407,7 +407,7 @@ class Abonnement extends Model
         if (User::isSuperAdmin()) : return  null;
         endif;
         $user = auth()->user();
-        $totalcredit = (new Tarifications)->getWhatsappPrice() * $destinataires;
+        $totalcredit = (new Tarifications)->getWhatsappPrice();
         $credit = Message::where('user_id', $user->id)->where('id', $messageId)->first();
 
         if ($credit) {
@@ -422,8 +422,7 @@ class Abonnement extends Model
         endif;
         $user = auth()->user();
         $facturemessage = (new Tarifications)->getWhatsappPrice() * $destinataires;
-        $facturemedia = ($files * (new Tarifications)->getWhatsappMediaPrice('media')) * $destinataires; dd($facturemedia);
-        
+        $facturemedia = ($files * (new Tarifications)->getWhatsappMediaPrice('media')) * $destinataires; 
         $totalcredit = $facturemessage + $facturemedia;
         $credit = Message::where('user_id', $user->id)->where('id', $messageId)->first();
 
