@@ -540,4 +540,10 @@ class Abonnement extends Model
         $templateCustom = Abonnement::where('user_id', $auth)->pluck('has_custom_template')->first();
         return $templateCustom;
     }
+
+    public function checkIsCustomTemplate($auth)
+    {
+        $templateCustom = Abonnement::where('user_id', $auth)->pluck('has_custom_template')->first();
+        return $templateCustom;
+    }
 }

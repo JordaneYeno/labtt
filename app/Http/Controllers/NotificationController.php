@@ -13,6 +13,7 @@ use App\Models\Message;
 use App\Models\Notification;
 use App\Models\Param;
 use App\Models\Tarifications;
+use App\Models\Template;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\Convertor;
@@ -1852,10 +1853,14 @@ class NotificationController extends Controller
                         $data["file"] = $url;
                     }
  
-                    $checkTemplate = (new ClientTemplateController)->getClientTemplateStatus($message->user_id);
-                       
-                    $template = false
-                    ? "emails.clients.{$message->user_id}.{$checkTemplate->getData()->name}"
+                    // $checkTemplate = (new ClientTemplateController)->getClientTemplateStatus($message->user_id);
+                    
+                    $templateExists = (new Abonnement)->checkIsCustomTemplate($message->user_id) == 1;
+                    $name_template = '';
+                    if($templateExists){$name_template = Template::where('user_id', $message->user_id)->pluck('name')->first();}
+
+                    $template = $templateExists
+                    ? "emails.clients.{$message->user_id}.{$name_template}"
                     : "mail.campagne";
 
                     try {
