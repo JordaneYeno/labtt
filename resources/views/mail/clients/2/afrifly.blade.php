@@ -138,7 +138,7 @@
 </head>
 <body>
 <div class="container">
-    <img src="header.png" style="width: 50%; height: 50%" alt="FlyGabon">
+    <img src="{{ asset('images/templates/header.png') }}" style="width: 50%; height: 50%" alt="FlyGabon">
 </div>
 <div class="content">
     <p><strong>OBJET : VOL DIRECT LIBREVILLE – PORT HARCOURT</strong></p>
@@ -165,7 +165,7 @@
     </div>
 
     <div class="footer">
-        <img src="footer_logo.png" alt="Afrijet">
+        <img src="{{ asset('images/templates/footer_logo.png') }}" alt="Afrijet">
     </div>
 </div>
 </body>
