@@ -9,6 +9,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\MessagesController;
 use App\Http\Controllers\ClientMessagesController;
+use App\Http\Controllers\ClientTemplateController;
 use App\Http\Controllers\FacebookPageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentConroller;
@@ -260,9 +261,16 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         
         Route::get('region', [AbonnementController::class, 'getInternational']);
         Route::put('region', [AbonnementController::class, 'setInternational']);
-        
-        Route::get('origin/theme', [AbonnementController::class, 'getIsCustomTemplate']);
-        Route::put('origin/theme', [AbonnementController::class, 'setIsCustomTemplate']);
+
+        Route::prefix('template')->group(function () {
+            Route::get('origin/theme', [AbonnementController::class, 'getIsCustomTemplate']);
+            Route::put('origin/theme', [AbonnementController::class, 'setIsCustomTemplate']);
+
+            Route::post('upload', [ClientTemplateController::class, 'uploadTemplate']);
+            // Route::get('client', [ClientTemplateController::class, 'getTemplateStatus']);
+            Route::get('client', [ClientTemplateController::class, 'getClientTemplateStatus']);
+            // Route::get('{id}/template-status', [ClientTemplateController::class, 'getTemplateStatus']);
+        });
     });
 
     Route::prefix('abonnement')->group(function () {

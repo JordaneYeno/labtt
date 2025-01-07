@@ -516,4 +516,28 @@ class Abonnement extends Model
         $solde = Abonnement::where('user_id', $userID)->decrement('solde', $totalSold);
         return $solde;
     }
+
+    // change isTemplate
+    
+    public function setIsCustomTemplate($auth, $status)
+    {
+        $templateCustom = Abonnement::where('user_id', $auth)->update(['has_custom_template' => $status]);
+        if ($templateCustom) {
+            return response()->json([
+                'status' => 'success',
+                'update' => 1,
+                'message' => 'template mis à jour'
+            ], 200);
+        }
+        return response()->json([
+            'status' => 'echec',
+            'message' => 'erreur lors de la mise à jour'
+        ], 200);
+    }    
+
+    public function getIsCustomTemplate($auth)
+    {
+        $templateCustom = Abonnement::where('user_id', $auth)->pluck('has_custom_template')->first();
+        return $templateCustom;
+    }
 }

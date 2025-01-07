@@ -13,6 +13,7 @@ use App\Models\Message;
 use App\Models\Notification;
 use App\Models\Param;
 use App\Models\Tarifications;
+use App\Models\Template;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\Convertor;
@@ -1831,7 +1832,7 @@ class NotificationController extends Controller
                 // $start = $allmessages->where('id', $message->id)->first()->update(['start' => date("Y-m-d H:i:s")]); // is start campaign 
 
                 if (strpos($message->canal, 'email') != false && $notification->canal == 'email') {
-                    $signature = $allabonnements->where('user_id', $message->user_id);
+                    $signature = $allabonnements->where('user_id', operator: $message->user_id);
                     $colorTheme = $allabonnements->where('user_id', $message->user_id)->pluck('cs_color')->first();
 
                     $data["mylogo"] = route('users.profile', ['id' => $message->user_id]);
@@ -1850,26 +1851,25 @@ class NotificationController extends Controller
                     {
                         $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]); 
                         $data["file"] = $url;
-
-                        // $filename = basename($file);
-                        // $folder = $message->user_id;
-                        // $file_path = public_path("storage/banner/{$folder}/{$filename}");
-                        // $objet_mail->attach($file_path);
                     }
  
                     try {
-                        Mail::send('mail.campagne', $data, function ($message) use ($data, $files) {
+
+                        $checkTemplate = (new ClientTemplateController)->getClientTemplateStatus($message->user_id);
+                        dd($checkTemplate);
+                        $template = $checkTemplate->template_exists
+                            ? "emails.clients.{$message->user_id}.{$checkTemplate}"
+                            : "mail.campagne";
+
+                        Mail::send($template, $data, function ($message) use ($data, $files) {
                             $message->to($data["email"])
                                 ->subject($data["title"])
                                 ->from($data['from_email'], $data['from_name']);
                         });
+
                         $notification->delivery_status = 'sent';
                         $notification->save();
                     } catch (\Exception $e) {
-                        // En cas d'erreur lors de l'envoi de l'e-mail, capturer l'exception
-                        // Vous pouvez logger l'erreur ou retourner une réponse d'erreur appropriée
-                        // return response()->json(['error' => 'Failed to send email: ' . $e->getMessage()], 500);
-
 
                         $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron 
                         $notification->save();
