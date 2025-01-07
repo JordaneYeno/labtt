@@ -58,7 +58,6 @@ class ClientTemplateController extends Controller
             'template_exists' => $templateExists,
         ], 200);
     }
-
     
     public function getClientTemplateStatus($auth)
     {
@@ -68,12 +67,19 @@ class ClientTemplateController extends Controller
         
         $name = Template::where('user_id', $clientId)->pluck('name')->first();
         $templateExists = (new Abonnement)->getIsCustomTemplate($clientId) == 1 && File::exists(resource_path("views/mail/clients/{$clientId}/{$name}.blade.php"));
+        // return response()->json([
+        //     'client_id' => $clientId,
+        //     'has_custom_template' => (new Abonnement)->getIsCustomTemplate($clientId),
+        //     'template_exists' => $templateExists,
+        //     '$name' => $templateExists==true? $name : null,
+        // ], 200);
         return response()->json([
             'client_id' => $clientId,
             'has_custom_template' => (new Abonnement)->getIsCustomTemplate($clientId),
             'template_exists' => $templateExists,
-            '$name' => $templateExists==true? $name : null,
+            'name' => $templateExists ? $name : null,
         ], 200);
+        
     }
     
     public function updateTemplate(Request $request, $clientId, $templateName)

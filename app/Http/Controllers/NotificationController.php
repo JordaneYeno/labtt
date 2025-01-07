@@ -13,7 +13,6 @@ use App\Models\Message;
 use App\Models\Notification;
 use App\Models\Param;
 use App\Models\Tarifications;
-use App\Models\Template;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\Convertor;
@@ -1832,7 +1831,7 @@ class NotificationController extends Controller
                 // $start = $allmessages->where('id', $message->id)->first()->update(['start' => date("Y-m-d H:i:s")]); // is start campaign 
 
                 if (strpos($message->canal, 'email') != false && $notification->canal == 'email') {
-                    $signature = $allabonnements->where('user_id', operator: $message->user_id);
+                    $signature = $allabonnements->where('user_id', $message->user_id);
                     $colorTheme = $allabonnements->where('user_id', $message->user_id)->pluck('cs_color')->first();
 
                     $data["mylogo"] = route('users.profile', ['id' => $message->user_id]);
@@ -1853,20 +1852,18 @@ class NotificationController extends Controller
                         $data["file"] = $url;
                     }
  
+                    $checkTemplate = (new ClientTemplateController)->getClientTemplateStatus($message->user_id);
+                       
+                    $template = false
+                    ? "emails.clients.{$message->user_id}.{$checkTemplate->getData()->name}"
+                    : "mail.campagne";
+
                     try {
-
-                        $checkTemplate = (new ClientTemplateController)->getClientTemplateStatus($message->user_id);
-                        dd($checkTemplate);
-                        $template = $checkTemplate->template_exists
-                            ? "emails.clients.{$message->user_id}.{$checkTemplate}"
-                            : "mail.campagne";
-
                         Mail::send($template, $data, function ($message) use ($data, $files) {
                             $message->to($data["email"])
                                 ->subject($data["title"])
                                 ->from($data['from_email'], $data['from_name']);
                         });
-
                         $notification->delivery_status = 'sent';
                         $notification->save();
                     } catch (\Exception $e) {
