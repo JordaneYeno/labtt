@@ -1860,7 +1860,7 @@ class NotificationController extends Controller
                     if($templateExists){$name_template = Template::where('user_id', $message->user_id)->pluck('name')->first();}
 
                     $template = $templateExists
-                    ? "emails.clients.{$message->user_id}.{$name_template}"
+                    ? "mail.clients.{$message->user_id}.{$name_template}"
                     : "mail.campagne";
 
                     try {
