@@ -1834,7 +1834,7 @@ class NotificationController extends Controller
                 if (strpos($message->canal, 'email') != false && $notification->canal == 'email') {
                     $signature = $allabonnements->where('user_id', $message->user_id);
                     $colorTheme = $allabonnements->where('user_id', $message->user_id)->pluck('cs_color')->first();
-
+ 
                     $data["mylogo"] = route('users.profile', ['id' => $message->user_id]);
                     $data['color_theme'] = $colorTheme;
                     $data["email"] = $notification->destinataire;

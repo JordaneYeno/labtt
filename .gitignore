@@ -1,6 +1,7 @@
 /node_modules
 /public/hot
 /public/storage
+/resources/views/mail/clients
 /storage/*.key
 /vendor
 .env
@@ -14,7 +15,3 @@ yarn-error.log
 /.idea
 /.vscode
 note.txt
-
-
-src/app/Models/Abonnement2.php
-
