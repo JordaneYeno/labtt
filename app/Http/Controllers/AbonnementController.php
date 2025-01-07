@@ -41,6 +41,31 @@ class AbonnementController extends Controller
         ]);
     }
     
+    // start International
+    public function getIsCustomTemplate()
+    {
+        $region = Abonnement::where('user_id', auth()->user()->id)->pluck('has_custom_template')->first();
+        return $region;
+    }
+
+    public function setIsCustomTemplate(Request $request)
+    {
+        $region = Abonnement::where('user_id', auth()->user()->id)->update(['has_custom_template' => $request->value]);
+        if ($region) {
+            return response()->json([
+                'status' => 'success',
+                'update' => 1,
+                'message' => 'template mis à jour'
+            ], 200);
+        }
+        return response()->json([
+            'status' => 'echec',
+            'message' => 'erreur lors de la mise à jour'
+        ], 200);
+    }    
+    // end International
+    
+    // start International
     public function getInternational()
     {
         $region = Abonnement::where('user_id', auth()->user()->id)->pluck('international')->first();
@@ -62,6 +87,7 @@ class AbonnementController extends Controller
             'message' => 'erreur lors de la mise à jour'
         ], 200);
     }
+    // end International
 
     public function setSoldeAfterSendMessage(Request $request)
     {

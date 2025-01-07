@@ -260,6 +260,9 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         
         Route::get('region', [AbonnementController::class, 'getInternational']);
         Route::put('region', [AbonnementController::class, 'setInternational']);
+        
+        Route::get('origin/theme', [AbonnementController::class, 'getIsCustomTemplate']);
+        Route::put('origin/theme', [AbonnementController::class, 'setIsCustomTemplate']);
     });
 
     Route::prefix('abonnement')->group(function () {

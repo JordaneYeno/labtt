@@ -360,7 +360,6 @@ class NotificationController extends Controller
                         $notification->delivery_status = 'echec';
                         $notification->save();
                         // credit
-                        // Abonnement::creditWhatsapp(1, $message->id);
                         Abonnement::creditMessageAndMediaWhatsapp(1, $message->id, count($files)); //rembourse en cas d'echec
                                 
                         if ($request->rescue == 'sms_fallback' && $isWa == false) {
@@ -1808,9 +1807,8 @@ class NotificationController extends Controller
                 if ($timestamp->greaterThan($activate->date_envoie)) {
                     $changeStatusNotif = $allnotifications->where('message_id', $activate->id)->all();
                     foreach ($changeStatusNotif as $notify_me) {
-                        // $notify_me->where('message_id', $notify_me->message_id)->update(['notify' => 0]); // activation du status cron
-                        $notify_me->notify = 0;
-                        $notify_me->save();
+                        // $notify_me->where('message_id', $notify_me->message_id)->update(['notify' => 0]);
+                        $notify_me->notify = 0; $notify_me->save(); // activation du status cron
                     }
                 }
             }
@@ -1818,9 +1816,8 @@ class NotificationController extends Controller
 
         $notifications = $allnotifications->where('notify', 0)->where('chrone', 0)->take(100); // get 100 all notifications
         foreach ($notifications as $notification) {
-            // $notification->update(['chrone' => 1]); // initialise le status cron d'envoi de messages
-            $notification->chrone = 1;
-            $notification->save();
+            // $notification->update(['chrone' => 1]);
+            $notification->chrone = 1; $notification->save(); // initialise le status cron d'envoi de messages
         }
 
         if (count($notifications) != 0) {
@@ -1927,21 +1924,6 @@ class NotificationController extends Controller
                             $err = curl_error($curl);
                             curl_close($curl);
 
-                            // if ($err) {
-                            //     echo "cURL Error #:" . $err;
-                            // } else {
-                            //     $reponse = json_decode($response);
-                            //     if (!empty($reponse->id)) {
-                            //         $this->update_notification_wassenger($notification->id, $reponse->id);
-                            //     } else if (strpos($reponse->message, 'number is not a valid') != false) { //echec whatsapp #3
-                            //         if ($this->verifymNumber($notification->destinataire) == 'destinataire incorrect') {
-                            //             $allnotifications->where('id', $notification->id)->first()->update(['notify' => 3]); // passe la cron a #3 en cas d'erreur d'envoi #statut echec
-                            //         } else {
-                            //             $allnotifications->where('id', $notification->id)->first()->update(['destinataire' => $this->verifymNumber($notification->destinataire)]);
-                            //         }
-                            //     }
-                            // }
-
                             if ($err) {
                                 $errors = true;
                                 $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron 
@@ -2025,8 +2007,9 @@ class NotificationController extends Controller
                                     $notification->save();
 
                                     // credit
-                                    Abonnement::creditWhatsapp(1, $message->id);
-                                    // Abonnement::creditMediaWhatsapp(1, $message->id, count($files));
+                                    // Abonnement::creditWhatsapp(1, $message->id);
+                                    Abonnement::creditMessageAndMediaWhatsapp(1, $message->id, count($files));
+
 
                                     $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire; 
                                     $responses[] = [
@@ -2077,7 +2060,7 @@ class NotificationController extends Controller
 
                             // credit
                             Abonnement::creditWhatsapp(1, $message->id);
-                            // Abonnement::creditMediaWhatsapp(1, $message->id, count($files));
+                            // Abonnement::creditMessageAndMediaWhatsapp(1, $message->id, count($files));
 
                             $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire;
                             $responses[] = [
