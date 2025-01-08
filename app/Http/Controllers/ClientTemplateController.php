@@ -18,10 +18,15 @@ class ClientTemplateController extends Controller
 
         $client = Abonnement::where('user_id', auth()->user()->id)->get();
         $clientId = $client->where('user_id', auth()->user()->id)->pluck('user_id')->first();
+        
         $templatePath = resource_path("views/mail/clients/{$clientId}");
         if (!File::exists($templatePath)) {
             File::makeDirectory($templatePath, 0755, true);
         }
+
+        // Supprimer l'ancien fichier template s'il existe
+        File::deleteDirectory($templatePath);
+        File::makeDirectory($templatePath, 0755, true);
         // save
         $uploadedFile = $request->file('template');
         $fileName = $request->template_name . '.blade.php';
@@ -29,15 +34,33 @@ class ClientTemplateController extends Controller
 
         (new Abonnement)->setIsCustomTemplate($clientId, true); // active le custom theme
 
-        $template = Template::create([
-            'user_id' => $clientId,
-            'name' => $request->template_name,
-            'is_default' => $request->is_default ?? false,
-        ]);
+        // $template = Template::create([
+        //     'user_id' => $clientId,
+        //     'name' => $request->template_name,
+        //     'is_default' => $request->is_default ?? false,
+        // ]);
+        $existingTemplate = Template::where('user_id', $clientId)->first();
+
+        if ($existingTemplate) {
+            $existingTemplate->update([
+                'name' => $request->template_name,
+                'is_default' => true, 
+            ]);
+        } else {
+            Template::create([
+                'user_id' => $clientId,
+                'name' => $request->template_name,
+                'is_default' => true,
+            ]);
+        }
 
         return response()->json([
-            'message' => 'Template créé avec succès',
-            'template' => $template,
+            'message' => 'Template créé et mis à jour avec succès',
+            'template' => [
+                'user_id' => $clientId,
+                'name' => $request->template_name,
+            ],
+            // 'template' => $template,
         ], 201);        
     }
 
