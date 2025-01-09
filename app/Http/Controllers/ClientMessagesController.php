@@ -205,7 +205,7 @@ class ClientMessagesController extends Controller
             }
             $recipients = DB::table('notifications')
                 ->where('message_id', $request->idMessage)
-                ->select('message_id', 'destinataire', 'notify', 'delivery_status', 'canal')
+                ->select('message_id', 'destinataire', 'notify', 'chrone', 'delivery_status', 'canal')
                 ->orderBy('created_at', 'DESC')
                 ->paginate(25);
             return response()->json([
