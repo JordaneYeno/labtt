@@ -1335,10 +1335,11 @@ class NotificationController extends Controller
             if (!$this->canSend) :
                 return response()->json(['status' => 'echec', 'message' => 'aucun contacts trouvé']);
             endif;
-            if ($total <= $solde) {
+            if ($total <= $solde) { //ici
                 Message::where('id', $message->id)->update(['canal' => $canal]);
                 if ($whatsapp) :
-                    Abonnement::factureWhatsapp(count($destinatairesWhatsapp), $whatsappTotal, $message->id);
+                    // Abonnement::factureWhatsapp(count($destinatairesWhatsapp), $whatsappTotal, $message->id);
+                    Abonnement::__factureWhatsapp(count($destinatairesWhatsapp), $total,$totalMedia, $message->id);                
                 endif;
                 if ($sms) :
                     Abonnement::factureSms(count($destinatairesSms), $smsTotal, $message->id, $message->message);
@@ -1346,12 +1347,14 @@ class NotificationController extends Controller
                 if ($email) :
                     Abonnement::factureEmail(count($destinatairesEmail), $emailTotal, $message->id);
                 endif;
-                $transaction = (new Transaction)->addTransactionAfterSendMessage('debit', $total, $message->id, $emailTotal, $smsTotal, $whatsappTotal, Abonnement::getSolde());
+                $Pprice = $total + $totalMedia;
+                $transaction = (new Transaction)->addTransactionAfterSendMessage('debit', $Pprice, $message->id, $emailTotal, $smsTotal, $whatsappTotal, Abonnement::getSolde());
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Votre campagne a été lancée avec succès',
                     'idx' => $message->ed_reference,
-                    'total_paye' => $total,
+                    // 'total_paye' => $total,
+                    'total_paye' => $Pprice,
                     'ancien_solde' => $solde,
                     'nouveau_solde' => Abonnement::getSolde(),
                 ], 200);

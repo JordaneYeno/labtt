@@ -15,3 +15,6 @@ yarn-error.log
 /.idea
 /.vscode
 note.txt
+
+
+/database/migrations/2025_01_08_095644_update_solde_column_to_decimal.php

@@ -6,7 +6,6 @@
     "license": "MIT",
     "require": {
         "php": "^7.4",
-        "doctrine/dbal": "^3.9",
         "facebook/graph-sdk": "^5.7",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.8",

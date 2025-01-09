@@ -16,18 +16,19 @@ class TarificationController extends Controller
 
     public function getPricingClient (Request $request)
     {   
-        $tarification = Tarifications::where('id', auth()->user()->tarification_id)->first();
         if(isset($request->countSms)){
             $smsCount = (new SmsCount)->countSmsSend(strip_tags($request->countSms));
             return response()->json([
-                'price_sms' => $tarification->prix_sms * $smsCount,
-                'price_email' => $tarification->prix_email,
-                'price_whatsapp' => $tarification->prix_whatsapp 
+                'price_sms' => (new Tarifications)->getPriceList('default','prix_sms') * $smsCount,
+                'price_email' => (new Tarifications)->getPriceList('default','prix_email'),
+                'price_whatsapp' => (new Tarifications)->getPriceList('default','prix_whatsapp'),
+                'price_media' => (new Tarifications)->getPriceList('media','prix_whatsapp')
             ]);
         }else{
             return response()->json([
-                'price_email' => $tarification->prix_email,
-                'price_whatsapp' => $tarification->prix_whatsapp
+                'price_email' => (new Tarifications)->getPriceList('default','prix_email'),
+                'price_whatsapp' => (new Tarifications)->getPriceList('default','prix_whatsapp'),
+                'price_media' => (new Tarifications)->getPriceList('media','prix_whatsapp')
             ]);
         }
     }
