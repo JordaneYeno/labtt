@@ -1347,14 +1347,12 @@ class NotificationController extends Controller
                 if ($email) :
                     Abonnement::factureEmail(count($destinatairesEmail), $emailTotal, $message->id);
                 endif;
-                $Pprice = $total + $totalMedia;
-                $transaction = (new Transaction)->addTransactionAfterSendMessage('debit', $Pprice, $message->id, $emailTotal, $smsTotal, $whatsappTotal, Abonnement::getSolde());
+                $transaction = (new Transaction)->addTransactionAfterSendMessage('debit', $total, $message->id, $emailTotal, $smsTotal, $whatsappTotal, Abonnement::getSolde());
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Votre campagne a été lancée avec succès',
                     'idx' => $message->ed_reference,
-                    // 'total_paye' => $total,
-                    'total_paye' => $Pprice,
+                    'total_paye' => $total,
                     'ancien_solde' => $solde,
                     'nouveau_solde' => Abonnement::getSolde(),
                 ], 200);
