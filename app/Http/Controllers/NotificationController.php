@@ -1812,6 +1812,7 @@ class NotificationController extends Controller
                                   ->where('chrone', 0)
                                   ->orderBy('created_at', 'asc')
                                   ->take(15)
+                            
                                 //   ->lockForUpdate()
                                   ->get();
 
