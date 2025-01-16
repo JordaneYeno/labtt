@@ -1811,8 +1811,8 @@ class NotificationController extends Controller
        $notifications = Notification::where('notify', 0)
                                   ->where('chrone', 0)
                                   ->orderBy('created_at', 'asc')
-                                  ->take(9)
-                                  ->lockForUpdate()
+                                  ->take(15)
+                                //   ->lockForUpdate()
                                   ->get();
 
         if ($notifications->isEmpty()) 
