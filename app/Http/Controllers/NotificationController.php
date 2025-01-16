@@ -1891,13 +1891,14 @@ class NotificationController extends Controller
                             $notification->save();
                         }
                     }
+                    
+                    $isWa = (new WaGroupController())->isExistOnWa(((new Abonnement)->getInternaltional($message->user_id) == 0) ? $interphone : $notification->destinataire); //check phone wa_number! 
 
-                    $isWa = (new WaGroupController())->isExistOnWa(((new Abonnement)->getInternaltional($message->user_id) == 0) ? $interphone :$notification->destinataire); //check phone wa_number! 
+                    if ($isWa != false) {
 
-                    if ($isWa != false) 
-                    {                        
                         if (count($files) > 0) {
-                            // sleep(1);    
+                            // sleep(2);
+
                             if (strpos($files, '.mp4') != false) {
                                 $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]); 
                             
@@ -1918,23 +1919,22 @@ class NotificationController extends Controller
                                         "Token: $API_KEY_WHATSAPP",
                                     ],
                                 ]);
-    
+
                                 $response = curl_exec($curl);
                                 $err = curl_error($curl);
                                 curl_close($curl);
-    
-                                if ($err) 
-                                {
+
+                                if ($err) {
                                     $errors = true;
                                     $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron 
                                     $notification->save();
-    
-                                    $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire;
-                                    
+
                                     $notification->delivery_status = 'echec';
                                     $notification->save();
                                     // credit
-                                    Abonnement::creditMessageAndMediaWhatsapp(1, $message->id, count($files)); //rembourse en cas d'echec                   
+                                    Abonnement::creditMessageAndMediaWhatsapp(1, $message->id, 1);
+
+                                    $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire;
                                     $responses[] = [
                                         'statut' => 'error',
                                         'message' => "Erreur lors de l'envoi du message à $tel",
@@ -1951,7 +1951,7 @@ class NotificationController extends Controller
                             
                                 $data = ["url" => $url];
                                 $curl = curl_init();
-                                curl_setopt_array($curl, options: [
+                                curl_setopt_array($curl, [
                                     CURLOPT_URL => "https://api.wassenger.com/v1/files",
                                     CURLOPT_RETURNTRANSFER => true,
                                     CURLOPT_SSL_VERIFYPEER => false, //ssl off
@@ -1966,7 +1966,7 @@ class NotificationController extends Controller
                                         "Token: $API_KEY_WHATSAPP",
                                     ],
                                 ]);
-    
+
                                 $response = curl_exec($curl);
                                 $err = curl_error($curl);
                                 curl_close($curl);
@@ -1974,14 +1974,14 @@ class NotificationController extends Controller
                                     echo "cURL Error #:" . $err;
                                 } else {
                                     $reponse_banner = json_decode($response);
-    
+
                                     if (is_array($reponse_banner) == true) {
                                         $itemsList = array("file" => $reponse_banner[0]->id);
                                     } else {
                                         $itemsList = array("file" => $reponse_banner->meta->file);
                                     }
-                                    sleep(1);//sleep(3);
-    
+                                    // sleep(2);//sleep(3);
+
                                     $data = ["phone" => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire, "message" => strip_tags($message->message), "media" => $itemsList, "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
                                     $curl = curl_init();
                                     curl_setopt_array($curl, [
@@ -1999,7 +1999,7 @@ class NotificationController extends Controller
                                             "Token: $API_KEY_WHATSAPP",
                                         ],
                                     ]);
-    
+
                                     $response = curl_exec($curl);
                                     $reponse = json_decode($response);
                                     $err = curl_error($curl);
@@ -2010,17 +2010,19 @@ class NotificationController extends Controller
                                         $notification->save();
                                         $notification->delivery_status = 'echec';
                                         $notification->save();
-    
+
                                         // credit
                                         Abonnement::creditMessageAndMediaWhatsapp(1, $message->id, count($files));
+
                                         $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire; 
                                         $responses[] = [
                                             'statut' => 'error',
                                             'message' => "Erreur lors de l'envoi du message à $tel",
                                         ];
                                         // echo "cURL Error #:" . $err;
-                                    } else {
-                                        // $totalMedia = count($files) * (new Tarifications)->getWhatsappMediaPrice('media');
+                                    } 
+                                    else 
+                                    {
                                         $reponse = json_decode($response);
                                         if (!empty($reponse->id)) {
                                             $notification->delivery_status = $reponse->deliveryStatus;
@@ -2031,7 +2033,7 @@ class NotificationController extends Controller
                                 } 
                             }
                         } else if (count($files) == 0) {
-                            // sleep(1); 
+                            // sleep(2); 
                             $data = ["phone" => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire, "message" => strip_tags($message->message), "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
                             $curl = curl_init();
                             curl_setopt_array($curl, [
@@ -2049,20 +2051,21 @@ class NotificationController extends Controller
                                     "Token: $API_KEY_WHATSAPP",
                                 ],
                             ]);
-    
+
                             $response = curl_exec($curl); //dd($response);
                             $err = curl_error($curl);
                             curl_close($curl);
-                            if ($err) {
+                            if ($err) 
+                            {
                                 $errors = true;
                                 $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron 
                                 $notification->save();
                                 $notification->delivery_status = 'echec';
                                 $notification->save();
-    
+
                                 // credit
                                 Abonnement::creditWhatsapp(1, $message->id);
-    
+
                                 $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire;
                                 $responses[] = [
                                     'statut' => 'error',
@@ -2081,13 +2084,8 @@ class NotificationController extends Controller
                             return 'nulled';
                         }
                     }
-                    else 
-                    {   
-                        $notification->delivery_status = 'echec';
-                        $notification->save();
-                        // credit
-                        Abonnement::creditMessageAndMediaWhatsapp(1, $message->id, count($files)); //rembourse en cas d'echec           
-                    }
+
+
                 } else if (strpos($message->canal, 'sms') !== false && $notification->canal === 'sms') { // Utilise `!== false` pour éviter les erreurs avec des positions `0`.
                     if((new Abonnement)->getInternaltional($message->user_id) == 0)
                     {
@@ -2109,6 +2107,7 @@ class NotificationController extends Controller
                         'receiver' => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire,
                         'sender' => $sender,
                     ];
+
 
                     if ($notification->has_final_status == 1 && $notification->notify == 0 && $notification->chrone == 1) {
                         $curl = curl_init();
@@ -2178,7 +2177,7 @@ class NotificationController extends Controller
                     ], 500); 
                 }
             }
-            // sleep(1);
+            sleep(1);
             $this->update_msg_finish($message->id);
         } else {
             // $message->status = 5;
@@ -2187,80 +2186,6 @@ class NotificationController extends Controller
                 'message' => 'Aucune notifications disponible',
             ], Response::HTTP_OK);
         }
-    }
-
-    // public function cron()
-    // {
-    //     $timestamp = Carbon::now();
-
-    //     // Récupérer les notifications prêtes à envoyer
-    //     $notifications = Notification::where('notify', 0)
-    //         ->where('chrone', 0)
-    //         ->take(100)
-    //         ->get();
-
-    //     if ($notifications->isNotEmpty()) {
-    //         $notifications->each->update(['chrone' => 1]); // Marquer comme "en cours de traitement"
-
-    //         foreach ($notifications as $notification) {
-    //             try {
-    //                 // Envoi via Wassenger
-    //                 $response = $this->sendMessageWassenger($notification);
-
-    //                 if ($response->successful()) {
-    //                     $notification->update([
-    //                         'notify' => 1,
-    //                         'chrone' => 0,
-    //                         'status' => 'success',
-    //                     ]);
-    //                 } else {
-    //                     $notification->update(['chrone' => 0, 'status' => 'failed']);
-    //                     Log::warning("Wassenger API Error: " . $response->body(), ['notification_id' => $notification->id]);
-    //                 }
-    //             } catch (\Exception $e) {
-    //                 $notification->update(['chrone' => 0, 'status' => 'error']);
-    //                 Log::error("API Call Exception: " . $e->getMessage(), ['notification_id' => $notification->id]);
-    //             }
-
-    //             // Pause pour limiter la charge (si nécessaire)
-    //             sleep(1);
-    //         }
-
-    //         return response()->json([
-    //             'statut' => 'success',
-    //             'message' => 'Notifications envoyées avec succès via Wassenger',
-    //         ], Response::HTTP_OK);
-    //     } else {
-    //         return response()->json([
-    //             'statut' => 'error',
-    //             'message' => 'Aucune notification disponible',
-    //         ], Response::HTTP_OK);
-    //     }
-    // }
-
-    private function sendMessageWassenger($notification, $API_KEY_WASSENGER)
-    {
-        // $API_KEY_WASSENGER = env('WASSENGER_API_KEY'); // Assure-toi de l'avoir défini dans ton .env
-        $baseUrl = 'https://api.wassenger.com/v1/messages';
-
-        $payload = [
-            'phone' => $notification->recipient, // Numéro de téléphone
-            'message' => $notification->message, // Message texte
-        ];
-
-        // Si un média est lié, ajoute-le au payload
-        if (!empty($notification->media_url)) {
-            $payload['media'] = [
-                'url' => $notification->media_url,
-            ];
-        }
-
-        // Envoi de la requête
-        // return Http::withHeaders([
-        //     'Authorization' => "Bearer $API_KEY_WASSENGER",
-        // ])->post($baseUrl, $payload);
-
-
     }
 
     public function getUsers()
