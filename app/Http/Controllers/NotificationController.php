@@ -2084,7 +2084,13 @@ class NotificationController extends Controller
                             return 'nulled';
                         }
                     }
-
+                    else 
+                    {
+                        $notification->delivery_status = 'echec';
+                        $notification->save();
+                        // credit
+                        Abonnement::creditMessageAndMediaWhatsapp(1, $message->id, count($files)); //rembourse en cas d'echec           
+                    }
 
                 } else if (strpos($message->canal, 'sms') !== false && $notification->canal === 'sms') { // Utilise `!== false` pour éviter les erreurs avec des positions `0`.
                     if((new Abonnement)->getInternaltional($message->user_id) == 0)
