@@ -1816,7 +1816,7 @@ class NotificationController extends Controller
                                   ->get();
 
         if ($notifications->isEmpty()) 
-        {
+        { 
             return response()->json([
                 'statut' => 'error',
                 'message' => 'Aucune notifications disponible pour le moment',
