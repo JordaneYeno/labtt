@@ -406,6 +406,58 @@ class WaGroupController extends Controller
         }
     }
 
+    public function isExistOnWaWithoutAuth($phone,$userId)
+    {
+        $device = $this->checkDevice((new Abonnement)->getCurrentWassengerDeviceWithoutAuth($userId));
+
+        if ($device instanceof \Illuminate\Http\JsonResponse) {
+            return $device;
+        }
+
+        $data = ["phone" => trim($phone)];
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => "https://api.wassenger.com/v1/numbers/exists",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_SSL_VERIFYPEER => false, // Désactive SSL
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_HTTPHEADER => [
+                "Content-Type: application/json",
+                "Token: $this->API_KEY_WHATSAPP",
+            ],
+        ]);
+
+        $response = curl_exec($curl);  //dd($response);
+        $err = curl_error($curl);
+
+        curl_close($curl);
+
+        if ($err) {
+            return response()->json([
+                'status' => 'error',
+                'message' => "cURL Error #: $err",
+            ], 500);
+        } else {
+            $reponse = json_decode($response);
+
+            if (isset($reponse->exists)) {
+                return $reponse->exists;
+            } else {
+                return false;
+                // return response()->json([
+                //     'status' => 'error',
+                //     'message' => 'introuvable.',
+                //     'phone' => $phone,
+                // ], 404);
+            }
+        }
+    }
+
     // public function getInfoGroup(Request  $request)
     // {
     //     $device = $this->checkDevice($this->WA_DEVICE);

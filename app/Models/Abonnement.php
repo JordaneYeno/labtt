@@ -415,6 +415,17 @@ class Abonnement extends Model
             $credit->save();
         }
     }
+
+    public static function creditWhatsappWithoutAuth($destinataires, $messageId, $user)
+    {
+        $totalcredit = (new Tarifications)->getWhatsappPrice();
+        $credit = Message::where('user_id', $user)->where('id', $messageId)->first();
+
+        if ($credit) {
+            $credit->credit += $totalcredit;
+            $credit->save();
+        }
+    }
     
     public static function creditMessageAndMediaWhatsapp($destinataires, $messageId, $files)
     {
@@ -432,6 +443,18 @@ class Abonnement extends Model
         }
     }
     
+    public static function creditMessageAndMediaWhatsappWithoutAuth($destinataires, $messageId, $files, $user)
+    {
+        $facturemessage = (new Tarifications)->getPriceList('default','prix_whatsapp') * $destinataires;
+        $facturemedia = ($files * (new Tarifications)->getPriceList('media','prix_whatsapp')) * $destinataires; 
+        $totalcredit = $facturemessage + $facturemedia;
+        $credit = Message::where('user_id', $user)->where('id', $messageId)->first();
+
+        if ($credit) {
+            $credit->credit += $totalcredit; 
+            $credit->save();
+        }
+    }
 
     public static function creditEmail($destinataires, $messageId)
     {
@@ -447,6 +470,17 @@ class Abonnement extends Model
         }
     }
 
+    public static function creditEmailWithoutAuth($destinataires, $messageId, $user)
+    {
+        $totalcredit = (new Tarifications)->getPriceList('default','prix_email') * $destinataires;
+        $credit = Message::where('user_id', $user)->where('id', $messageId)->first();
+
+        if ($credit) {
+            $credit->credit += $totalcredit;
+            $credit->save();
+        }
+    }
+
     public static function creditSms($destinataires, $messageId)
     {
         if (User::isSuperAdmin()) : return  null;
@@ -454,6 +488,17 @@ class Abonnement extends Model
         $user = auth()->user();
         $totalcredit = (new Tarifications)->getSmsPrice() * $destinataires;
         $credit = Message::where('user_id', $user->id)->where('id', $messageId)->first();
+
+        if ($credit) {
+            $credit->credit += $totalcredit;
+            $credit->save();
+        }
+    }
+
+    public static function creditSmsWithoutAuth($destinataires, $messageId, $user)
+    {
+        $totalcredit = (new Tarifications)->getPriceList('default','prix_sms') * $destinataires;
+        $credit = Message::where('user_id', $user)->where('id', $messageId)->first();
 
         if ($credit) {
             $credit->credit += $totalcredit;
