@@ -1897,8 +1897,7 @@ class NotificationController extends Controller
                     if ($isWa != false) 
                     {                        
                         if (count($files) > 0) {
-                            // sleep(1);
-    
+                            // sleep(1);    
                             if (strpos($files, '.mp4') != false) {
                                 $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]); 
                             
@@ -1981,7 +1980,7 @@ class NotificationController extends Controller
                                     } else {
                                         $itemsList = array("file" => $reponse_banner->meta->file);
                                     }
-                                    // sleep(1);//sleep(3);
+                                    sleep(1);//sleep(3);
     
                                     $data = ["phone" => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire, "message" => strip_tags($message->message), "media" => $itemsList, "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
                                     $curl = curl_init();

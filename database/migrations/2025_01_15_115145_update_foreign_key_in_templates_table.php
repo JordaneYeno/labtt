@@ -14,7 +14,7 @@ class UpdateForeignKeyInTemplatesTable extends Migration
     public function up()
     {
         Schema::table('templates', function (Blueprint $table) {
-            $table->dropForeign('user_id');
+            $table->dropForeign('templates_user_id_foreign');
         });
 
         // Créer la nouvelle contrainte
