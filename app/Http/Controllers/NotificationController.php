@@ -607,7 +607,7 @@ class NotificationController extends Controller
                     
                     // Valider le fichier
                     $validationResult = $this->validateFileMimeType($file, ['image/jpeg', 'image/png', 'text/csv']);
-
+                    dd($validationResult);
                     if ($validationResult['status'] === 'error') {
                         return response()->json([
                             'status' => 'error',
