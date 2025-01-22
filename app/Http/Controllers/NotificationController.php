@@ -2392,23 +2392,6 @@ class NotificationController extends Controller
         // $notifications = Notification::where('message_id', $message->id)->where('canal', 'whatsapp')->where('has_final_status', 0)->take(100)->get();
     }
 
-    private function avantUploadControle(\Illuminate\Http\UploadedFile $file)
-    {
-       // Vérification de la taille du fichier (en Mo)
-        $tailleMaxAutorisee = 20; // 20 Mo
-        $tailleFichierMo = $file->getSize() / (1024 * 1024); // Convertir en Mo
-
-        if ($tailleFichierMo > $tailleMaxAutorisee) {
-            Log::warning('Tentative d\'upload d\'un fichier trop volumineux.', [
-                'chemin' => $file->getPathname(),
-                'taille' => $tailleFichierMo . ' Mo',
-            ]);
-            return false;
-        }
-
-        return true;
-    }
-
     public function send_notification(Request $request)
     {
         $json = file_get_contents('php://input');
@@ -2479,4 +2462,22 @@ class NotificationController extends Controller
         $response = curl_exec($curl);
         return response()->json(json_decode($response));
     }
+    
+
+    private function avantUploadControle(\Illuminate\Http\UploadedFile $file)
+    {
+        $tailleMaxAutorisee = 20; // 20 Mo
+        $tailleFichierMo = $file->getSize() / (1024 * 1024); // Convertir en Mo
+
+        if ($tailleFichierMo > $tailleMaxAutorisee) {
+            Log::warning('Tentative d\'upload d\'un fichier trop volumineux.', [
+                'chemin' => $file->getPathname(),
+                'taille' => $tailleFichierMo . ' Mo',
+            ]);
+            return false;
+        }
+
+        return true;
+    }
+
 }

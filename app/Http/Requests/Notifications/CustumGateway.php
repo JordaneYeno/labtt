@@ -30,8 +30,9 @@ class CustumGateway extends FormRequest
             'title' => 'required',
             'message' => 'required',
             'recipients' => 'required',
-            'file' => 'file|max:20480|mimes:jpeg,jpg,png,bmp,tiff,doc,docx,xls,xlsx,ppt,pptx,csv,pdf',
-        ];
+            // 'file' => 'file|max:20480|mimes:jpeg,jpg,png,bmp,tiff,doc,docx,xls,xlsx,ppt,pptx,csv,pdf',
+            'file' => 'file|max:20480|mimes:jpeg,jpg,png,bmp,tiff,doc,docx,xls,xlsx,ppt,pptx,csv,text/csv,application/csv,application/vnd.ms-excel',
+        ]; 
     }
 
     /**
