@@ -141,7 +141,8 @@ class NotificationController extends Controller
                 if ($request->hasFile('file')) {
                     $file = $request->file('file');
                     // $maxFileSize = 5000 * 1024; // 5000 Ko en octets
-                    $maxFileSize = 15728640; // 15Mo
+                    // $maxFileSize = 15728640; // 15Mo
+                    $maxFileSize = 15 * 1024 * 1024;; // 15Mo
                     $allowedTypes = [
                         "application/msword",
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -604,7 +605,8 @@ class NotificationController extends Controller
                 if ($request->hasFile('file')) {
                     $file = $request->file('file');
                     // $maxFileSize = 5000 * 1024; // 5000 Ko en octets
-                    $maxFileSize = 15728640; // 15Mo
+                    // $maxFileSize = 15728640; // 15Mo
+                    $maxFileSize = 15 * 1024 * 1024;; // 15Mo
                     $allowedTypes = [
                         "application/msword",
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",

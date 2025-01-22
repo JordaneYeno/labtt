@@ -30,7 +30,24 @@ class CustumGateway extends FormRequest
             'title' => 'required',
             'message' => 'required',
             'recipients' => 'required',
-            'file' => 'file|max:2048|mimes:jpeg,png,pdf', // Retirez 'required' pour le rendre facultatif
+            // 'file' => 'file|max:2048|mimes:jpeg,png,pdf', // Retirez 'required' pour le rendre facultatif
+            // 'file' => 'file|max:15360|mimes:jpeg,png,pdf', // 15 Mo = 15360 Ko
+
+            'file' => 'file|max:15360|mimetypes:
+                application/msword,
+                application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+                application/vnd.ms-excel,
+                application/vnd.ms-powerpoint,
+                application/pdf,
+                image/jpeg,
+                image/png,
+                image/gif,
+                video/mp4,
+                text/csv,
+                application/csv',
+
+            // 'file' => 'file|max:15360|mimes:doc,docx,xls,xlsx,ppt,pptx,pdf,jpg,jpeg,png,gif,mp4,csv',
+
         ];
     }
 
@@ -46,9 +63,9 @@ class CustumGateway extends FormRequest
             'message.required' => 'Veuillez indiquer le contenu du message.',
             'recipients.required' => 'Veuillez indiquer la liste de destinataires.',
             'file.file' => 'Le fichier doit être un fichier valide.',
-            // 'file.max' => 'Le fichier ne doit pas dépasser 5 Mo.',
             'file.max' => 'Le fichier ne doit pas dépasser 15Mo.',
-            'file.mimes' => 'Le fichier doit être au format JPEG, PNG ou PDF.',
+            // 'file.mimes' => 'Le fichier doit être au format JPEG, PNG ou PDF.',
+            'file.mimes' => 'Type de fichier non autorisé',
         ];
     }
 
