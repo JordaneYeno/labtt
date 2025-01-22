@@ -2467,18 +2467,24 @@ class NotificationController extends Controller
 
          // Vérifier si le fichier est dans la liste des types MIME interdits
          if (in_array($mime, $blockedMimeTypes)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Ce type de fichier n\'est pas autorisé.',
-            ], 400); // Code HTTP 400 : Bad Request
+            // return response()->json([
+            //     'status' => 'error',
+            //     'message' => 'Ce type de fichier n\'est pas autorisé.',
+            // ], 400); // Code HTTP 400 : Bad Request
+
+            
+            return false;
         }
 
         // Vérifier si le fichier est dans la liste des types MIME autorisés (si spécifiée)
         if (!empty($allowedMimeTypes) && !in_array($mime, $allowedMimeTypes)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Seuls les fichiers de type ' . implode(', ', $allowedMimeTypes) . ' sont autorisés.',
-            ], 400); // Code HTTP 400 : Bad Request
+            // return response()->json([
+            //     'status' => 'error',
+            //     'message' => 'Seuls les fichiers de type ' . implode(', ', $allowedMimeTypes) . ' sont autorisés.',
+            // ], 400); // Code HTTP 400 : Bad Request
+
+            
+            return false;
         }
 
         if ($tailleFichierMo > $tailleMaxAutorisee) {
