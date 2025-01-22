@@ -2457,7 +2457,7 @@ class NotificationController extends Controller
         return true;
     }
 
-    private function validateFileMimeType(\Illuminate\Http\UploadedFile $file, array $allowedMimeTypes = [], array $blockedMimeTypes = ['application/sql', 'text/x-sql', 'application/x-php', 'text/x-php'])
+    private function validateFileMimeType(\Illuminate\Http\UploadedFile $file, array $allowedMimeTypes = [], array $blockedMimeTypes = ['application/sql', 'text/x-sql', 'application/x-php', 'text/x-php', 'text/plain'] /*['application/sql', 'text/x-sql', 'application/x-php', 'text/x-php']*/)
     {
         $tailleMaxAutorisee = 20; // 20 Mo
         $tailleFichierMo = $file->getSize() / (1024 * 1024); // Convertir en Mo
