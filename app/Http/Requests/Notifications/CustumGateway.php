@@ -30,7 +30,9 @@ class CustumGateway extends FormRequest
             'title' => 'required',
             'message' => 'required',
             'recipients' => 'required',
-            'file' => 'file|mimes:csv'
+            // 'file' => 'file|mimes:csv'
+
+            'file' => 'required|mimetypes:text/csv,application/csv,text/plain,text/comma-separated-values,text/tab-separated-values,application/vnd.ms-excel'
             
             // 'file' => 'file|max:20480|mimes:jpeg,jpg,png,bmp,tiff,doc,docx,xls,xlsx,ppt,pptx,csv,text/csv,application/csv,application/vnd.ms-excel',
         ]; 
@@ -50,8 +52,8 @@ class CustumGateway extends FormRequest
             // 'file.file' => 'Le fichier doit être un fichier valide.',
             // 'file.max' => 'Le fichier ne doit pas dépasser 20Mo.',
             // 'file.mimes' => 'Erreur de type de fichier (:attribute) - Seuls les fichiers DOC, DOCX, XLS, XLSX, PPT, PPTX, PDF, JPEG, PNG, CSV sont autorisés.',
-            'file.file' => 'Le fichier doit être un fichier valide.',
-            'file.mimes' => 'Erreur de type de fichier (:attribute) - Seuls les types suivants sont autorisés : DOC, DOCX, XLS, XLSX, PPT, PPTX, PDF, JPEG, PNG, CSV. Type reçu : :mimetype',
+            // 'file.file' => 'Le fichier doit être un fichier valide.',
+            'file.mimetypes' => 'Erreur de type de fichier (:attribute) - Seuls les types suivants sont autorisés : DOC, DOCX, XLS, XLSX, PPT, PPTX, PDF, JPEG, PNG, CSV. Type reçu : :mimetype',
             
         ];
     }
