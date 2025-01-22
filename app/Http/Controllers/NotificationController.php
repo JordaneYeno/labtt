@@ -620,29 +620,36 @@ class NotificationController extends Controller
                     $file = $request->file('file');
                     // $maxFileSize = 5000 * 1024; // 5000 Ko en octets
                     // $maxFileSize = 15728640; // 15Mo
-                    $maxFileSize = 15 * 1024 * 1024;; // 15Mo
-                    $allowedTypes = [
-                        "application/msword",
-                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                        "application/vnd.ms-excel",
-                        "application/vnd.ms-powerpoint",
-                        "application/pdf",
-                        "image/jpeg",
-                        "image/png",
-                        "image/gif",
-                        "video/mp4",
-                        // csv
-                        "text/csv",
-                        "application/csv",
-                    ];
+                    // $maxFileSize = 15 * 1024 * 1024;; // 15Mo
+                    // $allowedTypes = [
+                    //     "application/msword",
+                    //     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    //     "application/vnd.ms-excel",
+                    //     "application/vnd.ms-powerpoint",
+                    //     "application/pdf",
+                    //     "image/jpeg",
+                    //     "image/png",
+                    //     "image/gif",
+                    //     "video/mp4",
+                    //     // csv
+                    //     "text/csv",
+                    //     "application/csv",
+                    // ];
 
-                    if ($file->getSize() > $maxFileSize) {
-                        return response()->json(['status' => 'echec', 'message' => 'La taille du fichier ne doit pas dépasser 15000 Mo']);
+                    // if ($file->getSize() > $maxFileSize) {
+                    //     return response()->json(['status' => 'echec', 'message' => 'La taille du fichier ne doit pas dépasser 15000 Mo']);
+                    // }
+
+                    // if (!in_array($file->getMimeType(), $allowedTypes)) {
+                    //     return response()->json(['status' => 'echec', 'message' => 'Type de fichier non autorisé']);
+                    // }
+
+
+                    // Appel de la fonction de contrôle avant l'upload
+                    if (!$this->avantUploadControle($file)) {
+                        return response()->json(['error' => 'Contrôle avant upload échoué. api email'], 422);
                     }
 
-                    if (!in_array($file->getMimeType(), $allowedTypes)) {
-                        return response()->json(['status' => 'echec', 'message' => 'Type de fichier non autorisé']);
-                    }
 
                     $this->storeFile($message->id, $file, $user->id, false);
                 }
