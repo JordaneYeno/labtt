@@ -139,10 +139,17 @@ class NotificationController extends Controller
                 ]);
 
                 if ($request->hasFile('file')) {
-                    $file = $request->file('file');
-                    // $maxFileSize = 5000 * 1024; // 5000 Ko en octets
-                    // $maxFileSize = 15728640; // 15Mo
+                    $file = $request->file('file'); 
                     $maxFileSize = 15 * 1024 * 1024;; // 15Mo
+
+                    if ($file->getSize() > $maxFileSize) 
+                    {
+                        return response()->json([
+                            'status' => 'echec',
+                            'message' => 'Le fichier dépasse la taille autorisée de 15 Mo.'
+                        ], 400);
+                    }
+                    
                     $allowedTypes = [
                         "application/msword",
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -158,11 +165,8 @@ class NotificationController extends Controller
                         "application/csv",
                     ];
 
-                    if ($file->getSize() > $maxFileSize) {
-                        return response()->json(['status' => 'echec', 'message' => 'La taille du fichier ne doit pas dépasser 15000 Mo']);}
-
-                    if (!in_array($file->getMimeType(), $allowedTypes)) {
-                        return response()->json(['status' => 'echec', 'message' => 'Type de fichier non autorisé']);}
+                    // if (!in_array($file->getMimeType(), $allowedTypes)) {
+                    //     return response()->json(['status' => 'echec', 'message' => 'Type de fichier non autorisé']);}
 
                     $this->storeFile($message->id, $file, $user->id, false);
                 }
