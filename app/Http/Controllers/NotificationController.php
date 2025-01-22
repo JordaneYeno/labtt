@@ -2465,6 +2465,8 @@ class NotificationController extends Controller
         
         $mime = $file->getMimeType(); // getType
 
+        dd($mime);
+
          // Vérifier si le fichier est dans la liste des types MIME interdits
          if (in_array($mime, $blockedMimeTypes)) {
             return response()->json([
