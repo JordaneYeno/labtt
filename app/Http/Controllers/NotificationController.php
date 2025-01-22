@@ -159,7 +159,7 @@ class NotificationController extends Controller
                         "image/jpeg",
                         "image/png",
                         "image/gif",
-                        "video/mp4",
+                        "video/mp4", 
                         // csv
                         "text/csv",
                         "application/csv",
