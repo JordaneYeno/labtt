@@ -30,7 +30,7 @@ class CustumGateway extends FormRequest
             'title' => 'required',
             'message' => 'required',
             'recipients' => 'required',
-            'file' => 'file|mimes:jpeg,jpg,png,bmp,tiff,doc,docx,xls,xlsx,ppt,pptx,csv,pdf',
+            'file' => 'file|max:20480|mimes:jpeg,jpg,png,bmp,tiff,doc,docx,xls,xlsx,ppt,pptx,csv,pdf',
         ];
     }
 
@@ -46,7 +46,7 @@ class CustumGateway extends FormRequest
             'message.required' => 'Veuillez indiquer le contenu du message.',
             'recipients.required' => 'Veuillez indiquer la liste de destinataires.',
             'file.file' => 'Le fichier doit être un fichier valide.',
-            // 'file.max' => 'Le fichier ne doit pas dépasser 20Mo.',
+            'file.max' => 'Le fichier ne doit pas dépasser 20Mo.',
             // 'file.mimes' => 'Le fichier doit être au format DOC, DOCX, XLS, PPT, PDF, JPEG, PNG, MP4, CSV.',
             'file.mimes' => 'Erreur de type de fichier (:attribute) - Seuls les fichiers DOC, DOCX, XLS, XLSX, PPT, PPTX, PDF, JPEG, PNG, CSV sont autorisés.',
         
