@@ -142,14 +142,24 @@ class NotificationController extends Controller
                 if ($request->hasFile('file')) {
                     $file = $request->file('file'); 
                     // upload contoller
-                    // if (!$this->validateFileMimeType($file)) 
-                    // {
-                    //     return response()->json(['status' => 'error','message error' => 'Fichier non valide, Erreur de type file (:attribute)'], 400);
-                    // }
+                    $validationResult = $this->newValidateFileMimeType($file, [
+                        // Images
+                        'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp', 'image/tiff',
+                        // Documents
+                        'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                        'text/plain', 'text/csv', 'application/rtf',
+                        // Archives
+                        'application/zip', 'application/x-rar-compressed', 'application/x-tar', 'application/x-7z-compressed', 'application/gzip',
+                        // Audio
+                        'audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/webm', 'audio/aac',
+                        // Vidéo
+                        'video/mp4', 'video/x-msvideo', 'video/x-ms-wmv', 'video/quicktime', 'video/x-matroska', 'video/webm', 'video/ogg',
+                        // Autres
+                        'application/json', 'application/xml', 'application/octet-stream',
 
-                    // Valider le fichier
-                    // $validationResult = $this->validateFileMimeType($file, ['image/jpeg', 'image/png', 'text/csv']);
-                    $validationResult = $this->newValidateFileMimeType($file, ['image/jpeg', 'image/png', 'text/csv']);
+                        ]);
                     
                     if ($validationResult['status'] === 'error') {
                         return response()->json([
@@ -601,14 +611,24 @@ class NotificationController extends Controller
                 {
                     $file = $request->file('file');                    
                     // upload contoller
-                    // if (!$this->validateFileMimeType($file)) 
-                    // {
-                    //     return response()->json(['status' => 'error','message error' => 'Fichier non valide, Erreur de type file (:attribute)'], 400);
-                    // }
-                    
-                    // Valider le fichier
-                    // $validationResult = $this->validateFileMimeType($file, ['image/jpeg', 'image/png', 'text/csv']);
-                    $validationResult = $this->newValidateFileMimeType($file, ['image/jpeg', 'image/png', 'text/csv']);
+                    $validationResult = $this->newValidateFileMimeType($file, [
+                        // Images
+                        'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp', 'image/tiff',
+                        // Documents
+                        'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                        'text/plain', 'text/csv', 'application/rtf',
+                        // Archives
+                        'application/zip', 'application/x-rar-compressed', 'application/x-tar', 'application/x-7z-compressed', 'application/gzip',
+                        // Audio
+                        'audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/webm', 'audio/aac',
+                        // Vidéo
+                        'video/mp4', 'video/x-msvideo', 'video/x-ms-wmv', 'video/quicktime', 'video/x-matroska', 'video/webm', 'video/ogg',
+                        // Autres
+                        'application/json', 'application/xml', 'application/octet-stream',
+
+                    ]);
                     
                     if ($validationResult['status'] === 'error') {
                         return response()->json([
@@ -2470,10 +2490,26 @@ class NotificationController extends Controller
         return true;
     }
 
-//     use Illuminate\Support\Facades\Log;
-//     use Illuminate\Http\UploadedFile;
-
-    private function newValidateFileMimeType(\Illuminate\Http\UploadedFile $file, array $allowedMimeTypes = [], array $blockedMimeTypes = ['application/sql', 'text/x-sql', 'application/x-php', 'text/x-php', 'text/plain'])
+    private function newValidateFileMimeType(\Illuminate\Http\UploadedFile $file, array $allowedMimeTypes = [], array $blockedMimeTypes = 
+        [
+            // Fichiers exécutables et scripts
+            'application/x-php', 'text/x-php', 'application/x-httpd-php', 'application/x-shellscript', 'application/x-sh',
+            'application/x-perl', 'application/x-python', 'application/x-ruby', 'application/javascript', 'application/x-javascript',
+            'text/javascript',
+            // Fichiers de base de données
+            'application/sql', 'text/x-sql', 'application/x-sql',
+            // Fichiers texte potentiellement dangereux
+            'text/plain', 'text/html', 'text/xml', 'application/xml',
+            // Fichiers binaires et exécutables
+            'application/x-msdownload', 'application/x-msdos-program', 'application/x-executable', 'application/x-mach-binary',
+            'application/x-apple-diskimage', 'application/octet-stream',
+            // Fichiers compressés potentiellement dangereux
+            'application/x-gzip', 'application/x-bzip2', 'application/x-tar', 'application/x-7z-compressed', 'application/x-rar-compressed',
+            // Autres fichiers potentiellement dangereux
+            'application/x-java-archive', 'application/x-msaccess', 'application/x-msi', 'application/vnd.android.package-archive',        
+        ]
+    )
+    
     {
         $tailleMaxAutorisee = 20; // 20 Mo
         $tailleFichierMo = $file->getSize() / (1024 * 1024); // Convertir en Mo
