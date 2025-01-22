@@ -31,7 +31,7 @@ class CustomGateway extends FormRequest
             'recipients' => 'required',
             // 'file' => 'file|mimes:jpeg,jpg,png,bmp,tiff,doc,docx,xls,xlsx,ppt,pptx,csv,text/csv,application/csv,application/vnd.ms-excel|max:20480',
 
-           'file' => 'extension:csv'
+           'file' => 'file|extension:csv'
         ]; 
     }
 
@@ -46,7 +46,7 @@ class CustomGateway extends FormRequest
             'title.required' => 'Veuillez indiquer le titre du message.',
             'message.required' => 'Veuillez indiquer le contenu du message.',
             'recipients.required' => 'Veuillez indiquer la liste de destinataires.',
-            // 'file.file' => 'Le fichier doit être un fichier valide.',
+            'file.file' => 'Le fichier doit être un fichier valide.',
             'file.extension' => 'Erreur de type de fichier (:attribute) - Seuls les types suivants sont autorisés : DOC, DOCX, XLS, XLSX, PPT, PPTX, PDF, JPEG, PNG, CSV. Type reçu : :mimetype',
             // 'file.max' => 'Le fichier ne doit pas dépasser 20Mo.',
         ];
