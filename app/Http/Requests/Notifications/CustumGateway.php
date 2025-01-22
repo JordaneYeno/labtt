@@ -33,20 +33,20 @@ class CustumGateway extends FormRequest
             // 'file' => 'file|max:2048|mimes:jpeg,png,pdf', // Retirez 'required' pour le rendre facultatif
             // 'file' => 'file|max:15360|mimes:jpeg,png,pdf', // 15 Mo = 15360 Ko
 
-            'file' => 'file|max:15360|mimetypes:
-                application/msword,
-                application/vnd.openxmlformats-officedocument.wordprocessingml.document,
-                application/vnd.ms-excel,
-                application/vnd.ms-powerpoint,
-                application/pdf,
-                image/jpeg,
-                image/png,
-                image/gif,
-                video/mp4,
-                text/csv,
-                application/csv',
+            // 'file' => 'file|max:15360|mimetypes:
+            //     application/msword,
+            //     application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+            //     application/vnd.ms-excel,
+            //     application/vnd.ms-powerpoint,
+            //     application/pdf,
+            //     image/jpeg,
+            //     image/png,
+            //     image/gif,
+            //     video/mp4,
+            //     text/csv,
+            //     application/csv',
 
-            // 'file' => 'file|max:15360|mimes:doc,docx,xls,xlsx,ppt,pptx,pdf,jpg,jpeg,png,gif,mp4,csv',
+            'file' => 'file|max:15360|mimes:doc,docx,xls,xlsx,ppt,pptx,pdf,jpg,jpeg,png,gif,mp4,csv',
 
         ];
     }
