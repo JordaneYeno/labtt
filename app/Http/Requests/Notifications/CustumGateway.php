@@ -46,7 +46,8 @@ class CustumGateway extends FormRequest
             'message.required' => 'Veuillez indiquer le contenu du message.',
             'recipients.required' => 'Veuillez indiquer la liste de destinataires.',
             'file.file' => 'Le fichier doit être un fichier valide.',
-            'file.max' => 'Le fichier ne doit pas dépasser 5 Mo.',
+            // 'file.max' => 'Le fichier ne doit pas dépasser 5 Mo.',
+            'file.max' => 'Le fichier ne doit pas dépasser 15Mo.',
             'file.mimes' => 'Le fichier doit être au format JPEG, PNG ou PDF.',
         ];
     }

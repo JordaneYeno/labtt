@@ -140,7 +140,8 @@ class NotificationController extends Controller
 
                 if ($request->hasFile('file')) {
                     $file = $request->file('file');
-                    $maxFileSize = 5000 * 1024; // 5000 Ko en octets
+                    // $maxFileSize = 5000 * 1024; // 5000 Ko en octets
+                    $maxFileSize = 15728640; // 15Mo
                     $allowedTypes = [
                         "application/msword",
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -151,10 +152,13 @@ class NotificationController extends Controller
                         "image/png",
                         "image/gif",
                         "video/mp4",
+                        // csv
+                        "text/csv",
+                        "application/csv",
                     ];
 
                     if ($file->getSize() > $maxFileSize) {
-                        return response()->json(['status' => 'echec', 'message' => 'La taille du fichier ne doit pas dépasser 5000 Ko']);}
+                        return response()->json(['status' => 'echec', 'message' => 'La taille du fichier ne doit pas dépasser 15000 Mo']);}
 
                     if (!in_array($file->getMimeType(), $allowedTypes)) {
                         return response()->json(['status' => 'echec', 'message' => 'Type de fichier non autorisé']);}
@@ -599,7 +603,8 @@ class NotificationController extends Controller
 
                 if ($request->hasFile('file')) {
                     $file = $request->file('file');
-                    $maxFileSize = 5000 * 1024; // 5000 Ko en octets
+                    // $maxFileSize = 5000 * 1024; // 5000 Ko en octets
+                    $maxFileSize = 15728640; // 15Mo
                     $allowedTypes = [
                         "application/msword",
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -610,10 +615,13 @@ class NotificationController extends Controller
                         "image/png",
                         "image/gif",
                         "video/mp4",
+                        // csv
+                        "text/csv",
+                        "application/csv",
                     ];
 
                     if ($file->getSize() > $maxFileSize) {
-                        return response()->json(['status' => 'echec', 'message' => 'La taille du fichier ne doit pas dépasser 5000 Ko']);
+                        return response()->json(['status' => 'echec', 'message' => 'La taille du fichier ne doit pas dépasser 15000 Mo']);
                     }
 
                     if (!in_array($file->getMimeType(), $allowedTypes)) {
