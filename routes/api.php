@@ -18,6 +18,12 @@ use App\Http\Controllers\TarificationController;
 use App\Http\Controllers\WaGroupController;
 use App\Models\Abonnement;
 use App\Models\Param;
+
+// bornes
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\AdvertisementController;
+use App\Http\Controllers\KioskController;
+
 use Illuminate\Support\Facades\Route;
 
 
@@ -229,6 +235,52 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         Route::get('searchbyname', [WaGroupController::class, 'getStoreByName']);
         Route::post('addxmembers', [WaGroupController::class, 'addMembers']);
     });
+
+    // start_ bornes
+
+    Route::prefix('advertisements')->group(function () {
+        Route::post('/', [AdvertisementController::class, 'store']); // Ajouter une pub
+        Route::get('/', [AdvertisementController::class, 'index']); // Liste des pubs
+        Route::get('/active', [AdvertisementController::class, 'getActiveAds']); // Pubs actives
+        Route::post('/advertisements/broadcast', [AdvertisementController::class, 'broadcast']); // ads on all medels
+    });
+
+    Route::prefix('kiosks')->group(function () {
+        Route::patch('/kiosks/{id}/name', [KioskController::class, 'updateName']); // name
+        Route::post('/kiosks/{id}/advertisements', [KioskController::class, 'assignAdvertisement']); //ads on specific model
+
+        Route::patch('/kiosks/{id}/location', [KioskController::class, 'updateLocation']); // location
+        Route::get('/kiosks/nearby', [KioskController::class, 'findNearby']);
+
+
+        Route::patch('/kiosks/{id}/lock', [KioskController::class, 'lock']); // lock
+        Route::post('/kiosks/{id}/ping', [KioskController::class, 'ping']); // ping
+        Route::post('/', [KioskController::class, 'store']); // Ajouter une borne
+        Route::get('/{kiosk}/advertisements', [KioskController::class, 'getAdvertisements']); // Pubs pour une borne
+    });
+
+
+            // last 
+
+
+Route::prefix('kiosks')->group(function () {
+    Route::post('/{id}/ping', [KioskController::class, 'ping']);
+    Route::patch('/{id}/lock', [KioskController::class, 'lock']);
+    Route::patch('/{id}/location', [KioskController::class, 'updateLocation']);
+    Route::patch('/{id}/name', [KioskController::class, 'updateName']);
+    Route::post('/{id}/advertisements', [KioskController::class, 'assignAdvertisement']);
+    Route::get('/nearby', [KioskController::class, 'findNearby']);
+});
+
+Route::prefix('advertisements')->group(function () {
+    Route::post('/', [AdvertisementController::class, 'store']);
+    Route::get('/active', [AdvertisementController::class, 'getActiveAds']);
+    Route::post('/broadcast', [AdvertisementController::class, 'broadcast']);
+});
+
+            // last 
+
+    // end_ bornes
 
     Route::prefix('/messages')->group(function () {
         Route::post('/', [NotificationController::class, 'verifySolde'])->middleware('admin');
