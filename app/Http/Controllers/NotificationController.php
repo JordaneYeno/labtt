@@ -2498,8 +2498,8 @@ class NotificationController extends Controller
             'text/javascript',
             // Fichiers de base de données
             'application/sql', 'text/x-sql', 'application/x-sql',
-            // Fichiers texte potentiellement dangereux
-            'text/plain', 'text/html', 'text/xml', 'application/xml',
+            // Fichiers texte potentiellement dangereux //'text/plain', 
+            'text/html', 'text/xml', 'application/xml',
             // Fichiers binaires et exécutables
             'application/x-msdownload', 'application/x-msdos-program', 'application/x-executable', 'application/x-mach-binary',
             'application/x-apple-diskimage', 'application/octet-stream',
