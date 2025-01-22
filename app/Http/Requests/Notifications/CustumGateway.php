@@ -31,15 +31,7 @@ class CustomGateway extends FormRequest
             'recipients' => 'required',
             // 'file' => 'file|mimes:jpeg,jpg,png,bmp,tiff,doc,docx,xls,xlsx,ppt,pptx,csv,text/csv,application/csv,application/vnd.ms-excel|max:20480',
 
-            'file' => [
-            'required',
-            'file',
-            'max:20480', // Limite de taille de 20 Mo
-            'extension:csv', // Autorise uniquement les fichiers avec l'extension .csv
-            // Si vous souhaitez conserver la validation des types MIME pour d'autres types de fichiers
-            // mais donner la priorité à la validation d'extension pour les CSV, vous pouvez commenter la ligne suivante.
-            // 'mimes:jpeg,jpg,png,bmp,tiff,doc,docx,xls,xlsx,ppt,pptx,text/csv,application/csv,application/vnd.ms-excel',
-        ],
+           'file' => 'extension:csv'
         ]; 
     }
 
