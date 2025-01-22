@@ -29,7 +29,8 @@ class CustumGateway extends FormRequest
         return [
             'title' => 'required',
             'message' => 'required',
-            'recipients' => 'required',     
+            'recipients' => 'required',  
+            'file' => 'file|max:20480'   
         ]; 
     }
 
@@ -44,6 +45,8 @@ class CustumGateway extends FormRequest
             'title.required' => 'Veuillez indiquer le titre du message.',
             'message.required' => 'Veuillez indiquer le contenu du message.',
             'recipients.required' => 'Veuillez indiquer la liste de destinataires.',
+            'file.file' => 'Le fichier doit être un fichier valide.',
+            'file.max' => 'Le fichier ne doit pas dépasser 20Mo.',
         ];
     }
 

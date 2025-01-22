@@ -142,10 +142,21 @@ class NotificationController extends Controller
                 if ($request->hasFile('file')) {
                     $file = $request->file('file'); 
                     // upload contoller
-                    if (!$this->validateFileMimeType($file)) 
-                    {
-                        return response()->json(['status' => 'error','message error' => 'Fichier non valide, Erreur de type file (:attribute)'], 400);
+                    // if (!$this->validateFileMimeType($file)) 
+                    // {
+                    //     return response()->json(['status' => 'error','message error' => 'Fichier non valide, Erreur de type file (:attribute)'], 400);
+                    // }
+
+                    // Valider le fichier
+                    $validationResult = $this->validateFileMimeType($file, ['image/jpeg', 'image/png', 'text/csv']);
+
+                    if ($validationResult['status'] === 'error') {
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => $validationResult['message'],
+                        ], 400);
                     }
+
 
                     $this->storeFile($message->id, $file, $user->id, false);
                 }
@@ -589,10 +600,21 @@ class NotificationController extends Controller
                 {
                     $file = $request->file('file');                    
                     // upload contoller
-                    if (!$this->validateFileMimeType($file)) 
-                    {
-                        return response()->json(['status' => 'error','message error' => 'Fichier non valide, Erreur de type file (:attribute)'], 400);
+                    // if (!$this->validateFileMimeType($file)) 
+                    // {
+                    //     return response()->json(['status' => 'error','message error' => 'Fichier non valide, Erreur de type file (:attribute)'], 400);
+                    // }
+                    
+                    // Valider le fichier
+                    $validationResult = $this->validateFileMimeType($file, ['image/jpeg', 'image/png', 'text/csv']);
+
+                    if ($validationResult['status'] === 'error') {
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => $validationResult['message'],
+                        ], 400);
                     }
+
 
                     $this->storeFile($message->id, $file, $user->id, false);
                 }
@@ -2433,7 +2455,6 @@ class NotificationController extends Controller
 
          if (in_array($mime, $blockedMimeTypes)) { return false; }
 
-        // Vérifier si le fichier est dans la liste des types MIME autorisés (si spécifiée)
         if (!empty($allowedMimeTypes) && !in_array($mime, $allowedMimeTypes)) { return false; }
 
         if ($tailleFichierMo > $tailleMaxAutorisee) {
@@ -2445,6 +2466,48 @@ class NotificationController extends Controller
         }
 
         return true;
+    }
+
+//     use Illuminate\Support\Facades\Log;
+//     use Illuminate\Http\UploadedFile;
+
+    private function newValidateFileMimeType(\Illuminate\Http\UploadedFile $file, array $allowedMimeTypes = [], array $blockedMimeTypes = ['application/sql', 'text/x-sql', 'application/x-php', 'text/x-php', 'text/plain'])
+    {
+        $tailleMaxAutorisee = 20; // 20 Mo
+        $tailleFichierMo = $file->getSize() / (1024 * 1024); // Convertir en Mo
+
+        // Vérifier le type MIME
+        $mime = $file->getMimeType();
+
+        // Bloquer les types MIME interdits
+        if (in_array($mime, $blockedMimeTypes)) {
+            Log::warning('Tentative d\'upload d\'un fichier interdit.', [
+                'chemin' => $file->getPathname(),
+                'type_mime' => $mime,
+            ]);
+            return ['status' => 'error', 'message' => 'Ce type de fichier est interdit.'];
+        }
+
+        // Vérifier les types MIME autorisés
+        if (!empty($allowedMimeTypes) && !in_array($mime, $allowedMimeTypes)) {
+            Log::warning('Tentative d\'upload d\'un fichier non autorisé.', [
+                'chemin' => $file->getPathname(),
+                'type_mime' => $mime,
+            ]);
+            return ['status' => 'error', 'message' => 'Ce type de fichier n\'est pas autorisé.'];
+        }
+
+        // Vérifier la taille du fichier
+        if ($tailleFichierMo > $tailleMaxAutorisee) {
+            Log::warning('Tentative d\'upload d\'un fichier trop volumineux.', [
+                'chemin' => $file->getPathname(),
+                'taille' => $tailleFichierMo . ' Mo',
+            ]);
+            return ['status' => 'error', 'message' => 'Le fichier est trop volumineux.'];
+        }
+
+        // Si tout est OK
+        return ['status' => 'success', 'message' => 'Fichier valide.'];
     }
     
 }
