@@ -51,7 +51,7 @@ class NotificationController extends Controller
 
     // start cusumer Hobotta API
 
-    public function custumGateway(CustumGateway $request)
+    public function custumGateway(/*CustumGateway*/ Request $request)
     {
         
         $perPage = $request->perPage ? $request->perPage : 9;
@@ -137,6 +137,9 @@ class NotificationController extends Controller
                     'canal' => 'api whatsapp',
                     'status' => 4,  // status en de depart 
                 ]);
+
+                
+
 
                 if ($request->hasFile('file')) {
                     $file = $request->file('file'); 
@@ -616,40 +619,14 @@ class NotificationController extends Controller
                     'status' => 4,  // status en de depart
                 ]);
 
-                if ($request->hasFile('file')) {
-                    $file = $request->file('file');
-                    // $maxFileSize = 5000 * 1024; // 5000 Ko en octets
-                    // $maxFileSize = 15728640; // 15Mo
-                    // $maxFileSize = 15 * 1024 * 1024;; // 15Mo
-                    // $allowedTypes = [
-                    //     "application/msword",
-                    //     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    //     "application/vnd.ms-excel",
-                    //     "application/vnd.ms-powerpoint",
-                    //     "application/pdf",
-                    //     "image/jpeg",
-                    //     "image/png",
-                    //     "image/gif",
-                    //     "video/mp4",
-                    //     // csv
-                    //     "text/csv",
-                    //     "application/csv",
-                    // ];
-
-                    // if ($file->getSize() > $maxFileSize) {
-                    //     return response()->json(['status' => 'echec', 'message' => 'La taille du fichier ne doit pas dépasser 15000 Mo']);
-                    // }
-
-                    // if (!in_array($file->getMimeType(), $allowedTypes)) {
-                    //     return response()->json(['status' => 'echec', 'message' => 'Type de fichier non autorisé']);
-                    // }
-
-
-                    // Appel de la fonction de contrôle avant l'upload
-                    if (!$this->avantUploadControle($file)) {
+                if ($request->hasFile('file')) 
+                {
+                    $file = $request->file('file');                    
+                    // upload contoller
+                    if (!$this->validateFileMimeType($file)) 
+                    {
                         return response()->json(['error' => 'Contrôle avant upload échoué. api email'], 422);
                     }
-
 
                     $this->storeFile($message->id, $file, $user->id, false);
                 }
@@ -2480,4 +2457,39 @@ class NotificationController extends Controller
         return true;
     }
 
+    private function validateFileMimeType(\Illuminate\Http\UploadedFile $file, array $allowedMimeTypes = [], array $blockedMimeTypes = ['application/sql', 'text/x-sql', 'application/x-php', 'text/x-php'])
+    {
+        $tailleMaxAutorisee = 20; // 20 Mo
+        $tailleFichierMo = $file->getSize() / (1024 * 1024); // Convertir en Mo
+
+        
+        $mime = $file->getMimeType(); // getType
+
+         // Vérifier si le fichier est dans la liste des types MIME interdits
+         if (in_array($mime, $blockedMimeTypes)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ce type de fichier n\'est pas autorisé.',
+            ], 400); // Code HTTP 400 : Bad Request
+        }
+
+        // Vérifier si le fichier est dans la liste des types MIME autorisés (si spécifiée)
+        if (!empty($allowedMimeTypes) && !in_array($mime, $allowedMimeTypes)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Seuls les fichiers de type ' . implode(', ', $allowedMimeTypes) . ' sont autorisés.',
+            ], 400); // Code HTTP 400 : Bad Request
+        }
+
+        if ($tailleFichierMo > $tailleMaxAutorisee) {
+            Log::warning('Tentative d\'upload d\'un fichier trop volumineux.', [
+                'chemin' => $file->getPathname(),
+                'taille' => $tailleFichierMo . ' Mo',
+            ]);
+            return false;
+        }
+
+        return true;
+    }
+    
 }
