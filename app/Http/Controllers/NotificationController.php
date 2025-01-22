@@ -139,46 +139,12 @@ class NotificationController extends Controller
                 ]);
 
                 
-
-
                 if ($request->hasFile('file')) {
                     $file = $request->file('file'); 
-
-
-
-                    // $maxFileSize = 15 * 1024 * 1024;; // 15Mo
-
-                    // if ($file->getSize() > $maxFileSize) 
-                    // {
-                    //     return response()->json([
-                    //         'status' => 'echec',
-                    //         'message' => 'Le fichier dépasse la taille autorisée de 15 Mo.'
-                    //     ], 400);
-                    // }
-                    
-                    // $allowedTypes = [
-                    //     "application/msword",
-                    //     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    //     "application/vnd.ms-excel",
-                    //     "application/vnd.ms-powerpoint",
-                    //     "application/pdf",
-                    //     "image/jpeg",
-                    //     "image/png",
-                    //     "image/gif",
-                    //     "video/mp4", 
-                    //     // csv
-                    //     "text/csv",
-                    //     "application/csv",
-                    // ];
-
-                    // if (!in_array($file->getMimeType(), $allowedTypes)) {
-                    //     return response()->json(['status' => 'echec', 'message' => 'Type de fichier non autorisé']);}
-                    
-                    
-
-                    // Appel de la fonction de contrôle avant l'upload
-                    if (!$this->avantUploadControle($file)) {
-                        return response()->json(['error' => 'Contrôle avant upload échoué.'], 422);
+                    // upload contoller
+                    if (!$this->validateFileMimeType($file)) 
+                    {
+                        return response()->json(['status' => 'error','message error' => 'Fichier non valide, Erreur de type file (:attribute)'], 400);
                     }
 
                     $this->storeFile($message->id, $file, $user->id, false);
@@ -625,7 +591,7 @@ class NotificationController extends Controller
                     // upload contoller
                     if (!$this->validateFileMimeType($file)) 
                     {
-                        return response()->json(['error' => 'Contrôle avant upload échoué. api email'], 422);
+                        return response()->json(['status' => 'error','message error' => 'Fichier non valide, Erreur de type file (:attribute)'], 400);
                     }
 
                     $this->storeFile($message->id, $file, $user->id, false);
@@ -2465,27 +2431,10 @@ class NotificationController extends Controller
         
         $mime = $file->getMimeType(); // getType
 
-         // Vérifier si le fichier est dans la liste des types MIME interdits
-         if (in_array($mime, $blockedMimeTypes)) {
-            // return response()->json([
-            //     'status' => 'error',
-            //     'message' => 'Ce type de fichier n\'est pas autorisé.',
-            // ], 400); // Code HTTP 400 : Bad Request
-
-            
-            return false;
-        }
+         if (in_array($mime, $blockedMimeTypes)) { return false; }
 
         // Vérifier si le fichier est dans la liste des types MIME autorisés (si spécifiée)
-        if (!empty($allowedMimeTypes) && !in_array($mime, $allowedMimeTypes)) {
-            // return response()->json([
-            //     'status' => 'error',
-            //     'message' => 'Seuls les fichiers de type ' . implode(', ', $allowedMimeTypes) . ' sont autorisés.',
-            // ], 400); // Code HTTP 400 : Bad Request
-
-            
-            return false;
-        }
+        if (!empty($allowedMimeTypes) && !in_array($mime, $allowedMimeTypes)) { return false; }
 
         if ($tailleFichierMo > $tailleMaxAutorisee) {
             Log::warning('Tentative d\'upload d\'un fichier trop volumineux.', [

@@ -49,7 +49,7 @@ class CustumGateway extends FormRequest
 
 
     protected function failedValidation(Validator $validator)
-    {
+    {   
         $errors = $validator->errors();
 
         throw new HttpResponseException(
