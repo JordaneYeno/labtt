@@ -148,8 +148,9 @@ class NotificationController extends Controller
                     // }
 
                     // Valider le fichier
-                    $validationResult = $this->validateFileMimeType($file, ['image/jpeg', 'image/png', 'text/csv']);
-
+                    // $validationResult = $this->validateFileMimeType($file, ['image/jpeg', 'image/png', 'text/csv']);
+                    $validationResult = $this->newValidateFileMimeType($file, ['image/jpeg', 'image/png', 'text/csv']);
+                    
                     if ($validationResult['status'] === 'error') {
                         return response()->json([
                             'status' => 'error',
@@ -608,7 +609,7 @@ class NotificationController extends Controller
                     // Valider le fichier
                     // $validationResult = $this->validateFileMimeType($file, ['image/jpeg', 'image/png', 'text/csv']);
                     $validationResult = $this->newValidateFileMimeType($file, ['image/jpeg', 'image/png', 'text/csv']);
-                    dd($validationResult);
+                    
                     if ($validationResult['status'] === 'error') {
                         return response()->json([
                             'status' => 'error',
