@@ -1806,11 +1806,15 @@ class NotificationController extends Controller
 
     public function sendNotif()
     {
-        $currentHour = Carbon::now()->hour; if ($currentHour >= 11 && $currentHour < 18) {dd('lance campagnes', 'current', Carbon::now()->hour);} else {dd('heure close', 'current', Carbon::now()->hour);}
+        $currentHour = Carbon::now()->hour; 
+        $startHour = 11; // 07h00
+        $endHour = 13; // 18h00 
+        $isWithinAllowedHours = ($currentHour >= $startHour) && ($currentHour < $endHour);
+        
         $responses = [];
         $allmessages = Message::get();
         $allabonnements = Abonnement::get();
-        $allnotifications = Notification::orderBy('created_at', 'asc')->get();
+        $allnotifications = Notification::orderBy('created_at', 'asc')->get(); 
         $API_KEY_WHATSAPP = Param::getTokenWhatsapp();
 
         $sendAtDate = $allmessages->whereNotNull('date_envoie')->where('status', '2')->take(120); // messages programmés
@@ -1827,7 +1831,7 @@ class NotificationController extends Controller
             }
         }
 
-        if ($currentHour >= 7 && $currentHour < 18) 
+        if ($isWithinAllowedHours)
         {
             $notifications = Notification::where('notify', 0)
                                         ->where('chrone', 0)
