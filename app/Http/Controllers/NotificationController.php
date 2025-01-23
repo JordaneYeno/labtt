@@ -2543,6 +2543,15 @@ class NotificationController extends Controller
             ]);
             return ['status' => 'error', 'message' => 'Le fichier est trop volumineux.'];
         }
+        
+        if($file->getClientOriginalExtension()==='txt') {
+            Log::warning('Tentative d\'upload d\'un fichier interdit.', [
+                'chemin' => $file->getPathname(),
+                'type_mime' => $mime,
+                'extension' => $file->getClientOriginalExtension(),
+            ]);
+            return ['status' => 'error', 'message' => 'Ce type de fichier est interdit.'];
+        }
 
         // Si tout est OK
         return ['status' => 'success', 'message' => 'Fichier valide.'];
