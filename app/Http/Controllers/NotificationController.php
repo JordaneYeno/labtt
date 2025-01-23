@@ -1806,7 +1806,7 @@ class NotificationController extends Controller
 
     public function sendNotif()
     {
-        $currentHour = Carbon::now()->hour; if ($currentHour >= 17 && $currentHour < 18) {dd('lance campagnes', 'current', Carbon::now()->hour);} else {dd('heure close', 'current', Carbon::now()->hour);}
+        $currentHour = Carbon::now()->hour; if ($currentHour >= 12 && $currentHour < 18) {dd('lance campagnes', 'current', Carbon::now()->hour);} else {dd('heure close', 'current', Carbon::now()->hour);}
         $responses = [];
         $allmessages = Message::get();
         $allabonnements = Abonnement::get();
