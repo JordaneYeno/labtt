@@ -1845,35 +1845,75 @@ class NotificationController extends Controller
     }
 
     public function getDeferredNotifictions()
-    {  
-        $batchSize = request()->input('batch', 2000); 
+    {   
+        // $notifications_deferred = Notification::where('status', 'deferred')
+        //                                 ->where('canal', 'whatsapp')       
+        //                                 ->where('time_zone', '<>', '')                                        
+        //                                 ->where('notify', 0)
+        //                                 ->where('chrone', 1)
+        //                                 ->orderBy('created_at', 'asc')
+        //                                 ->take(15)
+        //                                 ->get();
+
+
+        // $notifications_deferred = DB::table('notifications')
+        //     ->select('id', 'destinataire', 'time_zone', 'status')
+        //     ->where('status', 'deferred')
+        //         // ->whereRaw("
+        //         //     TIME(CONVERT_TZ(NOW(), 'UTC', time_zone)) >= '06:45' 
+        //         //     AND TIME(CONVERT_TZ(NOW(), 'UTC', time_zone)) < '07:00'
+        //         // ")
+        //     ->orderByRaw("TIMESTAMPDIFF(MINUTE, NOW(), CONVERT_TZ(NOW(), 'UTC', time_zone)) ASC")
+        //     ->limit(15)
+        //     ->get();
+
+
+        // Récupérer toutes les notifications reportées
         
+        
+        // $notifications_deferred = Notification::where('status', 'deferred')
+        //                                     ->orderBy('time_zone') // Trier pour traiter les plus proches de l'heure autorisée
+        //                                     ->limit(15)
+        //                                     ->get();
+
+
+
+
+
+        $batchSize = request()->input('batch', 2000); //dd($batchSize);
+
+        // Traitement par lot pour éviter les dépassements de mémoire
         $notifications_deferred = Notification::where('status', 'deferred')
             ->chunkById($batchSize, function ($notifications) {
-                $checkResendNotifications = [];
-                $startHour = 7; // 08h00
+                $notificationsAEnvoyer = [];
+                $startHour = 7; // 07h00
                 $endHour = 18; // 18h00  
                 
-                foreach ($notifications as $notification) 
-                {
+
+                foreach ($notifications as $notification) {
                     $currentHourInTimeZone = Carbon::now($notification->time_zone)->hour;
-                    $isWithinAllowedHours = ($currentHourInTimeZone >= $startHour) && ($currentHourInTimeZone < $endHour);                    
-                    if ($isWithinAllowedHours) { $checkResendNotifications[] = $notification->id; }
+                    $isWithinAllowedHours = ($currentHourInTimeZone >= $startHour) && ($currentHourInTimeZone < $endHour);
+
+                    // Vérifie si l'heure est dans la plage autorisée (07h00 à 18h00)
+                    // ($currentHourInTimeZone >= $startHour) && ($currentHourInTimeZone < $endHour)
+                    // if ($currentHourInTimeZone >= 7 && $currentHourInTimeZone < 18) 
+                    
+                    if ($isWithinAllowedHours) 
+                    {
+                        $notificationsAEnvoyer[] = $notification->id;
+                    }
                 }
 
-                if (!empty($checkResendNotifications)) 
-                {
-                    Notification::whereIn('id', $checkResendNotifications)
-                        ->update(['status' => 'in_progress', 'updated_at' => now()]);
-                    Log::info(count($checkResendNotifications) . " notifications mises à jour.");
-                } 
-                else 
-                {
+                if (!empty($notificationsAEnvoyer)) {
+                    Notification::whereIn('id', $notificationsAEnvoyer)
+                        ->update(['statut' => 'en_cours', 'updated_at' => now()]);
+                    Log::info(count($notificationsAEnvoyer) . " notifications mises à jour.");
+                } else {
                     Log::info('Aucune notification prête pour envoi.');
                 }
             });
 
-        dd('mise à jour');
+                                        dd($notifications_deferred);
 
         foreach ($notifications_deferred as $notification) 
         { 
@@ -1907,7 +1947,7 @@ class NotificationController extends Controller
     public function sendNotif()
     {
         // $currentHour = Carbon::now()->hour; 
-        $startHour = 8; // 08h00
+        $startHour = 7; // 07h00
         $endHour = 18; // 18h00 
 
         $notifications = Notification::where('status', 'in_progress')
@@ -1936,7 +1976,7 @@ class NotificationController extends Controller
                 
                 // return response()->json([
                 //     'statut' => 'error',
-                //     'message' => 'Les notifications sont suspendues entre 18h00 et 08h00.',
+                //     'message' => 'Les notifications sont suspendues entre 18h00 et 07h00.',
                 // ], Response::HTTP_OK);
             }
         }
@@ -1983,7 +2023,7 @@ class NotificationController extends Controller
         // }else{            
         //     return response()->json([
         //         'statut' => 'error',
-        //         'message' => 'Les notifications sont suspendues entre 18h00 et 08h00.',
+        //         'message' => 'Les notifications sont suspendues entre 18h00 et 07h00.',
         //     ], Response::HTTP_OK);
         // }
 
@@ -2437,7 +2477,7 @@ if ($currentHourInTimeZone >= $startHour && $currentHourInTimeZone < $endHour) {
         {
             return response()->json([
                 'statut' => 'error',
-                'message' => 'Les notifications sont suspendues entre 18h00 et 08h00.',
+                'message' => 'Les notifications sont suspendues entre 18h00 et 07h00.',
             ], Response::HTTP_OK);
         }
     }

@@ -1,5 +1,7 @@
 <?php
 
+
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminAbonnementController;
 use App\Http\Controllers\AbonnementController;
 use App\Http\Controllers\Api\FileController;
@@ -10,34 +12,19 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\MessagesController;
 use App\Http\Controllers\ClientMessagesController;
 use App\Http\Controllers\ClientTemplateController;
-use App\Http\Controllers\FacebookPageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentConroller;
-use App\Http\Controllers\SocialiteController;
 use App\Http\Controllers\TarificationController;
 use App\Http\Controllers\WaGroupController;
 use App\Models\Abonnement;
 use App\Models\Param;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SocialiteController;
+use App\Http\Controllers\FacebookPageController;
 
 
-
-Route::post('add', [WaGroupController::class, 'addMembers']);
-Route::get('oauth', [SocialiteController::class, 'authenticate']);
-Route::post('/facebook/page-information', [FacebookPageController::class, 'getPageInformation']);
-
-// Route::group([
-//     'middleware' => 'api',
-//     'prefix' => 'v1'
-// ], function () {
-//     // Route::post('/login', [AuthController::class, 'login']);
-//     // Route::post('/register', [AuthController::class, 'register']);
-//     // Route::get('/data',[ProfileController::class,'getData']);
-// });
-
-// Route::middleware('auth:api')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
+// Route::post('add', [WaGroupController::class, 'addMembers']);
+// Route::get('oauth', [SocialiteController::class, 'authenticate']);
+// Route::post('/facebook/page-information', [FacebookPageController::class, 'getPageInformation']);
 
 
 Route::group([
@@ -48,49 +35,72 @@ Route::group([
     Route::get('/outfiles/{folder}', [FileController::class, 'getImagesInFolder']);
 });
 
+
+/*
+|--------------------------------------------------------------------------
+| Cron route::api
+|--------------------------------------------------------------------------
+|
+| Defines launch management for campaigns
+|
+*/
+Route::get('cron_deferred', [NotificationController::class, 'getDeferredNotifictions']); // launch every one hour
+Route::get('cron_timezone', [NotificationController::class, 'getRecipientsTimeZone']); // launch every 
+Route::get('chroneNotif', [NotificationController::class, 'sendNotif']); // launch every two minutes
+Route::get('chrone', [NotificationController::class, 'sendChrone']); // launch every [null]
+
+/*
+|--------------------------------------------------------------------------
+| Auth routes::api
+|--------------------------------------------------------------------------
+|
+| Client authentication
+|
+*/
 Route::post('connexion', [ApiController::class, 'authenticate']);
-Route::get('chrone', [NotificationController::class, 'sendChrone']);
-Route::get('chroneNotif', [NotificationController::class, 'sendNotif']);
-Route::get('verify_reception', [NotificationController::class, 'verify_reception']);
-Route::get('relancer', [NotificationController::class, 'relancer']);
-
-
 Route::post('register', [ApiController::class, 'registerUser']);
 Route::post('otp_verify', [ApiController::class, 'otp_verify']);
 Route::post('createpwd', [ApiController::class, 'createpwd_verify']);
 Route::post('recovery/password', [ApiController::class, 'recoveryPassword']);
+Route::get('verify_reception', [NotificationController::class, 'verify_reception']);
+Route::get('relancer', [NotificationController::class, 'relancer']);
+
 
 Route::post('init_token', [ApiController::class, 'init_token']);
 
-
+/*
+|--------------------------------------------------------------------------
+| payment routes::api
+|--------------------------------------------------------------------------
+|
+| Callback
+|
+*/
 Route::post('paiement/callback', [PaymentConroller::class, 'receiveCallback']);
 
+/*
+|--------------------------------------------------------------------------
+| Middleware routes::api
+|--------------------------------------------------------------------------
+|
+| Middleware
+|
+*/
 Route::group(['middleware' => ['jwt.verify']], function () {
 
-    Route::prefix('service')->group(function () {
-        Route::post('send', [NotificationController::class, 'gateway']);
-        Route::post('message', [NotificationController::class, 'custumGateway']);
-        
-        Route::prefix('group')->group(function () {
-            Route::get('mygroups', [NotificationController::class, 'getAllGroupInfo']);
-            Route::post('send', [NotificationController::class, 'multiSendAtGroups']);
-        });
-        Route::get('search/ref', [MessagesController::class, 'getMessagesByReferenceId']);
-    });
+    Route::get('logout', [ApiController::class, 'logout']);
 
     Route::get('export', [ExportController::class, 'storeExcel']);
     Route::post('import/contact', [ContactController::class, 'getContacts']);
-    Route::post('verify', [NotificationController::class, 'verifySolde']);
-    Route::prefix('password')->group(function () {
-        Route::post('checkpass', [ApiController::class, 'checkPassword']);
-        Route::put('upadate_pass', [ApiController::class, 'upadatePass']);
-    });
-    Route::put('reset', [AbonnementController::class, 'resetService']);
-    Route::post('status/callback', [PaymentConroller::class, 'verifyPayment']);
-    Route::get('logout', [ApiController::class, 'logout']);
-    Route::post('recipients', [ClientMessagesController::class, 'getRecipients']);
-    Route::get('tarification/services', [TarificationController::class, 'getPricingClient']);
-    
+      
+    /*
+    |--------------------------------------------------------------------------
+    | Middleware routes::api
+    |--------------------------------------------------------------------------
+    |
+    | Middleware admin
+    |
+    */
     Route::group(['middleware' => ['admin']], function () {
         
         Route::prefix('admin')->group(function () {
@@ -209,35 +219,54 @@ Route::group(['middleware' => ['jwt.verify']], function () {
             Route::get('demandes/reject', [AbonnementController::class, 'listDemandeReject']);
         });
     });
+      
+    /*
+    |--------------------------------------------------------------------------
+    | Middleware routes::api
+    |--------------------------------------------------------------------------
+    |
+    | Middleware client detail
+    |
+    */
+    Route::group(['middleware' => ['status.client']], function () {
+        Route::post('paiement', [PaymentConroller::class, 'initializePayment']);
+        Route::prefix('activation/service')->group(function () {
+            Route::prefix('sms')->group(function () {
+                Route::post('/', [AbonnementController::class, 'sendEnterpriseName']);
+                Route::post('code', [AbonnementController::class, 'sendCampagnKey']);
+            });
+            Route::post('email', [AbonnementController::class, 'sendEmailAddress']);
+            Route::post('whatsapp', [AbonnementController::class, 'sendWhatsappNumber']);
+        });
+    });
 
-    Route::prefix('/wagroup')->group(function () {
-        Route::get('mywadevice', [Abonnement::class, 'getCurrentWassengerDevice']); //check device wa
-
-        Route::get('getAssistance', [WaGroupController::class, 'getAssistance']);
-        Route::post('crgroup', [WaGroupController::class, 'createGroup']);
-        Route::get('allgroups', [WaGroupController::class, 'getAllGroups']);
-        Route::get('allmembers', [WaGroupController::class, 'allmembers']);
-        Route::get('getbywid', [WaGroupController::class, 'getGroupByWid']);
-        Route::get('refreshgroups', [WaGroupController::class, 'storeAllGroups']);
-        Route::put('changerole', [WaGroupController::class, 'switchStatus']);
-        Route::delete('revoke', [WaGroupController::class, 'revokeMembers']);
-        Route::get('wagroups', [WaGroupController::class, 'getStore']);
-        Route::post('sendmessage', [WaGroupController::class, 'sendAtGroups']); //send message in a group
+    /*
+    |--------------------------------------------------------------------------
+    | Hobotta Service routes::api
+    |--------------------------------------------------------------------------
+    |
+    | Service share api
+    |
+    */
+    Route::prefix('service')->group(function () {
+        Route::post('send', [NotificationController::class, 'gateway']);
+        Route::post('message', [NotificationController::class, 'custumGateway']);
         
-        Route::post('send', [NotificationController::class, 'multiSendAtGroups']); //bulk 
-
-        Route::get('searchbyname', [WaGroupController::class, 'getStoreByName']);
-        Route::post('addxmembers', [WaGroupController::class, 'addMembers']);
+        Route::prefix('group')->group(function () {
+            Route::get('mygroups', [NotificationController::class, 'getAllGroupInfo']);
+            Route::post('send', [NotificationController::class, 'multiSendAtGroups']);
+        });
+        Route::get('search/ref', [MessagesController::class, 'getMessagesByReferenceId']);
     });
-
-    Route::prefix('/messages')->group(function () {
-        Route::post('/', [NotificationController::class, 'verifySolde'])->middleware('admin');
-        Route::get('/', [ClientMessagesController::class, 'getAllMessagesByUser']);
-        Route::post('/canal', [ClientMessagesController::class, 'getMessagesByCanalAndUser']);
-        Route::post('/period', [ClientMessagesController::class, 'getMessagesByPeriodAndUser']);
-        Route::post('/keyword', [ClientMessagesController::class, 'getMessagesByKeywordCanalAndUser']);
-    });
-
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Sender service status routes::api
+    |--------------------------------------------------------------------------
+    |
+    | Canal status
+    |
+    */
     Route::prefix('service')->group(function () {
         Route::prefix('status')->group(function () {
             Route::get('/sms', [AbonnementController::class, 'smsStatus']);
@@ -273,6 +302,62 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         });
     });
 
+    Route::post('verify', [NotificationController::class, 'verifySolde']);
+    Route::post('status/callback', [PaymentConroller::class, 'verifyPayment']);
+    Route::post('recipients', [ClientMessagesController::class, 'getRecipients']);
+    Route::get('tarification/services', [TarificationController::class, 'getPricingClient']);
+        
+    /*
+    |--------------------------------------------------------------------------
+    | Update pwd routes::api
+    |--------------------------------------------------------------------------
+    |
+    | Auth client Password
+    |
+    */
+    Route::prefix('password')->group(function () {
+        Route::post('checkpass', [ApiController::class, 'checkPassword']);
+        Route::put('upadate_pass', [ApiController::class, 'upadatePass']);
+    });
+
+    Route::put('reset', [AbonnementController::class, 'resetService']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Whatsapp routes::api
+    |--------------------------------------------------------------------------
+    |
+    | Whatsapp groups
+    |
+    */
+    Route::prefix('/wagroup')->group(function () {
+        Route::get('mywadevice', [Abonnement::class, 'getCurrentWassengerDevice']); //check device wa
+
+        Route::get('getAssistance', [WaGroupController::class, 'getAssistance']);
+        Route::post('crgroup', [WaGroupController::class, 'createGroup']);
+        Route::get('allgroups', [WaGroupController::class, 'getAllGroups']);
+        Route::get('allmembers', [WaGroupController::class, 'allmembers']);
+        Route::get('getbywid', [WaGroupController::class, 'getGroupByWid']);
+        Route::get('refreshgroups', [WaGroupController::class, 'storeAllGroups']);
+        Route::put('changerole', [WaGroupController::class, 'switchStatus']);
+        Route::delete('revoke', [WaGroupController::class, 'revokeMembers']);
+        Route::get('wagroups', [WaGroupController::class, 'getStore']);
+        Route::post('sendmessage', [WaGroupController::class, 'sendAtGroups']); //send message in a group
+        
+        Route::post('send', [NotificationController::class, 'multiSendAtGroups']); //bulk 
+
+        Route::get('searchbyname', [WaGroupController::class, 'getStoreByName']);
+        Route::post('addxmembers', [WaGroupController::class, 'addMembers']);
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | abonnement routes::api
+    |--------------------------------------------------------------------------
+    |
+    | abonnement 
+    |
+    */
     Route::prefix('abonnement')->group(function () {
         Route::get('status', [AbonnementController::class, 'status']);
         Route::get('solde', [AbonnementController::class, 'solde']);
@@ -307,18 +392,13 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         Route::put('device', [Abonnement::class, 'setWaDeviceClient']);
     });
 
-    Route::group(['middleware' => ['status.client']], function () {
-        Route::post('paiement', [PaymentConroller::class, 'initializePayment']);
-        Route::prefix('activation/service')->group(function () {
-            Route::prefix('sms')->group(function () {
-                Route::post('/', [AbonnementController::class, 'sendEnterpriseName']);
-                Route::post('code', [AbonnementController::class, 'sendCampagnKey']);
-            });
-            Route::post('email', [AbonnementController::class, 'sendEmailAddress']);
-            Route::post('whatsapp', [AbonnementController::class, 'sendWhatsappNumber']);
-        });
+    Route::prefix('/messages')->group(function () {
+        Route::post('/', [NotificationController::class, 'verifySolde'])->middleware('admin');
+        Route::get('/', [ClientMessagesController::class, 'getAllMessagesByUser']);
+        Route::post('/canal', [ClientMessagesController::class, 'getMessagesByCanalAndUser']);
+        Route::post('/period', [ClientMessagesController::class, 'getMessagesByPeriodAndUser']);
+        Route::post('/keyword', [ClientMessagesController::class, 'getMessagesByKeywordCanalAndUser']);
     });
-
 
     // Route::post('sendMessageSimple', [MessagesController::class, 'sendMessageSimple']);
     // Route::post('mail_all_busi', [NotificationController::class, 'mail_all_busi']);        

@@ -22,7 +22,6 @@ use App\Services\SmsCount;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -1804,167 +1803,86 @@ class NotificationController extends Controller
         }
     }
 
-    public function getRecipientsTimeZone()
-    {    
-        $notifications_timeZone = Notification::where('status', 'pending')
-                                        ->where('canal', 'whatsapp')       
-                                        ->where('time_zone', null)                                        
+
+    public function sendNotif()
+    {
+        
+        /* "start _function getClientTimeZone" */
+
+        $notifications = Notification::where('status', 'pending')
                                         ->where('notify', 0)
                                         ->where('chrone', 0)
                                         ->orderBy('created_at', 'asc')
                                         ->take(15)
+                                    
                                         ->get();
-
-        foreach ($notifications_timeZone as $notification) 
+       
+        if ($notifications->isEmpty()) 
         { 
-            $files = Fichier::where('message_id', $notification->message_id)->pluck('lien');
-            $notification->chrone = 1; $notification->save(); // initialise le status cron d'envoi de messages
-            $notification->status = 'in_progress'; $notification->save(); 
-            $isWa = (new WaGroupController())->isExistOnWaAndGetTimeZone($notification->destinataire);
-            
-            if (isset($isWa['status']) && $isWa['status'] === true)
-            {
-                // $zone = response()->json([
-                //     'sub' => $isWa['country']->phonePrefix,
-                //     'country' => $isWa['country']->name,
-                //     'flag' => $isWa['country']->code,
-                //     'time_zone' => $isWa['country']->timezones,
-                // ], 200); 
-                
-                $notification->time_zone = $isWa['country']->timezones[0]; $notification->save();
-
-            }//$currentHourInTimeZone = Carbon::now($zone->getData()->time_zone[0])->hour;   
-            else
-            {
-                $notification->delivery_status = 'echec'; $notification->save();
-                $notification->status = 'failed'; $notification->save();
-                // credit
-                Abonnement::timeZoneCreditMessageAndMediaWhatsappWithoutAuth(1, $notification->message_id, count($files)); //rembourse en cas d'echec           
-            }      
+            return response()->json([
+                'statut' => 'error',
+                'message' => 'Aucune notifications disponible pour le moment',
+            ], Response::HTTP_OK);
         }
-    }
 
-    public function getDeferredNotifictions()
-    {  
-        $batchSize = request()->input('batch', 2000); 
-        
-        $notifications_deferred = Notification::where('status', 'deferred')
-            ->chunkById($batchSize, function ($notifications) {
-                $checkResendNotifications = [];
-                $startHour = 7; // 08h00
-                $endHour = 18; // 18h00  
-                
-                foreach ($notifications as $notification) 
-                {
-                    $currentHourInTimeZone = Carbon::now($notification->time_zone)->hour;
-                    $isWithinAllowedHours = ($currentHourInTimeZone >= $startHour) && ($currentHourInTimeZone < $endHour);                    
-                    if ($isWithinAllowedHours) { $checkResendNotifications[] = $notification->id; }
-                }
-
-                if (!empty($checkResendNotifications)) 
-                {
-                    Notification::whereIn('id', $checkResendNotifications)
-                        ->update(['status' => 'in_progress', 'updated_at' => now()]);
-                    Log::info(count($checkResendNotifications) . " notifications mises à jour.");
-                } 
-                else 
-                {
-                    Log::info('Aucune notification prête pour envoi.');
-                }
-            });
-
-        dd('mise à jour');
-
-        foreach ($notifications_deferred as $notification) 
-        { 
-            $files = Fichier::where('message_id', $notification->message_id)->pluck('lien');
-            $notification->chrone = 1; $notification->save(); // initialise le status cron d'envoi de messages
-            $notification->status = 'in_progress'; $notification->save(); 
-            $isWa = (new WaGroupController())->isExistOnWaAndGetTimeZone($notification->destinataire);
+        foreach ($notifications as $notification) { 
             
-            if (isset($isWa['status']) && $isWa['status'] === true)
+            if($notification->canal==='whatsapp')
             {
-                // $zone = response()->json([
-                //     'sub' => $isWa['country']->phonePrefix,
-                //     'country' => $isWa['country']->name,
-                //     'flag' => $isWa['country']->code,
-                //     'time_zone' => $isWa['country']->timezones,
-                // ], 200); 
+                $notification->chrone = 1; $notification->save(); // initialise le status cron d'envoi de messages
+                $notification->status = 'in_progress'; $notification->save(); 
+                $isWa = (new WaGroupController())->isExistOnWaAndGetTimeZone($notification->destinataire);
                 
-                $notification->time_zone = $isWa['country']->timezones[0]; $notification->save();
+                if (isset($isWa['status']) && $isWa['status'] === true)
+                {
+                    $zone = response()->json([
+                        'sub' => $isWa['country']->phonePrefix,
+                        'country' => $isWa['country']->name,
+                        'flag' => $isWa['country']->code,
+                        'time_zone' => $isWa['country']->timezones,
+                    ], 200);       
+                }//$currentHourInTimeZone = Carbon::now($zone->getData()->time_zone[0])->hour;
 
-            }//$currentHourInTimeZone = Carbon::now($zone->getData()->time_zone[0])->hour;   
-            else
-            {
-                $notification->delivery_status = 'echec'; $notification->save();
-                $notification->status = 'failed'; $notification->save();
-                // credit
-                Abonnement::timeZoneCreditMessageAndMediaWhatsappWithoutAuth(1, $notification->message_id, count($files)); //rembourse en cas d'echec           
-            }      
+                $notification->time_zone = $zone->getData()->time_zone[0]; $notification->save();
+            }
         }
-    }
 
-    public function sendNotif()
-    {
-        // $currentHour = Carbon::now()->hour; 
-        $startHour = 8; // 08h00
+        /* "end _function getClientTimeZone" */
+
+
+
+
+
+        $currentHour = Carbon::now()->hour; 
+        $startHour = 7; // 07h00
         $endHour = 18; // 18h00 
+        $isWithinAllowedHours = ($currentHour >= $startHour) && ($currentHour < $endHour);
 
-        $notifications = Notification::where('status', 'in_progress')
+
+        $isWa = (new WaGroupController())->isExistOnWaAndGetTimeZone('+918360422306'); 
+        // $isWa = (new WaGroupController())->isExistOnWaAndGetTimeZone('237679504973'); 
+        
+        if (isset($isWa['status']) && $isWa['status'] === true) 
+        {
+            dd($currentHourInTimeZone = Carbon::now($isWa['country']->timezones[0])->hour);
+            $zone = response()->json([
+                'sub' => $isWa['country']->phonePrefix,
+                'country' => $isWa['country']->name,
+                'flag' => $isWa['country']->code,
+                'time_zone' => $isWa['country']->timezones,
+            ], 200);            
+        }
+
+        $currentHourInTimeZone = Carbon::now($zone->getData()->time_zone[0])->hour; //$currentHourInTimeZone = Carbon::now($timeZone)->hour;
+        
+
+        $notifications = Notification::where('status', 'pending')
                                         ->where('notify', 0)
-                                        ->where('chrone', 1)
+                                        ->where('chrone', 0)
                                         ->orderBy('created_at', 'asc')
                                         ->take(15)
-                                        ->get();
-
-
-        foreach ($notifications as $notification) 
-        { 
-            $currentHourInTimeZone = Carbon::now($notification->time_zone)->hour;
-            $isWithinAllowedHours = ($currentHourInTimeZone >= $startHour) && ($currentHourInTimeZone < $endHour);
-            
-            if ($isWithinAllowedHours)
-            {
-                return response()->json([
-                    'statut' => 'success',
-                    'message' => 'Campagne lancer avec succes.',
-                ], Response::HTTP_OK);
-            }
-            else
-            {   
-                $notification->status = 'deferred'; $notification->save();         
-                
-                // return response()->json([
-                //     'statut' => 'error',
-                //     'message' => 'Les notifications sont suspendues entre 18h00 et 08h00.',
-                // ], Response::HTTP_OK);
-            }
-        }
-
-        // $isWa = (new WaGroupController())->isExistOnWaAndGetTimeZone('+918360422306'); 
-        // // $isWa = (new WaGroupController())->isExistOnWaAndGetTimeZone('237679504973'); 
-        
-        // if (isset($isWa['status']) && $isWa['status'] === true) 
-        // {
-        //     dd($currentHourInTimeZone = Carbon::now($isWa['country']->timezones[0])->hour);
-        //     $zone = response()->json([
-        //         'sub' => $isWa['country']->phonePrefix,
-        //         'country' => $isWa['country']->name,
-        //         'flag' => $isWa['country']->code,
-        //         'time_zone' => $isWa['country']->timezones,
-        //     ], 200);            
-        // }
-
-        // $currentHourInTimeZone = Carbon::now($zone->getData()->time_zone[0])->hour; //$currentHourInTimeZone = Carbon::now($timeZone)->hour;
-        
-
-        // $notifications = Notification::where('status', 'pending')
-        //                                 ->where('notify', 0)
-        //                                 ->where('chrone', 0)
-        //                                 ->orderBy('created_at', 'asc')
-        //                                 ->take(15)
                                     
-        //                                 ->get();
+                                        ->get();
        
         if ($notifications->isEmpty()) 
         { 
@@ -1983,7 +1901,7 @@ class NotificationController extends Controller
         // }else{            
         //     return response()->json([
         //         'statut' => 'error',
-        //         'message' => 'Les notifications sont suspendues entre 18h00 et 08h00.',
+        //         'message' => 'Les notifications sont suspendues entre 18h00 et 07h00.',
         //     ], Response::HTTP_OK);
         // }
 
@@ -2437,7 +2355,7 @@ if ($currentHourInTimeZone >= $startHour && $currentHourInTimeZone < $endHour) {
         {
             return response()->json([
                 'statut' => 'error',
-                'message' => 'Les notifications sont suspendues entre 18h00 et 08h00.',
+                'message' => 'Les notifications sont suspendues entre 18h00 et 07h00.',
             ], Response::HTTP_OK);
         }
     }

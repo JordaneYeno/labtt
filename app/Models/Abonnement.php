@@ -455,6 +455,19 @@ class Abonnement extends Model
             $credit->save();
         }
     }
+    
+    public static function timeZoneCreditMessageAndMediaWhatsappWithoutAuth($destinataires, $messageId, $files)
+    {
+        $facturemessage = (new Tarifications)->getPriceList('default','prix_whatsapp') * $destinataires;
+        $facturemedia = ($files * (new Tarifications)->getPriceList('media','prix_whatsapp')) * $destinataires; 
+        $totalcredit = $facturemessage + $facturemedia;
+        $credit = Message::where('id', $messageId)->first();
+
+        if ($credit) {
+            $credit->credit += $totalcredit; 
+            $credit->save();
+        }
+    }
 
     public static function creditEmail($destinataires, $messageId)
     {
