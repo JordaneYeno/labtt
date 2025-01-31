@@ -510,7 +510,7 @@ class NotificationController extends Controller
                     $debitClient->montant = $total-$current_credit+$totalMedia; $debitClient->save();
                 }
 
-                $message->status = 6; // Modifier le statut du message à 6 en cas de succès //le status 6 indiques le message est bien envoyé
+                $message->status = 6; // Modifier le statut du message à 6 en cas de succès //le statut 6 indiques le message est bien envoyé
                 $message->save();
                 $paginator = $paginate->paginate_resp($responses, $perPage, request('page', 1));
 
@@ -746,7 +746,7 @@ class NotificationController extends Controller
                     $debitClient->montant = $total-$current_credit-$totalMedia; $debitClient->save();
                 }
 
-                $message->status = 6; // Modifier le statut du message à 6 en cas de succès //le status 6 indiques le message est bien envoyé
+                $message->status = 6; // Modifier le statut du message à 6 en cas de succès //le statut 6 indiques le message est bien envoyé
                 $message->save();
                 $paginator = $paginate->paginate_resp($responses, $perPage, request('page', 1));
 
@@ -877,7 +877,7 @@ class NotificationController extends Controller
                 }
 
                 if ($errors) {
-                    $message->status = 5; // Modifier le statut du message à 5 en cas d'erreur //le status 5 indiques le message non envoyé
+                    $message->status = 5; // Modifier le statut du message à 5 en cas d'erreur //le statut 5 indiques le message non envoyé
                     $message->save();
 
 
@@ -899,7 +899,7 @@ class NotificationController extends Controller
                     $debitClient->montant = $total-$current_credit; $debitClient->save();
                 }
 
-                $message->status = 6; // Modifier le statut du message à 6 en cas de succès //le status 6 indiques le message est bien envoyé
+                $message->status = 6; // Modifier le statut du message à 6 en cas de succès //le statut 6 indiques le message est bien envoyé
                 $message->save();
                 $paginator = $paginate->paginate_resp($responses, $perPage, request('page', 1));
 
@@ -1069,7 +1069,7 @@ class NotificationController extends Controller
             $debitClient->montant = $total-$current_credit; $debitClient->save();
         }
 
-        $message->status = 6; // Modifier le statut du message à 6 en cas de succès //le status 6 indiques le message est bien envoyé
+        $message->status = 6; // Modifier le statut du message à 6 en cas de succès //le statut 6 indiques le message est bien envoyé
         $message->save();
         $paginator = $paginate->paginate_resp($responses, $perPage, request('page', 1));
 
@@ -1812,13 +1812,13 @@ class NotificationController extends Controller
                                         ->where('notify', 0)
                                         ->where('chrone', 0)
                                         ->orderBy('created_at', 'asc')
-                                        ->take(15)
+                                        ->take(55)
                                         ->get();
 
         foreach ($notifications_timeZone as $notification) 
         { 
             $files = Fichier::where('message_id', $notification->message_id)->pluck('lien');
-            $notification->chrone = 1; $notification->save(); // initialise le status cron d'envoi de messages
+            $notification->chrone = 1; $notification->save(); // initialise le statut cron d'envoi de messages
             $notification->status = 'in_progress'; $notification->save(); 
             $isWa = (new WaGroupController())->isExistOnWaAndGetTimeZone($notification->destinataire);
             
@@ -1848,10 +1848,10 @@ class NotificationController extends Controller
     {  
         $batchSize = request()->input('batch', 2000); 
         
-        $notifications_deferred = Notification::where('status', 'deferred')
+        Notification::where('status', 'deferred')
             ->chunkById($batchSize, function ($notifications) {
                 $checkResendNotifications = [];
-                $startHour = 7; // 08h00
+                $startHour = 8; // 08h00
                 $endHour = 18; // 18h00  
                 
                 foreach ($notifications as $notification) 
@@ -1872,36 +1872,6 @@ class NotificationController extends Controller
                     Log::info('Aucune notification prête pour envoi.');
                 }
             });
-
-        dd('mise à jour');
-
-        foreach ($notifications_deferred as $notification) 
-        { 
-            $files = Fichier::where('message_id', $notification->message_id)->pluck('lien');
-            $notification->chrone = 1; $notification->save(); // initialise le status cron d'envoi de messages
-            $notification->status = 'in_progress'; $notification->save(); 
-            $isWa = (new WaGroupController())->isExistOnWaAndGetTimeZone($notification->destinataire);
-            
-            if (isset($isWa['status']) && $isWa['status'] === true)
-            {
-                // $zone = response()->json([
-                //     'sub' => $isWa['country']->phonePrefix,
-                //     'country' => $isWa['country']->name,
-                //     'flag' => $isWa['country']->code,
-                //     'time_zone' => $isWa['country']->timezones,
-                // ], 200); 
-                
-                $notification->time_zone = $isWa['country']->timezones[0]; $notification->save();
-
-            }//$currentHourInTimeZone = Carbon::now($zone->getData()->time_zone[0])->hour;   
-            else
-            {
-                $notification->delivery_status = 'echec'; $notification->save();
-                $notification->status = 'failed'; $notification->save();
-                // credit
-                Abonnement::timeZoneCreditMessageAndMediaWhatsappWithoutAuth(1, $notification->message_id, count($files)); //rembourse en cas d'echec           
-            }      
-        }
     }
 
     public function sendNotif()
@@ -1916,56 +1886,7 @@ class NotificationController extends Controller
                                         ->orderBy('created_at', 'asc')
                                         ->take(15)
                                         ->get();
-
-
-        foreach ($notifications as $notification) 
-        { 
-            $currentHourInTimeZone = Carbon::now($notification->time_zone)->hour;
-            $isWithinAllowedHours = ($currentHourInTimeZone >= $startHour) && ($currentHourInTimeZone < $endHour);
-            
-            if ($isWithinAllowedHours)
-            {
-                return response()->json([
-                    'statut' => 'success',
-                    'message' => 'Campagne lancer avec succes.',
-                ], Response::HTTP_OK);
-            }
-            else
-            {   
-                $notification->status = 'deferred'; $notification->save();         
-                
-                // return response()->json([
-                //     'statut' => 'error',
-                //     'message' => 'Les notifications sont suspendues entre 18h00 et 08h00.',
-                // ], Response::HTTP_OK);
-            }
-        }
-
-        // $isWa = (new WaGroupController())->isExistOnWaAndGetTimeZone('+918360422306'); 
-        // // $isWa = (new WaGroupController())->isExistOnWaAndGetTimeZone('237679504973'); 
         
-        // if (isset($isWa['status']) && $isWa['status'] === true) 
-        // {
-        //     dd($currentHourInTimeZone = Carbon::now($isWa['country']->timezones[0])->hour);
-        //     $zone = response()->json([
-        //         'sub' => $isWa['country']->phonePrefix,
-        //         'country' => $isWa['country']->name,
-        //         'flag' => $isWa['country']->code,
-        //         'time_zone' => $isWa['country']->timezones,
-        //     ], 200);            
-        // }
-
-        // $currentHourInTimeZone = Carbon::now($zone->getData()->time_zone[0])->hour; //$currentHourInTimeZone = Carbon::now($timeZone)->hour;
-        
-
-        // $notifications = Notification::where('status', 'pending')
-        //                                 ->where('notify', 0)
-        //                                 ->where('chrone', 0)
-        //                                 ->orderBy('created_at', 'asc')
-        //                                 ->take(15)
-                                    
-        //                                 ->get();
-       
         if ($notifications->isEmpty()) 
         { 
             return response()->json([
@@ -1974,261 +1895,137 @@ class NotificationController extends Controller
             ], Response::HTTP_OK);
         }
 
-        // if ($currentHourInTimeZone >= $startHour && $currentHourInTimeZone < $endHour) 
-        // {
-        //     return response()->json([
-        //         'statut' => 'success',
-        //         'message' => 'Campagne lancer avec succes.',
-        //     ], Response::HTTP_OK);
-        // }else{            
-        //     return response()->json([
-        //         'statut' => 'error',
-        //         'message' => 'Les notifications sont suspendues entre 18h00 et 08h00.',
-        //     ], Response::HTTP_OK);
-        // }
+        foreach ($notifications as $notification) 
+        { 
+            $currentHourInTimeZone = Carbon::now($notification->time_zone)->hour;
+            $isWithinAllowedHours = ($currentHourInTimeZone >= $startHour) && ($currentHourInTimeZone < $endHour);
+            
+            // if ($isWithinAllowedHours)
+            // {
+            //     // return response()->json([
+            //     //     'statut' => 'success',
+            //     //     'message' => 'Campagne lancer avec succes.',
+            //     // ], Response::HTTP_OK);
+            // }
 
-        dd('echec');
+            $responses = [];
+            $allmessages = Message::get();
+            $allabonnements = Abonnement::get();
+            $allnotifications = Notification::orderBy('created_at', 'asc')->get(); 
+            $API_KEY_WHATSAPP = Param::getTokenWhatsapp();
 
-        
-// // Tableau associatif des timezones par emplacement
-// $timezones = [
-//     'Douala' => 'Africa/Douala',
-//     'Libreville' => 'Africa/Libreville',
-//     'Benin' => 'Africa/Porto-Novo', // Note: Il n'existe pas de "Africa/Benin", j'ai utilisé "Africa/Porto-Novo" qui est la capitale du Bénin
-// ];
+            $sendAtDate = $allmessages->whereNotNull('date_envoie')->where('status', '2')->take(120); // messages programmés
 
-// // Exemple de variable pour déterminer l'emplacement actuel (à remplacer par votre logique d'emplacement)
-// $currentLocation = 'Douala'; // ou 'Libreville', ou 'Benin', etc.
-
-// // Définition de la timezone en fonction de l'emplacement
-// $currentTimezone = $timezones[$currentLocation];
-
-// // Récupération de l'heure actuelle pour l'emplacement spécifique
-// $currentTime = Carbon::now($currentTimezone); dd($currentTime);
-
-
-
-$notifications = Notification::where('notify', 0)
-->where('chrone', 0)
-->orderBy('created_at', 'asc')
-->with('user')  // Associer les données utilisateur
-->get();
-
-foreach ($notifications as $notification) {
-$timeZone = $notification->user->time_zone ?? 'UTC';
-
-$currentHourInTimeZone = Carbon::now($timeZone)->hour;
-
-if ($currentHourInTimeZone >= $startHour && $currentHourInTimeZone < $endHour) {
-// Envoyer la notification
-}
-}
-
-
-
-
-
-
-        
-        $responses = [];
-        $allmessages = Message::get();
-        $allabonnements = Abonnement::get();
-        $allnotifications = Notification::orderBy('created_at', 'asc')->get(); 
-        $API_KEY_WHATSAPP = Param::getTokenWhatsapp();
-
-        $sendAtDate = $allmessages->whereNotNull('date_envoie')->where('status', '2')->take(120); // messages programmés
-
-        if (count($sendAtDate) !== 0) {
-            $timestamp = Carbon::parse(now()->format('Y-m-d H:i:s'));
-            foreach ($sendAtDate as $activate) {
-                if ($timestamp->greaterThan($activate->date_envoie)) {
-                    $changeStatusNotif = $allnotifications->where('message_id', $activate->id)->all();
-                    foreach ($changeStatusNotif as $notify_me) {
-                        $notify_me->notify = 0; $notify_me->save(); // activation du status cron
+            if (count($sendAtDate) !== 0) {
+                $timestamp = Carbon::parse(now()->format('Y-m-d H:i:s'));
+                foreach ($sendAtDate as $activate) {
+                    if ($timestamp->greaterThan($activate->date_envoie)) {
+                        $changeStatusNotif = $allnotifications->where('message_id', $activate->id)->all();
+                        foreach ($changeStatusNotif as $notify_me) {
+                            $notify_me->notify = 0; $notify_me->save(); // activation du status cron
+                        }
                     }
                 }
             }
-        }
 
-        if ($isWithinAllowedHours)
-        {
-            $notifications = Notification::where('notify', 0)
-                                        ->where('chrone', 0)
-                                        ->orderBy('created_at', 'asc')
-                                        ->take(15)
-                                    
-                                        //   ->lockForUpdate()
-                                        ->get();
-       
-            if ($notifications->isEmpty()) 
-            { 
-                return response()->json([
-                    'statut' => 'error',
-                    'message' => 'Aucune notifications disponible pour le moment',
-                ], Response::HTTP_OK);
-            }
-            $errors = false;
-            foreach ($notifications as $notification) { 
-                $notification->chrone = 1; $notification->save(); // initialise le status cron d'envoi de messages
-                
-                $message = $allmessages->where('id', $notification->message_id)->first();
-                $files = Fichier::where('message_id', $notification->message_id)->pluck('lien');
-                $messageToUpdate = $allmessages->where('id', $message->id)->first();
-                $messageToUpdate->update(['start' => !empty($messageToUpdate->start) ? $messageToUpdate->start : date("Y-m-d H:i:s")]);
-
-                if (strpos($message->canal, 'email') != false && $notification->canal == 'email') {
-                    $signature = $allabonnements->where('user_id', $message->user_id);
-                    $colorTheme = $allabonnements->where('user_id', $message->user_id)->pluck('cs_color')->first();
-
-                    $data["mylogo"] = route('users.profile', ['id' => $message->user_id]);
-                    $data['color_theme'] = $colorTheme;
-                    $data["email"] = $notification->destinataire;
-                    $data["title"] = $message->title;
-                    $data["body"] = $message->message;
-                    $data["from_email"] = $message->email_awt;
-                    $data["localisation"] = $signature->pluck('entreprese_localisation')->first();
-                    $data["contact"] = $signature->pluck('entreprese_contact')->first();
-                    $data["from_name"] = $signature->pluck('entreprese_name')->first();
-                    $data["ville"] = $signature->pluck('entreprese_ville')->first();
-                    $data["mail"] = $signature->pluck('email')->first();
-
-                    if (count($files) > 0) 
-                    {
-                        $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]); 
-                        $data["file"] = $url;
-                    }
+            if ($isWithinAllowedHours)
+            {
+                $notifications = Notification::where('notify', 0)
+                                            ->where('chrone', 0)
+                                            ->orderBy('created_at', 'asc')
+                                            ->take(15)                                        
+                                            //   ->lockForUpdate()
+                                            ->get();
+        
+                if ($notifications->isEmpty()) 
+                { 
+                    return response()->json([
+                        'statut' => 'error',
+                        'message' => 'Aucune notifications disponible pour le moment',
+                    ], Response::HTTP_OK);
+                }
+                $errors = false;
+                foreach ($notifications as $notification) { 
+                    $notification->chrone = 1; $notification->save(); // initialise le statut cron d'envoi de messages
                     
-                    $templateExists = (new Abonnement)->checkIsCustomTemplate($message->user_id) == 1;
-                    $name_template = '';
-                    if($templateExists){$name_template = Template::where('user_id', $message->user_id)->pluck('name')->first();}
+                    $message = $allmessages->where('id', $notification->message_id)->first();
+                    $files = Fichier::where('message_id', $notification->message_id)->pluck('lien');
+                    $messageToUpdate = $allmessages->where('id', $message->id)->first();
+                    $messageToUpdate->update(['start' => !empty($messageToUpdate->start) ? $messageToUpdate->start : date("Y-m-d H:i:s")]);
 
-                    $template = $templateExists
-                    ? "mail.clients.{$message->user_id}.{$name_template}"
-                    : "mail.campagne";
+                    if (strpos($message->canal, 'email') != false && $notification->canal == 'email') {
+                        $signature = $allabonnements->where('user_id', $message->user_id);
+                        $colorTheme = $allabonnements->where('user_id', $message->user_id)->pluck('cs_color')->first();
 
-                    try {
-                        Mail::send($template, $data, function ($message) use ($data, $files) {
-                            $message->to($data["email"])
-                                ->subject($data["title"])
-                                ->from($data['from_email'], $data['from_name']);
-                        });
-                        $notification->delivery_status = 'sent';
-                        $notification->save();
-                    } catch (\Exception $e) {
+                        $data["mylogo"] = route('users.profile', ['id' => $message->user_id]);
+                        $data['color_theme'] = $colorTheme;
+                        $data["email"] = $notification->destinataire;
+                        $data["title"] = $message->title;
+                        $data["body"] = $message->message;
+                        $data["from_email"] = $message->email_awt;
+                        $data["localisation"] = $signature->pluck('entreprese_localisation')->first();
+                        $data["contact"] = $signature->pluck('entreprese_contact')->first();
+                        $data["from_name"] = $signature->pluck('entreprese_name')->first();
+                        $data["ville"] = $signature->pluck('entreprese_ville')->first();
+                        $data["mail"] = $signature->pluck('email')->first();
 
-                        $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron 
-                        $notification->save();
-                        $notification->delivery_status = 'echec';
-                        $notification->save();
-
-                        // credit
-                        Abonnement::creditEmailWithoutAuth(1, $message->id, $message->user_id);
-                    }
-
-                    $this->update_notification($notification->id);
-                } else if (strpos($message->canal, 'whatsapp') != false && $notification->canal == 'whatsapp') {
-                    if((new Abonnement)->getInternaltional($message->user_id) == 0)
-                    {
-                        $conv = new Convertor();
-                        $interphone = $conv->internationalisation($notification->destinataire, request('country', 'GA'));
-
-                        if ($interphone === 'invalid number') 
+                        if (count($files) > 0) 
                         {
-                            $notification->destinataire = '0' . $notification->destinataire;
-                            $notification->save();
+                            $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]); 
+                            $data["file"] = $url;
                         }
-                    }
-                    
-                    $isWa = (new WaGroupController())->isExistOnWaWithoutAuth(((new Abonnement)->getInternaltional($message->user_id) == 0) ? $interphone : $notification->destinataire, $message->user_id); //check phone wa_number! 
-                    if ($isWa != false) {
+                        
+                        $templateExists = (new Abonnement)->checkIsCustomTemplate($message->user_id) == 1;
+                        $name_template = '';
+                        if($templateExists){$name_template = Template::where('user_id', $message->user_id)->pluck('name')->first();}
 
-                        if (count($files) > 0) {
-                            // sleep(2);
+                        $template = $templateExists
+                        ? "mail.clients.{$message->user_id}.{$name_template}"
+                        : "mail.campagne";
 
-                            if (strpos($files, '.mp4') != false) {
-                                $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]); 
-                            
-                                $data = ["phone" => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire, "message" => strip_tags($message->message), "media" => ["url" => $url], "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
-                                $curl = curl_init();
-                                curl_setopt_array($curl, [
-                                    CURLOPT_URL => "https://api.wassenger.com/v1/messages",
-                                    CURLOPT_RETURNTRANSFER => true,
-                                    CURLOPT_SSL_VERIFYPEER => false, //ssl off
-                                    CURLOPT_ENCODING => "",
-                                    CURLOPT_MAXREDIRS => 10,
-                                    CURLOPT_TIMEOUT => 30,
-                                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                    CURLOPT_CUSTOMREQUEST => "POST",
-                                    CURLOPT_POSTFIELDS => json_encode($data),
-                                    CURLOPT_HTTPHEADER => [
-                                        "Content-Type: application/json",
-                                        "Token: $API_KEY_WHATSAPP",
-                                    ],
-                                ]);
+                        try {
+                            Mail::send($template, $data, function ($message) use ($data, $files) {
+                                $message->to($data["email"])
+                                    ->subject($data["title"])
+                                    ->from($data['from_email'], $data['from_name']);
+                            });
+                            $notification->delivery_status = 'sent';
+                            $notification->save();
+                        } catch (\Exception $e) {
 
-                                $response = curl_exec($curl);
-                                $err = curl_error($curl);
-                                curl_close($curl);
+                            $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron 
+                            $notification->save();
+                            $notification->delivery_status = 'echec';
+                            $notification->save();
 
-                                if ($err) {
-                                    $errors = true;
-                                    $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron 
-                                    $notification->save();
+                            // credit
+                            Abonnement::creditEmailWithoutAuth(1, $message->id, $message->user_id);
+                        }
 
-                                    $notification->delivery_status = 'echec';
-                                    $notification->save();
-                                    // credit
-                                    Abonnement::creditMessageAndMediaWhatsappWithoutAuth(1, $message->id, 1, $message->user_id);
+                        $this->update_notification($notification->id);
+                    } else if (strpos($message->canal, 'whatsapp') != false && $notification->canal == 'whatsapp') {
+                        if((new Abonnement)->getInternaltional($message->user_id) == 0)
+                        {
+                            $conv = new Convertor();
+                            $interphone = $conv->internationalisation($notification->destinataire, request('country', 'GA'));
 
-                                    $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire;
-                                    $responses[] = [
-                                        'statut' => 'error',
-                                        'message' => "Erreur lors de l'envoi du message à $tel",
-                                    ];
-                                    // echo "cURL Error #:" . $err;
-                                } else {
-                                    $reponse = json_decode($response);
-                                    if (!empty($reponse->id)) {
-                                        $this->update_notification_wassenger($notification->id, $reponse->id);
-                                    }
-                                }
-                            } else {
-                                $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]); 
-                            
-                                $data = ["url" => $url];
-                                $curl = curl_init();
-                                curl_setopt_array($curl, [
-                                    CURLOPT_URL => "https://api.wassenger.com/v1/files",
-                                    CURLOPT_RETURNTRANSFER => true,
-                                    CURLOPT_SSL_VERIFYPEER => false, //ssl off
-                                    CURLOPT_ENCODING => "",
-                                    CURLOPT_MAXREDIRS => 10,
-                                    CURLOPT_TIMEOUT => 30,
-                                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                                    CURLOPT_CUSTOMREQUEST => "POST",
-                                    CURLOPT_POSTFIELDS => json_encode($data),
-                                    CURLOPT_HTTPHEADER => [
-                                        "Content-Type: application/json",
-                                        "Token: $API_KEY_WHATSAPP",
-                                    ],
-                                ]);
+                            if ($interphone === 'invalid number') 
+                            {
+                                $notification->destinataire = '0' . $notification->destinataire;
+                                $notification->save();
+                            }
+                        }
+                        
+                        $isWa = (new WaGroupController())->isExistOnWaWithoutAuth(((new Abonnement)->getInternaltional($message->user_id) == 0) ? $interphone : $notification->destinataire, $message->user_id); //check phone wa_number! 
+                        if ($isWa != false) {
 
-                                $response = curl_exec($curl);
-                                $err = curl_error($curl);
-                                curl_close($curl);
-                                if ($err) {
-                                    echo "cURL Error #:" . $err;
-                                } else {
-                                    $reponse_banner = json_decode($response);
+                            if (count($files) > 0) {
+                                // sleep(2);
 
-                                    if (is_array($reponse_banner) == true) {
-                                        $itemsList = array("file" => $reponse_banner[0]->id);
-                                    } else {
-                                        $itemsList = array("file" => $reponse_banner->meta->file);
-                                    }
-                                    // sleep(2);//sleep(3);
-
-                                    $data = ["phone" => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire, "message" => strip_tags($message->message), "media" => $itemsList, "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
+                                if (strpos($files, '.mp4') != false) {
+                                    $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]); 
+                                
+                                    $data = ["phone" => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire, "message" => strip_tags($message->message), "media" => ["url" => $url], "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
                                     $curl = curl_init();
                                     curl_setopt_array($curl, [
                                         CURLOPT_URL => "https://api.wassenger.com/v1/messages",
@@ -2247,198 +2044,281 @@ if ($currentHourInTimeZone >= $startHour && $currentHourInTimeZone < $endHour) {
                                     ]);
 
                                     $response = curl_exec($curl);
-                                    $reponse = json_decode($response);
                                     $err = curl_error($curl);
                                     curl_close($curl);
+
                                     if ($err) {
                                         $errors = true;
                                         $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron 
                                         $notification->save();
+
                                         $notification->delivery_status = 'echec';
                                         $notification->save();
-
                                         // credit
-                                        Abonnement::creditMessageAndMediaWhatsappWithoutAuth(1, $message->id, count($files), $message->user_id);
+                                        Abonnement::creditMessageAndMediaWhatsappWithoutAuth(1, $message->id, 1, $message->user_id);
 
-                                        $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire; 
+                                        $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire;
                                         $responses[] = [
                                             'statut' => 'error',
                                             'message' => "Erreur lors de l'envoi du message à $tel",
                                         ];
                                         // echo "cURL Error #:" . $err;
-                                    } 
-                                    else 
-                                    {
+                                    } else {
                                         $reponse = json_decode($response);
                                         if (!empty($reponse->id)) {
-                                            $notification->delivery_status = $reponse->deliveryStatus;
-                                            $notification->save();
                                             $this->update_notification_wassenger($notification->id, $reponse->id);
                                         }
                                     }
-                                } 
+                                } else {
+                                    $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]); 
+                                
+                                    $data = ["url" => $url];
+                                    $curl = curl_init();
+                                    curl_setopt_array($curl, [
+                                        CURLOPT_URL => "https://api.wassenger.com/v1/files",
+                                        CURLOPT_RETURNTRANSFER => true,
+                                        CURLOPT_SSL_VERIFYPEER => false, //ssl off
+                                        CURLOPT_ENCODING => "",
+                                        CURLOPT_MAXREDIRS => 10,
+                                        CURLOPT_TIMEOUT => 30,
+                                        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                                        CURLOPT_CUSTOMREQUEST => "POST",
+                                        CURLOPT_POSTFIELDS => json_encode($data),
+                                        CURLOPT_HTTPHEADER => [
+                                            "Content-Type: application/json",
+                                            "Token: $API_KEY_WHATSAPP",
+                                        ],
+                                    ]);
+
+                                    $response = curl_exec($curl);
+                                    $err = curl_error($curl);
+                                    curl_close($curl);
+                                    if ($err) {
+                                        echo "cURL Error #:" . $err;
+                                    } else {
+                                        $reponse_banner = json_decode($response);
+
+                                        if (is_array($reponse_banner) == true) {
+                                            $itemsList = array("file" => $reponse_banner[0]->id);
+                                        } else {
+                                            $itemsList = array("file" => $reponse_banner->meta->file);
+                                        }
+                                        // sleep(2);//sleep(3);
+
+                                        $data = ["phone" => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire, "message" => strip_tags($message->message), "media" => $itemsList, "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
+                                        $curl = curl_init();
+                                        curl_setopt_array($curl, [
+                                            CURLOPT_URL => "https://api.wassenger.com/v1/messages",
+                                            CURLOPT_RETURNTRANSFER => true,
+                                            CURLOPT_SSL_VERIFYPEER => false, //ssl off
+                                            CURLOPT_ENCODING => "",
+                                            CURLOPT_MAXREDIRS => 10,
+                                            CURLOPT_TIMEOUT => 30,
+                                            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                                            CURLOPT_CUSTOMREQUEST => "POST",
+                                            CURLOPT_POSTFIELDS => json_encode($data),
+                                            CURLOPT_HTTPHEADER => [
+                                                "Content-Type: application/json",
+                                                "Token: $API_KEY_WHATSAPP",
+                                            ],
+                                        ]);
+
+                                        $response = curl_exec($curl);
+                                        $reponse = json_decode($response);
+                                        $err = curl_error($curl);
+                                        curl_close($curl);
+                                        if ($err) {
+                                            $errors = true;
+                                            $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron 
+                                            $notification->save();
+                                            $notification->delivery_status = 'echec';
+                                            $notification->save();
+
+                                            // credit
+                                            Abonnement::creditMessageAndMediaWhatsappWithoutAuth(1, $message->id, count($files), $message->user_id);
+
+                                            $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire; 
+                                            $responses[] = [
+                                                'statut' => 'error',
+                                                'message' => "Erreur lors de l'envoi du message à $tel",
+                                            ];
+                                            // echo "cURL Error #:" . $err;
+                                        } 
+                                        else 
+                                        {
+                                            $reponse = json_decode($response);
+                                            if (!empty($reponse->id)) {
+                                                $notification->delivery_status = $reponse->deliveryStatus;
+                                                $notification->save();
+                                                $this->update_notification_wassenger($notification->id, $reponse->id);
+                                            }
+                                        }
+                                    } 
+                                }
+                            } else if (count($files) == 0) {
+                                // sleep(2); 
+                                $data = ["phone" => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire, "message" => strip_tags($message->message), "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
+                                $curl = curl_init();
+                                curl_setopt_array($curl, [
+                                    CURLOPT_URL => "https://api.wassenger.com/v1/messages",
+                                    CURLOPT_RETURNTRANSFER => true,
+                                    CURLOPT_SSL_VERIFYPEER => false, //ssl off
+                                    CURLOPT_ENCODING => "",
+                                    CURLOPT_MAXREDIRS => 10,
+                                    CURLOPT_TIMEOUT => 30,
+                                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                                    CURLOPT_CUSTOMREQUEST => "POST",
+                                    CURLOPT_POSTFIELDS => json_encode($data),
+                                    CURLOPT_HTTPHEADER => [
+                                        "Content-Type: application/json",
+                                        "Token: $API_KEY_WHATSAPP",
+                                    ],
+                                ]);
+
+                                $response = curl_exec($curl); //dd($response);
+                                $err = curl_error($curl);
+                                curl_close($curl);
+                                if ($err) 
+                                {
+                                    $errors = true;
+                                    $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron 
+                                    $notification->save();
+                                    $notification->delivery_status = 'echec';
+                                    $notification->save();
+
+                                    // credit
+                                    Abonnement::creditWhatsappWithoutAuth(1, $message->id, $message->user_id);
+
+                                    $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire;
+                                    $responses[] = [
+                                        'statut' => 'error',
+                                        'message' => "Erreur lors de l'envoi du message à $tel",
+                                    ];
+                                    // echo "cURL Error #:" . $err;
+                                } else {
+                                    $reponse = json_decode($response);
+                                    if (!empty($reponse->id)) {
+                                        $notification->delivery_status = $reponse->deliveryStatus;
+                                        $notification->save();
+                                        $this->update_notification_wassenger($notification->id, $reponse->id);
+                                    }
+                                }
+                            } else {
+                                return 'nulled';
                             }
-                        } else if (count($files) == 0) {
-                            // sleep(2); 
-                            $data = ["phone" => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire, "message" => strip_tags($message->message), "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
+                        }
+                        else 
+                        {
+                            $notification->delivery_status = 'echec';
+                            $notification->save();
+                            // credit
+                            Abonnement::creditMessageAndMediaWhatsappWithoutAuth(1, $message->id, count($files), $message->user_id); //rembourse en cas d'echec           
+                        }
+
+                    } else if (strpos($message->canal, 'sms') !== false && $notification->canal === 'sms') { // Utilise `!== false` pour éviter les erreurs avec des positions `0`.
+                        if((new Abonnement)->getInternaltional($message->user_id) == 0)
+                        {
+                            $conv = new Convertor();
+                            $interphone = $conv->internationalisation($notification->destinataire, request('country', 'GA'));
+
+                            if ($interphone === 'invalid number') {
+                                $notification->destinataire = '0' . $notification->destinataire;
+                                $notification->save();
+                            }
+                        }
+
+                        $smsSender = $allabonnements->where('user_id', $message->user_id)->pluck('sms')->first();
+                        $sender = ($smsSender === 'default') ? strtoupper(Param::getSmsSender()) : strtoupper($smsSender);
+
+                        $text = strip_tags($message->message);
+                        $messageData = [
+                            'message' => (new SmsCount)->removeAccents(str_replace('&nbsp;', ' ', $text)),
+                            'receiver' => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire,
+                            'sender' => $sender,
+                        ];
+
+
+                        if ($notification->has_final_status == 1 && $notification->notify == 0 && $notification->chrone == 1) {
                             $curl = curl_init();
                             curl_setopt_array($curl, [
-                                CURLOPT_URL => "https://api.wassenger.com/v1/messages",
+                                CURLOPT_URL => 'https://devdocks.bakoai.pro/api/smpp/send',
                                 CURLOPT_RETURNTRANSFER => true,
-                                CURLOPT_SSL_VERIFYPEER => false, //ssl off
+                                CURLOPT_SSL_VERIFYPEER => false, // off ssl
                                 CURLOPT_ENCODING => "",
                                 CURLOPT_MAXREDIRS => 10,
                                 CURLOPT_TIMEOUT => 30,
                                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                                 CURLOPT_CUSTOMREQUEST => "POST",
-                                CURLOPT_POSTFIELDS => json_encode($data),
+                                CURLOPT_POSTFIELDS => json_encode($messageData),
                                 CURLOPT_HTTPHEADER => [
-                                    "Content-Type: application/json",
-                                    "Token: $API_KEY_WHATSAPP",
+                                    'Authorization: Basic ' . base64_encode('hobotta:hobotta'),
+                                    'Content-Type: application/json',
                                 ],
                             ]);
 
-                            $response = curl_exec($curl); //dd($response);
+                            $response = curl_exec($curl);
                             $err = curl_error($curl);
                             curl_close($curl);
-                            if ($err) 
-                            {
+
+                            if ($err) {
                                 $errors = true;
-                                $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron 
+                                $notification->notify = 3; // Échec de l'envoi
                                 $notification->save();
                                 $notification->delivery_status = 'echec';
                                 $notification->save();
 
                                 // credit
-                                Abonnement::creditWhatsappWithoutAuth(1, $message->id, $message->user_id);
+                                Abonnement::creditSmsWithoutAuth(1, $message->id, $message->user_id);
 
-                                $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire;
+                                $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone : $notification->destinataire;
                                 $responses[] = [
                                     'statut' => 'error',
                                     'message' => "Erreur lors de l'envoi du message à $tel",
                                 ];
-                                // echo "cURL Error #:" . $err;
                             } else {
                                 $reponse = json_decode($response);
-                                if (!empty($reponse->id)) {
-                                    $notification->delivery_status = $reponse->deliveryStatus;
+                                if (isset($reponse->status_code) && $reponse->status_code == "0") {
+                                    $this->update_notification_smsApi($notification->id);
+                                    $notification->delivery_status = 'sent';
                                     $notification->save();
-                                    $this->update_notification_wassenger($notification->id, $reponse->id);
                                 }
                             }
-                        } else {
-                            return 'nulled';
                         }
-                    }
-                    else 
-                    {
-                        $notification->delivery_status = 'echec';
+
+                        $notification->has_final_status = 1;
                         $notification->save();
-                        // credit
-                        Abonnement::creditMessageAndMediaWhatsappWithoutAuth(1, $message->id, count($files), $message->user_id); //rembourse en cas d'echec           
+
+                        sleep(1); // Ajout d'une pause de 1 secondes avant de poursuivre
+                    } else {
+                        return response()->json([
+                            'status' => 'error cron',
+                        ], 200);
                     }
 
-                } else if (strpos($message->canal, 'sms') !== false && $notification->canal === 'sms') { // Utilise `!== false` pour éviter les erreurs avec des positions `0`.
-                    if((new Abonnement)->getInternaltional($message->user_id) == 0)
-                    {
-                        $conv = new Convertor();
-                        $interphone = $conv->internationalisation($notification->destinataire, request('country', 'GA'));
+                    if ($errors) {
+                        $message->status = 5; // Modifier le statut du message à 5 en cas d'erreur //le statut 5 indiques le message non envoyé
+                        $message->save();
 
-                        if ($interphone === 'invalid number') {
-                            $notification->destinataire = '0' . $notification->destinataire;
-                            $notification->save();
-                        }
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Des erreurs sont survenues lors de l\'envoi de certains messages.',
+                            'details' => $responses,
+                        ], 500); 
                     }
-
-                    $smsSender = $allabonnements->where('user_id', $message->user_id)->pluck('sms')->first();
-                    $sender = ($smsSender === 'default') ? strtoupper(Param::getSmsSender()) : strtoupper($smsSender);
-
-                    $text = strip_tags($message->message);
-                    $messageData = [
-                        'message' => (new SmsCount)->removeAccents(str_replace('&nbsp;', ' ', $text)),
-                        'receiver' => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire,
-                        'sender' => $sender,
-                    ];
-
-
-                    if ($notification->has_final_status == 1 && $notification->notify == 0 && $notification->chrone == 1) {
-                        $curl = curl_init();
-                        curl_setopt_array($curl, [
-                            CURLOPT_URL => 'https://devdocks.bakoai.pro/api/smpp/send',
-                            CURLOPT_RETURNTRANSFER => true,
-                            CURLOPT_SSL_VERIFYPEER => false, // off ssl
-                            CURLOPT_ENCODING => "",
-                            CURLOPT_MAXREDIRS => 10,
-                            CURLOPT_TIMEOUT => 30,
-                            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                            CURLOPT_CUSTOMREQUEST => "POST",
-                            CURLOPT_POSTFIELDS => json_encode($messageData),
-                            CURLOPT_HTTPHEADER => [
-                                'Authorization: Basic ' . base64_encode('hobotta:hobotta'),
-                                'Content-Type: application/json',
-                            ],
-                        ]);
-
-                        $response = curl_exec($curl);
-                        $err = curl_error($curl);
-                        curl_close($curl);
-
-                        if ($err) {
-                            $errors = true;
-                            $notification->notify = 3; // Échec de l'envoi
-                            $notification->save();
-                            $notification->delivery_status = 'echec';
-                            $notification->save();
-
-                            // credit
-                            Abonnement::creditSmsWithoutAuth(1, $message->id, $message->user_id);
-
-                            $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone : $notification->destinataire;
-                            $responses[] = [
-                                'statut' => 'error',
-                                'message' => "Erreur lors de l'envoi du message à $tel",
-                            ];
-                        } else {
-                            $reponse = json_decode($response);
-                            if (isset($reponse->status_code) && $reponse->status_code == "0") {
-                                $this->update_notification_smsApi($notification->id);
-                                $notification->delivery_status = 'sent';
-                                $notification->save();
-                            }
-                        }
-                    }
-
-                    $notification->has_final_status = 1;
-                    $notification->save();
-
-                    sleep(1); // Ajout d'une pause de 1 secondes avant de poursuivre
-                } else {
-                    return response()->json([
-                        'status' => 'error cron',
-                    ], 200);
                 }
+                sleep(1);
+                $this->update_msg_finish($message->id); 
 
-                if ($errors) {
-                    $message->status = 5; // Modifier le statut du message à 5 en cas d'erreur //le status 5 indiques le message non envoyé
-                    $message->save();
-
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'Des erreurs sont survenues lors de l\'envoi de certains messages.',
-                        'details' => $responses,
-                    ], 500); 
-                }
             }
-            sleep(1);
-            $this->update_msg_finish($message->id); 
-
-        }
-        else 
-        {
-            return response()->json([
-                'statut' => 'error',
-                'message' => 'Les notifications sont suspendues entre 18h00 et 08h00.',
-            ], Response::HTTP_OK);
+            else
+            {   
+                $notification->status = 'deferred'; $notification->save();         
+                
+                // return response()->json([
+                //     'statut' => 'error',
+                //     'message' => 'Les notifications sont suspendues entre 18h00 et 08h00.',
+                // ], Response::HTTP_OK);
+            }
         }
     }
 

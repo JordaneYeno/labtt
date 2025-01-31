@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminAbonnementController;
 use App\Http\Controllers\AbonnementController;
 use App\Http\Controllers\Api\FileController;
+use App\Http\Controllers\Api\MonitorsAuthController;
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\AssistanceController;
 use App\Http\Controllers\ContactController;
@@ -22,6 +23,9 @@ use App\Http\Controllers\SocialiteController;
 use App\Http\Controllers\FacebookPageController;
 
 
+use Illuminate\Http\Request;
+
+
 // Route::post('add', [WaGroupController::class, 'addMembers']);
 // Route::get('oauth', [SocialiteController::class, 'authenticate']);
 // Route::post('/facebook/page-information', [FacebookPageController::class, 'getPageInformation']);
@@ -35,6 +39,63 @@ Route::group([
     Route::get('/outfiles/{folder}', [FileController::class, 'getImagesInFolder']);
 });
 
+/*
+|--------------------------------------------------------------------------
+| bornes routes::api
+|--------------------------------------------------------------------------
+|
+| bornes 
+|
+*/
+// Route::middleware('auth.basic')->get('/test', [MonitorsAuthController::class, 'index']);
+
+// Route::post('/borns/login', [MonitorsAuthController::class, 'login']);
+// Route::post('/refresh', [MonitorsAuthController::class, 'refresh']);
+// Route::post('/logout', [MonitorsAuthController::class, 'logout']);
+
+// Route::middleware('jwt.auth')->group(function () {
+//     Route::get('/monitor', function (Request $request) {
+//         return $request->user(); // Retourne les informations de MonitorsAuth
+//     });
+
+//     // Ajoute d'autres routes protégées ici
+// });
+
+
+// Route::group(['middleware' => 'jwt.auth'], function () {
+//     Route::get('/donnees', function (Request $request) {
+//         // Code pour retourner les données une fois authentifié
+//         return response()->json(['donnees' => 'Sécurisées via JWT']);
+//     });
+// });
+
+
+
+// Route::post('/login', 'MonitorsAuthController@login');
+
+
+Route::group(['namespace' => 'API'], function () {
+    // Routes sans authentification
+    // Route::post('/login', [MonitorsAuthController::class, 'authenticate']);
+    // Route::post('/login', [MonitorsAuthController::class, 'login1']);
+    Route::post('/login', [MonitorsAuthController::class, 'loginMonitors']);
+    Route::post('/register', [MonitorsAuthController::class, 'register']);
+
+    // Routes qui nécessitent une authentification
+    Route::group(['middleware' => 'jwt.auth'], function () {
+        // Exemple de route protégée
+        Route::get('/donnees', function (Request $request) {
+            return response()->json(['donnees' => 'Sécurisées via JWT']);
+        });
+    });
+});
+
+
+
+
+
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -45,7 +106,7 @@ Route::group([
 |
 */
 Route::get('cron_deferred', [NotificationController::class, 'getDeferredNotifictions']); // launch every one hour
-Route::get('cron_timezone', [NotificationController::class, 'getRecipientsTimeZone']); // launch every 
+Route::get('cron_timezone', [NotificationController::class, 'getRecipientsTimeZone']); // launch every five minutes
 Route::get('chroneNotif', [NotificationController::class, 'sendNotif']); // launch every two minutes
 Route::get('chrone', [NotificationController::class, 'sendChrone']); // launch every [null]
 

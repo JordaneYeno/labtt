@@ -15,7 +15,7 @@ class AddStatusAndTimezoneNotifications extends Migration
     {
         Schema::table('notifications', function (Blueprint $table) {
             $table->string('time_zone')->nullable()->after('has_final_status');
-            $table->enum('status', ['pending', 'in_progress', 'sent', 'failed', 'deferred'])->default('pending')->after('delivery_status');   
+            $table->enum('status', ['pending', 'in_progress', 'sent', 'failed', 'deferred'])->default('pending')->after('delivery_status'); 
  
         });
     }
