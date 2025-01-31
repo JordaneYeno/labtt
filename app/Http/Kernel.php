@@ -69,5 +69,6 @@ class Kernel extends HttpKernel
         'admin.super' => \App\Http\Middleware\SuperAdminMiddleware::class,
         'client.activate' => \App\Http\Middleware\ClientMiddleware::class,
         'status.client' => \App\Http\Middleware\StatusMiddleware::class,
+        'monitor' => \App\Http\Middleware\MonitorAuth::class,
     ];
 }

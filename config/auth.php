@@ -49,6 +49,11 @@ return [
             'driver' => 'jwt', // Utilise JWT
             'provider' => 'monitors_auth', // Le provider personnalisé
         ],
+
+        'monitor-api' => [
+            'driver' => 'jwt',
+            'provider' => 'auth_monitors_credentials',  // Nous utilisons un nouveau provider ici
+        ],
     ],
 
     /*
@@ -74,10 +79,10 @@ return [
             'model' => App\Models\User::class,
         ],
 
-        'monitors_auth' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\AuthMonitorsCredential::class,
-        ],
+        // 'monitors_auth' => [
+        //     'driver' => 'eloquent',
+        //     'model' => App\Models\AuthMonitorsCredential::class,
+        // ],
 
         // 'monitors_auth' => [
         //     'driver' => 'eloquent',
@@ -85,15 +90,22 @@ return [
         // ],
 
 
-        // 'monitors_auth' => [
-        //     'driver' => 'database',
-        //     'table' => 'auth_monitors_credentials', 
-        // ],
+        'monitors_auth' => [
+            'driver' => 'database',
+            'table' => 'auth_monitors_credentials', 
+        ],
 
         // 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',
         // ],
+
+
+
+        'auth_monitors_credentials' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\AuthMonitorsCredential::class,  // Le modèle pour tes "monitor credentials"
+        ],
     ],
 
     /*

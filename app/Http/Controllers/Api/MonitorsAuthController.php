@@ -13,9 +13,46 @@ use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
 class MonitorsAuthController extends Controller
-
-
 {
+
+    public function newLogin(Request $request)
+    {
+        $monitorCredential = AuthMonitorsCredential::where('email', $request->email)->first();
+
+        if (!$monitorCredential || !Hash::check($request->password, $monitorCredential->password)) {
+            return response()->json(['error' => 'Invalid credentials'], 401);
+        }
+
+        // Génère le token JWT avec le guard 'monitor-api'
+        $token = JWTAuth::guard('monitor-api')->fromUser($monitorCredential);
+
+        return response()->json(['token' => $token]);
+    }
+
+    public function getData(Request $request)
+    {
+        $user = $request->user(); 
+        // Tu peux maintenant récupérer des données liées à cet utilisateur
+        $monitorData = AuthMonitorsCredential::find($user->id);  // Exemple pour récupérer les informations de l'utilisateur
+
+        return response()->json($monitorData);
+    }
+
+    public function loginTest(Request $request)
+    {
+        // Exemple de récupération de l'utilisateur (par email)
+        $monitorCredential = AuthMonitorsCredential::where('username', $request->username)->first();
+
+        if (!$monitorCredential || !Hash::check($request->password, $monitorCredential->password)) {
+            return response()->json(['error' => 'Invalid credentials'], 401);
+        }
+
+        // Générer le token JWT
+        $token = JWTAuth::fromUser($monitorCredential);
+
+        return response()->json(['token' => $token]);
+    }
+
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -96,7 +133,7 @@ class MonitorsAuthController extends Controller
 
         Log::info('Generated token:', ['token' => $token]);
         return response()->json([
-            'access_token' => $token,
+            'access_token' => $token,   
             'token_type' => 'Bearer',
             'expires_in' => auth('api')->factory()->getTTL() * 60, // TTL en secondes
         ]);
@@ -116,10 +153,20 @@ class MonitorsAuthController extends Controller
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
    
-        if (!$monitorCredential->isAccountActive()) 
-        {
-            return response()->json(['error' => 'Account is not active or expired'], 403);
-        }
+        // if (!$monitorCredential->isAccountActive()) 
+        // {
+        //     return response()->json(['error' => 'Account is not active or expired'], 403);
+        // }
+        
+        // $token = JWTAuth::guard('monitor-api')->fromUser($monitorCredential, [
+        //     'exp' => Carbon::now()->addYear()->timestamp, // Expiration du token
+        //     'typ' => 'refresh'  // Type de token
+        // ]);
+
+         // Génère le token JWT avec le guard 'monitor-api'
+        //  $token = JWTAuth::guard('monitor-api')->fromUser($monitorCredential);
+
+        
 
         // Créer un token avec des claims personnalisés
         $token = JWTAuth::fromUser($monitorCredential, [

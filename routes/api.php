@@ -79,6 +79,7 @@ Route::group(['namespace' => 'API'], function () {
     // Route::post('/login', [MonitorsAuthController::class, 'authenticate']);
     // Route::post('/login', [MonitorsAuthController::class, 'login1']);
     Route::post('/login', [MonitorsAuthController::class, 'loginMonitors']);
+    // Route::post('/login', [MonitorsAuthController::class, 'loginTest']);
     Route::post('/register', [MonitorsAuthController::class, 'register']);
 
     // Routes qui nécessitent une authentification
@@ -91,8 +92,21 @@ Route::group(['namespace' => 'API'], function () {
 });
 
 
+// Route::middleware('auth:api')->group(function () {
+Route::middleware('auth:api')->group(function () {
+    Route::get('/2monitor-data', [MonitorsAuthController::class, 'getData']);
+    Route::get('/another-monitor-endpoint', [MonitorsAuthController::class, 'anotherMethod']);
+});
 
 
+// Route::middleware('auth:api')->get('/monitor-data', [MonitorsAuthController::class, 'getData']);
+
+
+Route::middleware('auth:monitor-api')->get('/monitor-data-last', [MonitorsAuthController::class, 'getData']);
+
+Route::group(['middleware' => ['monitor']], function () {
+    Route::get('/monitor-data44', [MonitorsAuthController::class, 'getData']);
+});
 
 
 
