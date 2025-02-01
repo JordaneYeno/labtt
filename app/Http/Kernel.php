@@ -70,5 +70,6 @@ class Kernel extends HttpKernel
         'client.activate' => \App\Http\Middleware\ClientMiddleware::class,
         'status.client' => \App\Http\Middleware\StatusMiddleware::class,
         'monitor' => \App\Http\Middleware\MonitorAuth::class,
+        'set.token.expiration' => \App\Http\Middleware\SetTokenExpiration::class,
     ];
 }

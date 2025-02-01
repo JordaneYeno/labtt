@@ -339,34 +339,36 @@ class MonitorsAuthController extends Controller
          }
      }
 
+
+
      public function loginMonitors(Request $request)
-    {
-        $request->validate([
-            'username' => 'required|string|min:6|max:15',
-            'password' => 'required|string|min:6|max:50',
-        ]);
+{
+    $request->validate([
+        'username' => 'required|string|min:6|max:15',
+        'password' => 'required|string|min:6|max:50',
+    ]);
 
-        // Vérification des informations d'identification
-        $monitorCredential = AuthMonitorsCredential::where('username', $request->username)->first();
-        if (!$monitorCredential || !Hash::check($request->password, $monitorCredential->password)) {
-            return response()->json(['error' => 'Invalid credentials'], 401);
-        }
-
-        // Génération du token avec une expiration de 3 minutes
-        $expiresIn = 3; // 3 minutes
-
-        $token = JWTAuth::fromUser($monitorCredential, [
-            'exp' => Carbon::now()->addMinutes($expiresIn)->timestamp, // Expiration à 3 minutes
-            'typ' => 'access'  // Type de token
-        ]);
-
-        Log::info('Generated token:', ['token' => $token]);
-
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => $expiresIn * 60, // Renvoie la durée en secondes
-        ]);
+    // Vérification des informations d'identification
+    $monitorCredential = AuthMonitorsCredential::where('username', $request->username)->first();
+    if (!$monitorCredential || !Hash::check($request->password, $monitorCredential->password)) {
+        return response()->json(['error' => 'Invalid credentials'], 401);
     }
+
+    // Génération du token avec une expiration de 3 minutes
+    $expiresIn = 3; // 3 minutes
+
+    $token = JWTAuth::fromUser($monitorCredential, [
+        'exp' => Carbon::now()->addMinutes($expiresIn)->timestamp, // Expiration à 3 minutes
+        'typ' => 'access'  // Type de token
+    ]);
+
+    Log::info('Generated token:', ['token' => $token]);
+
+    return response()->json([
+        'access_token' => $token,
+        'token_type' => 'bearer',
+        'expires_in' => $expiresIn * 60, // Renvoie la durée en secondes
+    ]);
+}
 
 }

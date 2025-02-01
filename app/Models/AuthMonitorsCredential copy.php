@@ -5,11 +5,8 @@ namespace App\Models;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Database\Eloquent\Model;
 
-class   AuthMonitorsCredential extends Model implements JWTSubject
+class   AuthMonitorsCredential90 extends Model implements JWTSubject
 {
-    protected $fillable = [
-        'api_token', 'token_expires_at'
-    ];
     protected $hidden = ['password',]; // Masquer 
     protected $table = 'auth_monitors_credentials'; 
 

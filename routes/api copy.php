@@ -47,37 +47,74 @@ Route::group([
 | bornes 
 |
 */
+// Route::middleware('auth.basic')->get('/test', [MonitorsAuthController::class, 'index']);
 
-// Route pour se connecter et obtenir un access token + refresh token
-Route::post('login', [MonitorsAuthController::class, 'loginMonitors']);
+// Route::post('/borns/login', [MonitorsAuthController::class, 'login']);
+// Route::post('/refresh', [MonitorsAuthController::class, 'refresh']);
+// Route::post('/logout', [MonitorsAuthController::class, 'logout']);
 
-// Route pour rafraîchir l'access token
-// Route::post('refresh', [MonitorsAuthController::class, 'refreshToken']);
-// Route::middleware('auth:monitor-api')->get('/monitor-data-last', [MonitorsAuthController::class, 'getData']);
+// Route::middleware('jwt.auth')->group(function () {
+//     Route::get('/monitor', function (Request $request) {
+//         return $request->user(); // Retourne les informations de MonitorsAuth
+//     });
 
-// Route::middleware(['auth:monitor-api', 'set.token.expiration'])->get('/protected-resource', function () {
-//     return response()->json(['message' => 'This is a protected resource']);
-// });
-
-Route::group(['middleware' => ['monitor']], function () {
-    Route::get('/protected-resource', [MonitorsAuthController::class, 'getData']);
-});
-
-;
-
-// Route::group(['middleware' => ['monitor']], function () {
-//     // Route protégée
-//     Route::get('/monitor-data', [MonitorsAuthController::class, 'getData']);
+//     // Ajoute d'autres routes protégées ici
 // });
 
 
-Route::group(['middleware' => ['monitor']], function () {
-    Route::get('/monitor', function () {
-        // Logique pour les utilisateurs monitor
-        return response()->json(['message' => 'This is a protected resource']);
+// Route::group(['middleware' => 'jwt.auth'], function () {
+//     Route::get('/donnees', function (Request $request) {
+//         // Code pour retourner les données une fois authentifié
+//         return response()->json(['donnees' => 'Sécurisées via JWT']);
+//     });
+// });
+
+
+
+// Route::post('/login', 'MonitorsAuthController@login');
+
+
+Route::group(['namespace' => 'API'], function () {
+    // Routes sans authentification
+    // Route::post('/login', [MonitorsAuthController::class, 'authenticate']);
+    // Route::post('/login', [MonitorsAuthController::class, 'login1']);
+    Route::post('/login', [MonitorsAuthController::class, 'loginMonitors']);
+    // Route::post('/login', [MonitorsAuthController::class, 'loginTest']);
+    Route::post('/register', [MonitorsAuthController::class, 'register']);
+
+    // Routes qui nécessitent une authentification
+    Route::group(['middleware' => 'jwt.auth'], function () {
+        // Exemple de route protégée
+        Route::get('/donnees', function (Request $request) {
+            return response()->json(['donnees' => 'Sécurisées via JWT']);
+        });
     });
 });
 
+
+// Route::middleware('auth:api')->group(function () {
+Route::middleware('auth:api')->group(function () {
+    Route::get('/2monitor-data', [MonitorsAuthController::class, 'getData']);
+    Route::get('/another-monitor-endpoint', [MonitorsAuthController::class, 'anotherMethod']);
+});
+
+
+// Route::middleware('auth:api')->get('/monitor-data', [MonitorsAuthController::class, 'getData']);
+
+
+Route::middleware('auth:monitor-api')->get('/monitor-data-last', [MonitorsAuthController::class, 'getData']);
+
+Route::group(['middleware' => ['monitor']], function () {
+    Route::get('/monitor-data44', [MonitorsAuthController::class, 'getData']);
+});
+
+
+// Route pour rafraîchir l'access token
+Route::post('refresh', [MonitorsAuthController::class, 'refreshToken']);
+
+Route::middleware(['auth:monitor-api', 'set.token.expiration'])->get('/protected-resource', function () {
+    return response()->json(['message' => 'This is a protected resource']);
+});
 
 
 /*
