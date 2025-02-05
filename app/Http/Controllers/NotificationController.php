@@ -1975,11 +1975,12 @@ class NotificationController extends Controller
                 {
                     $conv = new Convertor();
                     $interphone = $conv->internationalisation($notification->destinataire, request('country', 'GA'));
-
+                    
                     if ($interphone === 'invalid number') 
                     {
                         $notification->destinataire = '0' . $notification->destinataire;
                         $notification->save();
+                        $interphone = $conv->internationalisation($notification->destinataire, request('country', 'GA'));
                     }
                 }
                 
@@ -2191,6 +2192,7 @@ class NotificationController extends Controller
                     if ($interphone === 'invalid number') {
                         $notification->destinataire = '0' . $notification->destinataire;
                         $notification->save();
+                        $interphone = $conv->internationalisation($notification->destinataire, request('country', 'GA'));
                     }
                 }
 
@@ -2203,7 +2205,7 @@ class NotificationController extends Controller
                     'receiver' => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire,
                     'sender' => $sender,
                 ];
-
+                
                 // if ($notification->has_final_status == 1 && $notification->notify == 0 && $notification->chrone == 1) {
                 if ($notification->notify == 0 && $notification->chrone == 1) {
                     $curl = curl_init();
