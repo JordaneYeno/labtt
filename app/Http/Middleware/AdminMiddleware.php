@@ -24,6 +24,5 @@ class AdminMiddleware
             'status' => 'erreur',
             'message' => 'accès non autorisé'
         ]);
-        // return $next($request);
     }
 }

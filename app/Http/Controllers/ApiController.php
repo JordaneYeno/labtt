@@ -383,7 +383,8 @@ class ApiController extends Controller
         }
 
         $user = Auth::user();
-        if ($user->status == 0 && $user->role_id == 0) {
+        // if ($user->status == 0 && $user->role_id == 0) {
+        if ($user->status == 0) {
             auth()->logout();
             return response()->json([
                 'status' => 'echec',
@@ -396,7 +397,7 @@ class ApiController extends Controller
             'message' => 'Connexion effectuée avec succes',
             'expires_in' => JWTAuth::factory()->getTTL(),
             'token' => $token,
-            'user' => $user,
+            'state' => $user->status,
         ]);
     }
 
@@ -426,16 +427,8 @@ class ApiController extends Controller
         }
     }
 
-    public function getUser(Request $request)
-    {
-        $this->validate($request, [
-            'token' => 'required',
-        ]);
-
-        $user = JWTAuth::authenticate($request->token);
-
-        return response()->json(['user' => $user]);
-    }
+    public function getUserAuth()
+    {return response()->json(['user' => auth()->user(),], Response::HTTP_OK);}
 
     public function getClients(Request $request)
     {

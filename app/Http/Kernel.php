@@ -64,12 +64,12 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'jwt.verify' => \App\Http\Middleware\JwtMiddleware::class,
         'jwt.auth' => Tymon\JWTAuth\Middleware\GetUserFromToken::class,
-        'jwt.refresh' => Tymon\JWTAuth\Middleware\RefreshToken::class,
+        // 'jwt.refresh' => Tymon\JWTAuth\Middleware\RefreshToken::class,
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
         'admin.super' => \App\Http\Middleware\SuperAdminMiddleware::class,
         'client.activate' => \App\Http\Middleware\ClientMiddleware::class,
         'status.client' => \App\Http\Middleware\StatusMiddleware::class,
-        'monitor' => \App\Http\Middleware\MonitorAuth::class,
-        'set.token.expiration' => \App\Http\Middleware\SetTokenExpiration::class,
+        'monitor' => \App\Http\Middleware\MonitorMiddleware::class,
+        'jwt.refresh' => \App\Http\Middleware\RefreshTokenMiddleware::class,
     ];
 }

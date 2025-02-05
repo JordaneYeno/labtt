@@ -26,10 +26,6 @@ use App\Http\Controllers\FacebookPageController;
 use Illuminate\Http\Request;
 
 
-// Route::post('add', [WaGroupController::class, 'addMembers']);
-// Route::get('oauth', [SocialiteController::class, 'authenticate']);
-// Route::post('/facebook/page-information', [FacebookPageController::class, 'getPageInformation']);
-
 
 Route::group([
     // 'middleware' => 'outbound',
@@ -49,7 +45,7 @@ Route::group([
 */
 
 // Route pour se connecter et obtenir un access token + refresh token
-Route::post('login', [MonitorsAuthController::class, 'loginMonitors']);
+// Route::post('login', [MonitorsAuthController::class, 'loginMonitors']);
 
 // Route pour rafraîchir l'access token
 // Route::post('refresh', [MonitorsAuthController::class, 'refreshToken']);
@@ -130,12 +126,28 @@ Route::post('paiement/callback', [PaymentConroller::class, 'receiveCallback']);
 | Middleware
 |
 */
+
+// Route::middleware('auth:api')->post('/refresh-token', [MonitorsAuthController::class, 'refreshToken']);
 Route::group(['middleware' => ['jwt.verify']], function () {
 
     Route::get('logout', [ApiController::class, 'logout']);
+    Route::get('authuser', [ApiController::class, 'getUserAuth']);
 
     Route::get('export', [ExportController::class, 'storeExcel']);
     Route::post('import/contact', [ContactController::class, 'getContacts']);
+      
+    /*
+    |--------------------------------------------------------------------------
+    | Monitor routes::api
+    |--------------------------------------------------------------------------
+    |
+    | Monitor ads
+    |
+    */
+    Route::middleware(['monitor'])->group(function () {
+        Route::get('/monitor/datas', [MonitorsAuthController::class, 'getActiveAds']);
+        // Route::get('/monitor/data', [MonitorsAuthController::class, 'getAds']);
+    });
       
     /*
     |--------------------------------------------------------------------------
@@ -273,6 +285,12 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     |
     */
     Route::group(['middleware' => ['status.client']], function () {
+        Route::prefix('advertisements')->group(function () {
+            Route::post('/', [MonitorsAuthController::class, 'store']); 
+            // Route::get('/', [MonitorsAuthController::class, 'index']); // Liste des pubs
+        });
+        
+
         Route::post('paiement', [PaymentConroller::class, 'initializePayment']);
         Route::prefix('activation/service')->group(function () {
             Route::prefix('sms')->group(function () {

@@ -3,10 +3,9 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Http\Request;
 
-class SetTokenExpiration
+class MonitorMiddleware
 {
     /**
      * Handle an incoming request.
@@ -14,15 +13,16 @@ class SetTokenExpiration
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
      * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
-     * @return mixed
      */
     public function handle(Request $request, Closure $next)
     {
-        // return $next($request);
-        if (auth()->check()) {
-            JWTAuth::factory()->setTTL(3); // token à 3 minute (en minutes)
+        if (auth()->check() && auth()->user()->role_id == 4) {
+            return $next($request);
         }
-
-        return $next($request);
+    
+        return response()->json([
+            // 'status' => '',
+            'message' => 'Accès réservé aux bornes uniquement'
+        ], 403);     
     }
 }

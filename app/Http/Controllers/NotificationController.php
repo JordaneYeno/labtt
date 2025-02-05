@@ -2238,7 +2238,8 @@ class NotificationController extends Controller
                         ];
 
 
-                        if ($notification->has_final_status == 1 && $notification->notify == 0 && $notification->chrone == 1) {
+                        // if ($notification->has_final_status == 1 && $notification->notify == 0 && $notification->chrone == 1) {
+                        if ($notification->notify == 0 && $notification->chrone == 1) {
                             $curl = curl_init();
                             curl_setopt_array($curl, [
                                 CURLOPT_URL => 'https://devdocks.bakoai.pro/api/smpp/send',
