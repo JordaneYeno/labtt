@@ -145,7 +145,9 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     |
     */
     Route::middleware(['monitor'])->group(function () {
-        Route::get('/monitor/datas', [MonitorsAuthController::class, 'getActiveAds']);
+        Route::post('/monitor/datas', [MonitorsAuthController::class, 'getActiveAds']);
+
+        // Route::get('/monitor/datas', [MonitorsAuthController::class, 'getActiveAds']);
         // Route::get('/monitor/data', [MonitorsAuthController::class, 'getAds']);
     });
       
