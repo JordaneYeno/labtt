@@ -9,7 +9,7 @@ class Advertisement extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['client_id', 'title', 'description', 'media_path', 'start_date', 'end_date', 'status', 'ed_reference'];
+    protected $fillable = ['client_id', 'title', 'description', 'media_path', 'link', 'start_date', 'end_date', 'status', 'ed_reference'];
 
     protected $hidden = ['id', 'updated_at', 'created_at', 'client_id'];
 }

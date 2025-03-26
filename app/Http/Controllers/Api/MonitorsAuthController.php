@@ -71,6 +71,7 @@ class MonitorsAuthController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'media_path' => '/storage/' . $filePath,
+            'link' => $request->link,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'status' => 'active',
@@ -154,7 +155,7 @@ class MonitorsAuthController extends Controller
 
         if (empty($request->filters)) {
             $activeAds = Advertisement::where('status', 'active')
-                ->select('status', 'title', 'media_path', 'start_date', 'end_date', 'ed_reference')
+                ->select('status', 'title', 'media_path', 'link', 'start_date', 'end_date', 'ed_reference')
                 ->get();
         } else {
             // // On extrait les IDs et les dates de fin à exclure

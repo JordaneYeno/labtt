@@ -28,6 +28,7 @@ class CreateAdvertisementRequest extends FormRequest
         return [
             'title' => 'required|string',
             'description' => 'nullable|string',
+            // 'link' => 'nullable|string',
             'media_path' => 'file|mimes:jpg,jpeg,png,gif,mp4,mov,avi,mkv|max:10240', // Accepter des images ou des fichiers vidéo, max 10MB
             'start_date' => 'required|date|before_or_equal:end_date', // Assure que start_date est avant ou égale à end_date
             'end_date' => 'required|date|after_or_equal:start_date', // Assure que end_date est après ou égale à start_date
