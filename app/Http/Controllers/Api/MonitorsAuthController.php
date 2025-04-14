@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 use function PHPUnit\Framework\isEmpty;
+use function PHPUnit\Framework\isNull;
 
 class MonitorsAuthController extends Controller
 {
@@ -71,7 +72,8 @@ class MonitorsAuthController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'media_path' => '/storage/' . $filePath,
-            'link' => $request->link,
+            'link' => $request->link ?? '',
+            'delay' => $request->delay ?? 0,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'status' => 'active',
@@ -155,7 +157,7 @@ class MonitorsAuthController extends Controller
 
         if (empty($request->filters)) {
             $activeAds = Advertisement::where('status', 'active')
-                ->select('status', 'title', 'media_path', 'link', 'start_date', 'end_date', 'ed_reference')
+                ->select('status', 'title', 'media_path', 'link',  'delay', 'start_date', 'end_date', 'ed_reference')
                 ->get();
         } else {
             // // On extrait les IDs et les dates de fin à exclure
