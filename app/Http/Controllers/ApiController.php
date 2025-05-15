@@ -395,7 +395,7 @@ class ApiController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Connexion effectuée avec succes',
-            'expires_in' => JWTAuth::factory()->getTTL(),
+            'expires_in' => JWTAuth::factory()->getTTL() * 60, // ← en secondes
             'token' => $token,
             'state' => $user->status,
         ]);
