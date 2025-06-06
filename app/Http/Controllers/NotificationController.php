@@ -30,6 +30,8 @@ use Mail;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Str;
 
+use Illuminate\Http\JsonResponse;
+
 class NotificationController extends Controller
 {
     protected $user;
@@ -51,7 +53,8 @@ class NotificationController extends Controller
 
     // start cusumer Hobotta API
 
-    public function custumGateway(CustumGateway $request)
+    // public function custumGateway(CustumGateway $request)
+    public function custumGateway(Request $request)
     {
         
         $perPage = $request->perPage ? $request->perPage : 9;
@@ -79,7 +82,7 @@ class NotificationController extends Controller
                 if (Param::getStatusWhatsapp() == 0) {
                     return response()->json([
                         'status' => 'échec',
-                        'message' => 'Service WhatsApp désactivé',
+                        'message' => 'SService WHATSAPP interrompu momentanément.',
                     ], 422);
                 }
 
@@ -88,6 +91,14 @@ class NotificationController extends Controller
                         'status' => 'error',
                         'message' => 'Device introuvable.',
                     ], 400); // Code 400 : Bad Request
+                }                
+
+                // if ((Abonnement::getAbo($user->id))->whatsapp_status == 0) {
+                if ((Abonnement::getAbo($user->id))->whatsapp_status === 0 || (Abonnement::getAbo($user->id))->whatsapp_status !== 3) {
+                    return response()->json([
+                        'status' => 'échec',
+                        'message' => 'Canal WHATSAPP inactif.',
+                    ], 422);
                 }
 
                 $API_KEY_WHATSAPP = Param::getTokenWhatsapp();
@@ -336,7 +347,7 @@ class NotificationController extends Controller
                                 $notification->delivery_status = 'echec';
                                 $notification->save();
                                 // credit
-                                Abonnement::creditWhatsapp(1, $message->id);
+                                sleep(1);Abonnement::creditWhatsapp(1, $message->id);
                                 // Abonnement::creditMediaWhatsapp(1, $message->id, count($files));
                                                             
                                 $responses[] = [
@@ -361,7 +372,7 @@ class NotificationController extends Controller
                         $notification->delivery_status = 'echec';
                         $notification->save();
                         // credit
-                        Abonnement::creditMessageAndMediaWhatsapp(1, $message->id, count($files)); //rembourse en cas d'echec
+                        sleep(1);Abonnement::creditMessageAndMediaWhatsapp(1, $message->id, count($files)); //rembourse en cas d'echec
                                 
                         if ($request->rescue == 'sms_fallback' && $isWa == false) {
                                                             
@@ -458,7 +469,7 @@ class NotificationController extends Controller
                                 $notification->save();
                         
                                 // credit
-                                Abonnement::creditSms(1, $message->id);
+                                sleep(1);Abonnement::creditSms(1, $message->id);
                                 $responses[] = [
                                     'statut' => 'error',
                                     'message' => "Erreur lors de l'envoi du message à $destinataire",
@@ -518,14 +529,15 @@ class NotificationController extends Controller
                 if (Param::getStatusEmail() == 0) {
                     return response()->json([
                         'status' => 'échec',
-                        'message' => 'Service email désactivé',
+                        'message' => 'Service EMAIL interrompu momentanément.',
                     ], 422);
                 }
 
-                if ((Abonnement::getAbo($user->id))->email_status == 0) {
+                // if ((Abonnement::getAbo($user->id))->email_status == 0) {
+                if ((Abonnement::getAbo($user->id))->email_status === 0 || (Abonnement::getAbo($user->id))->email_status !== 3) {
                     return response()->json([
                         'status' => 'échec',
-                        'message' => 'Service email désactivé',
+                        'message' => 'Canal EMAIL inactif.',
                     ], 422);
                 }
 
@@ -686,7 +698,7 @@ class NotificationController extends Controller
                         $notification->delivery_status = 'echec';
                         $notification->save();
                         // credit
-                        Abonnement::creditEmail(1, $message->id);
+                        sleep(1);Abonnement::creditEmail(1, $message->id);
 
                         $responses[] = [
                             'statut' => 'error',
@@ -743,10 +755,19 @@ class NotificationController extends Controller
                 ], 200);
 
             case "sms":
+                
                 if (Param::getStatusSms() == 0) {
                     return response()->json([
                         'status' => 'échec',
-                        'message' => 'Service SMS désactivé',
+                        'message' => 'Service SMS interrompu momentanément.',
+                    ], 422);
+                }
+
+                // if ((Abonnement::getAbo($user->id))->sms_status == 0) {
+                if ((Abonnement::getAbo($user->id))->sms_status === 0 || (Abonnement::getAbo($user->id))->sms_status !== 3) {
+                    return response()->json([
+                        'status' => 'échec',
+                        'message' => 'Canal SMS inactif.',
                     ], 422);
                 }
 
@@ -764,6 +785,7 @@ class NotificationController extends Controller
                     }
                 }
 
+                
                 if ($total > $solde) {
                     return response()->json([
                         'status' => 'échec',
@@ -796,20 +818,55 @@ class NotificationController extends Controller
                         'message_id' => $message->id,
                     ]);
 
-                    if((new Abonnement)->getInternaltional($user->id) == 0) 
-                    {
+                    // if((new Abonnement)->getInternaltional($user->id) == 0) 
+                    // {
+                    //     // $conv = new Convertor();
+                    //     // $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
+                        
+                    //     $conv = new Convertor();
+                    //     // $numerosFormattes = []; // Tableau pour stocker les numéros valides
+
+                    //     $result = $conv->validateAndFormatLocalPhoneNumber($destinataire);
+
+                    //     if ($result instanceof JsonResponse) {
+                    //         return $result; // Retourne l'erreur JSON immédiatement
+                    //     }
+
+                    //     // $numerosFormattes[] = $result; // Ajoute le numéro formaté au tableau
+
+                    // }
+
+                    // Vérifie si c'est une campagne locale
+                    if ((new Abonnement)->getInternaltional($user->id) == 0) {
+
                         $conv = new Convertor();
-                        $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
+                        $result = $conv->validateAndFormatLocalPhoneNumber($destinataire);
+
+
+                        if ($result instanceof JsonResponse) {
+                            // Rembourse le crédit
+                            sleep(1);Abonnement::creditSms(1, $message->id);
+
+                            // Ajoute un message d'erreur
+                            $responses[] = [
+                                'statut' => 'error',
+                                'message' => "Numéro invalide. Crédit remboursé pour : $destinataire"
+                            ];
+
+                            // Passe au destinataire suivant
+                            continue;
+                        }
                     }
 
                     $text = strip_tags($message->message);
                     $data =
                         [
                             'message' => (new SmsCount)->removeAccents(str_replace('&nbsp;', ' ', $text)),
-                            'receiver' => ((new Abonnement)->getInternaltional($user->id) == 0) ?$interphone :$destinataire,
+                            // 'receiver' => ((new Abonnement)->getInternaltional($user->id) == 0) ?$interphone :$destinataire,
+                            'receiver' => ((new Abonnement)->getInternaltional($user->id) == 0) ? $result :$destinataire,
                             'sender' => $allAbonnements->where('user_id', $user->id)->pluck('sms')->first() === 'default' ?  strtoupper(Param::getSmsSender() /*'bakoai'*/)  : strtoupper($allAbonnements->where('user_id', $user->id)->pluck('sms')->first()),
                         ];
-
+// dd($data);
                     $curl = curl_init();
                     curl_setopt_array($curl, [
                         CURLOPT_URL => 'https://devdocks.bakoai.pro/api/smpp/send',
@@ -840,7 +897,7 @@ class NotificationController extends Controller
                         $notification->save();
 
                         // credit
-                        Abonnement::creditSms(1, $message->id);
+                        sleep(1);Abonnement::creditSms(1, $message->id);
                         $responses[] = [
                             'statut' => 'error',
                             'message' => "Erreur lors de l'envoi du message à $destinataire",
@@ -853,6 +910,7 @@ class NotificationController extends Controller
                             'message' => 'Message envoyé avec succès',
                             'destinataire' => $destinataire,
                             'canal' => $notification->canal,
+                            'formated' => $result,
                         ];
                     }
                 }
@@ -1012,7 +1070,7 @@ class NotificationController extends Controller
                         $notification->save();
                         $name = 'invalid key';
                         // credit
-                        Abonnement::creditGroupWhatsapp(1, $message->id);
+                        sleep(1);Abonnement::creditGroupWhatsapp(1, $message->id);
                     } else {
                         $notification->delivery_status = $reponse->deliveryStatus;
                         $notification->save();
@@ -1877,7 +1935,7 @@ class NotificationController extends Controller
                     $notification->save();
 
                     // credit
-                    Abonnement::creditEmailWithoutAuth(1, $message->id, $message->user_id);
+                    sleep(1);Abonnement::creditEmailWithoutAuth(1, $message->id, $message->user_id);
                 }
 
                 $this->update_notification($notification->id);
@@ -1934,7 +1992,7 @@ class NotificationController extends Controller
                                 $notification->delivery_status = 'echec';
                                 $notification->save();
                                 // credit
-                                Abonnement::creditMessageAndMediaWhatsappWithoutAuth(1, $message->id, 1, $message->user_id);
+                                sleep(1);Abonnement::creditMessageAndMediaWhatsappWithoutAuth(1, $message->id, 1, $message->user_id);
 
                                 $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire;
                                 $responses[] = [
@@ -2014,7 +2072,7 @@ class NotificationController extends Controller
                                     $notification->save();
 
                                     // credit
-                                    Abonnement::creditMessageAndMediaWhatsappWithoutAuth(1, $message->id, count($files), $message->user_id);
+                                    sleep(1);Abonnement::creditMessageAndMediaWhatsappWithoutAuth(1, $message->id, count($files), $message->user_id);
 
                                     $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire; 
                                     $responses[] = [
@@ -2066,7 +2124,7 @@ class NotificationController extends Controller
                             $notification->save();
 
                             // credit
-                            Abonnement::creditWhatsappWithoutAuth(1, $message->id, $message->user_id);
+                            sleep(1);Abonnement::creditWhatsappWithoutAuth(1, $message->id, $message->user_id);
 
                             $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire;
                             $responses[] = [
@@ -2091,7 +2149,7 @@ class NotificationController extends Controller
                     $notification->delivery_status = 'echec';
                     $notification->save();
                     // credit
-                    Abonnement::creditMessageAndMediaWhatsappWithoutAuth(1, $message->id, count($files), $message->user_id); //rembourse en cas d'echec           
+                    sleep(1);Abonnement::creditMessageAndMediaWhatsappWithoutAuth(1, $message->id, count($files), $message->user_id); //rembourse en cas d'echec           
                 }
 
             } else if (strpos($message->canal, 'sms') !== false && $notification->canal === 'sms') { // Utilise `!== false` pour éviter les erreurs avec des positions `0`.
@@ -2148,7 +2206,7 @@ class NotificationController extends Controller
                         $notification->save();
 
                         // credit
-                        Abonnement::creditSmsWithoutAuth(1, $message->id, $message->user_id);
+                        sleep(1);Abonnement::creditSmsWithoutAuth(1, $message->id, $message->user_id);
 
                         $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone : $notification->destinataire;
                         $responses[] = [

@@ -1,11 +1,46 @@
 <?php
 
 namespace App\Services;
-
 use App\Models\International;
 
 class Convertor
 {
+    function validateAndFormatLocalPhoneNumber($number)
+    {
+        $number = trim($number);
+        $number = preg_replace('/\D/', '', $number);
+
+        // // Cas préfixes partiels valides (autoriser début de saisie utilisateur)
+        // if (preg_match('/^241(06|07|6|7)?$/', $number)) {
+        //     return $number;
+        // }
+
+        // Format 1 : 7XXXXXXX ou 6XXXXXXX
+        if (preg_match('/^(7|6)\d{7}$/', $number)) {
+            return '241' . $number;
+        }
+
+        // Format 2 : 07XXXXXXX ou 06XXXXXXX
+        if (preg_match('/^0(7|6)\d{7}$/', $number)) {
+            return '241' . substr($number, 1);
+        }
+        
+        // Cas : 24106XXXXXXX ou 24107XXXXXXX => Corriger vers 2416XXXXXXX ou 2417XXXXXXX
+        if (preg_match('/^2410(6|7)(\d{7})$/', $number, $matches)) {
+            $number = '241' . $matches[1] . $matches[2]; // Ex: 24106 + 1234567 ➜ 2416 + 1234567
+        }
+
+        // Vérifier que le format final est bien 2416XXXXXXX ou 2417XXXXXXX (11 chiffres)
+        if (preg_match('/^241(6|7)\d{7}$/', $number)) {
+            return $number;
+        }
+
+        
+        // Numéro invalide
+        return response()->json([
+            'error' => 'Numéro invalide. Le format doit commencer par 6 ou 7, ou être au format 2416/2417.'
+        ], 422);
+    }
 
     public function convertNumbert($number, $indicatif = 241)
     {
