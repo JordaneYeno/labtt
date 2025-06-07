@@ -910,7 +910,7 @@ class NotificationController extends Controller
                             'message' => 'Message envoyé avec succès',
                             'destinataire' => $destinataire,
                             'canal' => $notification->canal,
-                            'formated' => $result,
+                            // 'formated' => isset($result)$result,
                         ];
                     }
                 }
