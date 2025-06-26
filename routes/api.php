@@ -22,6 +22,12 @@ use Illuminate\Support\Facades\Route;
 
 
 
+Route::post('recep/outfiles/{message_id}', [ExportController::class, 'exportNotificationsToExcel']);
+Route::get('dec/recep/outfiles/{encrypted_id}', [ExportController::class, 'downloadEncryptedFile']);
+
+
+Route::get('export', [ExportController::class, 'exportToExcel']);
+
 Route::post('add', [WaGroupController::class, 'addMembers']);
 Route::get('oauth', [SocialiteController::class, 'authenticate']);
 Route::post('/facebook/page-information', [FacebookPageController::class, 'getPageInformation']);
@@ -78,7 +84,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         Route::get('search/ref', [MessagesController::class, 'getMessagesByReferenceId']);
     });
 
-    Route::get('export', [ExportController::class, 'storeExcel']);
+    // Route::get('export', [ExportController::class, 'storeExcel']);
     Route::post('import/contact', [ContactController::class, 'getContacts']);
     Route::post('verify', [NotificationController::class, 'verifySolde']);
     Route::prefix('password')->group(function () {
@@ -88,6 +94,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::put('reset', [AbonnementController::class, 'resetService']);
     Route::post('status/callback', [PaymentConroller::class, 'verifyPayment']);
     Route::get('logout', [ApiController::class, 'logout']);
+    Route::get('authuser', [ApiController::class, 'getUserAuth']);
     Route::post('recipients', [ClientMessagesController::class, 'getRecipients']);
     Route::get('tarification/services', [TarificationController::class, 'getPricingClient']);
     

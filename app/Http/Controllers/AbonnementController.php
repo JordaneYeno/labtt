@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\EnterpriseNameRequest;
-use App\Http\Requests\PaymentRequest;
 use App\Http\Requests\WhatsappRequest;
 use App\Models\Abonnement;
 use App\Models\Demande;
@@ -15,11 +14,6 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
-use App\Services\SendMailService;
-use Exception;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use GuzzleHttp\Client;
 
 class AbonnementController extends Controller
 {

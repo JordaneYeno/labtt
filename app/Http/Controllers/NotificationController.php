@@ -977,7 +977,7 @@ class NotificationController extends Controller
         $solde = $allAbonnements->where('user_id', $user->id)->pluck('solde')->first();
         $responses = [];
         $total = 0;
-        $userDeviceId = (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($user->id);
+        $userDeviceId = (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($user->id); //dd($userDeviceId);
 
 
         if (Param::getStatusWhatsapp() == 0) {
@@ -994,8 +994,8 @@ class NotificationController extends Controller
             ], 400); // Code 400 : Bad Request
         }
 
-        $API_KEY_WHATSAPP = Param::getTokenWhatsapp();
-        $groupes = explode(',', $request->wid);
+        $API_KEY_WHATSAPP = Param::getTokenWhatsapp(); //dd($API_KEY_WHATSAPP);
+        $groupes = explode(',', $request->wid); 
         $total = count($groupes) * (new Tarifications)->getWhatsappPrice();
 
         if ($total > $solde) {
@@ -1017,7 +1017,8 @@ class NotificationController extends Controller
         ]);
 
         // Facturer la campagne WhatsApp
-        Abonnement::factureGroupWhatsapp(count($groupes), $total, $message->id);
+        // Abonnement::factureGroupWhatsapp(count($groupes), $total, $message->id);
+        Abonnement::__factureWhatsapp(count($groupes), $total, 0, $message->id);
 
         // Débiter le solde de l'utilisateur
         (new Transaction)->__addTransactionAfterSendMessage($user->id, 'debit', $total, $message->id, count($groupes), Abonnement::__getSolde($user->id), null, 'whatsapp');
@@ -1025,7 +1026,7 @@ class NotificationController extends Controller
         $errors = false;
 
         foreach ($groupes as $groupe) {
-            $data = ["group" => $groupe, "message" => $request->message, "device" => $userDeviceId];
+            $data = ["group" => $groupe, "message" => $request->message, "device" => $userDeviceId]; // dd($data);
 
             $notification = Notification::create([
                 'destinataire' => $groupe,
