@@ -381,28 +381,33 @@ class ApiController extends Controller
                 'message' => 'Impossible de créer le jeton.',
             ], 500);
         }
-
+ 
         $user = Auth::user();
-        // if ($user->status == 0 && $user->role_id == 0) {
-        if ($user->status == 0) {
-            auth()->logout();
-            return response()->json([
-                'status' => 'echec',
-                'message' => 'Votre compte est en attente d\'activation.',
-            ]);
-        }
 
-        return response()->json([
+        $response = [
             'status' => 'success',
-            'message' => 'Connexion effectuée avec succes',
-            'expires_in' => JWTAuth::factory()->getTTL() * 60, // ← en secondes
+            'message' => 'Connexion effectuée avec succès',
+            'expires_in' => JWTAuth::factory()->getTTL() * 60,  // Temps d'expiration du token en secondes
             'token' => $token,
             'state' => $user->status,
-        ]);
+        ];
+
+        // Si l'utilisateur est un administrateur, ajoute la clé 'is_admin' à la réponse
+        if ($user->admin) {
+            $response['is_admin'] = true;
+        }
+
+        return response()->json($response);
     }
     
     public function getUserAuth()
-    {return response()->json(['user' => auth()->user(),], Response::HTTP_OK);}
+    {
+        $user = auth()->user(); $user->makeHidden(['admin']);
+
+        return response()->json([
+            'user' => $user,
+        ], Response::HTTP_OK);
+    }
 
     public function logout(Request $request)
     {

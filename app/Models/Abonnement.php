@@ -108,6 +108,12 @@ class Abonnement extends Model
         return $user;
     }
 
+    public function isAdminGetCashClient_v1($id)
+    {
+        $user = Abonnement::where('user_id', $id)->pluck('solde')->first(); //dd($user);
+        return $user;
+    }
+
     public function isAdminSetCashClient($id, Request $request)
     {
         $device = Abonnement::where('user_id', $id)->update(['solde' => $request->value]);
