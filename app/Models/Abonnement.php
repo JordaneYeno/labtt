@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\ServiceStatus;
 use App\Services\SendMailService;
 use App\Services\SmsCount;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -112,6 +114,41 @@ class Abonnement extends Model
     {
         $user = Abonnement::where('user_id', $id)->pluck('solde')->first(); //dd($user);
         return $user;
+    }
+
+    public function isAdminGetCashClientAppro_v1($id, Request $request)
+    {
+        $shuffle = str_shuffle('123456789');
+        $shuffle = substr($shuffle, 0, 1);
+
+        $_year = Carbon::now()->year;
+        $_year = substr($_year, -1);
+        $lasttime = Carbon::create(1970, 1, 1, 0, 0, 0)->diffInSeconds(Carbon::now());
+
+        $refKeyGen = "K" . $_year . "C" . str_pad($shuffle + 1, 3, 'T', STR_PAD_LEFT) . $lasttime;
+       
+        $reference = $refKeyGen;
+        
+        $abonnement = Abonnement::where('user_id', $id)->first();
+        $credit = $abonnement->increment('solde', $request->montant);
+        $paiement = Paiement::create([
+            // 'ref' => $reference,
+            'ref' => 'credit manuel',
+            'interface_id' => "admin",
+            'reference_marchand' => 'NA',
+            'type' => 'backoffice',
+            'statut' => 200, 
+            'final_status' => 200,
+            'operateur' => 'NA',
+            'numero_client' => 'NA',
+            'message' => 'Recharge manuelle du compte',
+            'tel_client' => 'NA',
+            'abonnement_id' => $abonnement->id,
+            'amount' => $request->montant
+        ]);
+        return $abonnement ?
+            response()->json(['status' => 'success', 'message' => 'le compte a été crédité!']) :
+            response()->json(['status' => 'echec', 'message' => 'le compte n\'a pas été crédité!']);
     }
 
     public function isAdminSetCashClient($id, Request $request)
@@ -253,21 +290,19 @@ class Abonnement extends Model
     public static function setAttributes($status)
     {
         switch ($status) {
-            case 0:
-                $status = 'aucune demande';
-                break;
-            case 1:
-                $status = 'en attente';
-                break;
-            case 2:
-                $status = 'rejeté';
-                break;
-            case 3:
-                $status = 'accepté';
-                break;
+            case ServiceStatus::RESET:
+                return 'Réinitialisé';
+            case ServiceStatus::PENDING:
+                return 'En attente';
+            case ServiceStatus::REJECTED:
+                return 'Rejeté';
+            case ServiceStatus::ACCEPTED:
+                return 'Accepté';
+            default:
+                return 'Statut inconnu';
         }
-        return $status;
     }
+
     public function getSmsStatus($requestUserId)
     {
         $userId = $requestUserId;

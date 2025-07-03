@@ -382,22 +382,33 @@ class ApiController extends Controller
             ], 500);
         }
  
-        $user = Auth::user();
+        $user = Auth::user(); 
 
-        $response = [
-            'status' => 'success',
-            'message' => 'Connexion effectuée avec succès',
-            'expires_in' => JWTAuth::factory()->getTTL() * 60,  // Temps d'expiration du token en secondes
-            'token' => $token,
-            'state' => $user->status,
-        ];
+        if($user->status===0) {
+            $response = [
+                'status' => 'success',
+                'message' => 'Accès refusé \ compte désactivé',
+                'state' => $user->status,
+            ];
 
-        // Si l'utilisateur est un administrateur, ajoute la clé 'is_admin' à la réponse
-        if ($user->admin) {
-            $response['is_admin'] = true;
+            return response()->json($response);
+        }else{
+
+            $response = [
+                'status' => 'success',
+                'message' => 'Connexion effectuée avec succès',
+                'expires_in' => JWTAuth::factory()->getTTL() * 60,  // Temps d'expiration du token en secondes
+                'token' => $token,
+                'state' => $user->status,
+            ];
+
+            // Si l'utilisateur est un administrateur, ajoute la clé 'is_admin' à la réponse
+            if ($user->admin) {
+                $response['is_admin'] = true;
+            }
+
+            return response()->json($response);
         }
-
-        return response()->json($response);
     }
     
     public function getUserAuth()

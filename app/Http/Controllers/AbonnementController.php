@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ServiceStatus;
 use App\Http\Requests\EnterpriseNameRequest;
 use App\Http\Requests\WhatsappRequest;
 use App\Models\Abonnement;
@@ -95,14 +96,55 @@ class AbonnementController extends Controller
         return $abonnement->getStatut();
     }
 
-    public function createDemande($service)
+
+    public static function createDemande($service, $id=null, $status=null)
     {
-        Demande::create([
-            'service' => $service,
-            'status' => 1,
-            'user_id' => auth()->user()->id
-        ]);
+        // $id = $id ?? auth()->id(); // si $id est null
+        $id = $id ?? auth()->user()->id; // si $id est null
+
+        // Vérifier si une demande existe déjà pour ce service et cet utilisateur
+        $existingRequest = Demande::where('user_id', $id)
+            ->where('service', $service)
+            ->whereIn('status', [
+                ServiceStatus::ACCEPTED, 
+                ServiceStatus::REJECTED, 
+                ServiceStatus::PENDING,
+                ServiceStatus::RESET,
+            ])  // Recherche uniquement dans les statuts acceptés, rejetés, en attente ou réinitialisés
+            ->first();
+
+        // Si aucune demande n'existe, créer une nouvelle demande
+        if (!$existingRequest) {
+            // Création d'une nouvelle demande en statut "En attente"
+            Demande::create([
+                'user_id' => $id,
+                'service' => $service,
+                'status' => ServiceStatus::PENDING,  // En attente
+            ]);
+        } else {
+            // Si une demande existe déjà, mettre à jour la demande si nécessaire
+            // Si la demande est acceptée, rejetée ou réinitialisée, on la remet en statut "En attente"
+            if (in_array($existingRequest->status, [
+                ServiceStatus::ACCEPTED, 
+                ServiceStatus::REJECTED, 
+                ServiceStatus::PENDING, 
+                ServiceStatus::RESET
+            ])) {
+                if($status == null) { 
+                    $existingRequest->update([
+                        'status' => ServiceStatus::PENDING  // Remettre en statut "En attente" si accepté, rejeté ou réinitialisé
+                    ]);
+
+                }else{
+
+                    $existingRequest->update([
+                        'status' => ServiceStatus::REJECTED  // rejeté ou réinitialisé
+                    ]);
+                }
+            }
+        }
     }
+
 
     public function sendEnterpriseName(EnterpriseNameRequest $request)
     {
@@ -115,7 +157,8 @@ class AbonnementController extends Controller
             ], 200);
         }
         if ($abonnement->first()->sms_status == 0) {
-            $this->createDemande('sms');
+            // $this->createDemande('sms');
+            $this->createDemande('sms', null);
             $abonnement->update(['sms' => $nomEntreprise, 'sms_status' => 1]);
             // (new SendMailService)->submitMail($this->mailAdmin, 'Activation sms', Param::getEmailAwt());
             return response()->json([
@@ -184,7 +227,8 @@ class AbonnementController extends Controller
             ], 200);
         }
         if ($abonnement->first()->email_status == 0) {
-            $this->createDemande('email');
+            // $this->createDemande('email');
+            $this->createDemande('email', null);
             $abonnement->update(['email' => $emailClient, 'email_status' => 1]);
             // (new SendMailService)->submitMail($this->mailAdmin, 'Activation email', Param::getEmailAwt());
             return response()->json([
@@ -210,41 +254,129 @@ class AbonnementController extends Controller
         return ['status' => 'echec', 'message' => 'votre abonnement est déjà activé'];
     }
 
+
     public function sendWhatsappNumber(WhatsappRequest $request)
     {
         $whatsappNumber = $request['numero_whatsapp'];
         $abonnement = Abonnement::where('user_id', auth()->user()->id);
-        if (!$abonnement) {
+
+        if (!$abonnement->exists()) {
             return response()->json([
                 'status' => 'echec',
-                'message' => 'aucun service trouvé pour cet utilisateur'
+                'message' => 'Aucun service trouvé pour cet utilisateur.'
             ], 200);
         }
-        if ($abonnement->first()->whatsapp_status == 0) {
-            $this->createDemande('whatsapp');
-            $abonnement->update(['whatsapp' => $whatsappNumber, 'whatsapp_status' => 1]);
-            // (new SendMailService)->submitMail($this->mailAdmin, 'Activation whatsapp', Param::getEmailAwt());
+
+        $abonnementData = $abonnement->first();
+
+        // Si le service est "Réinitialisé", on vide les colonnes concernées
+        if ($abonnementData->whatsapp_status == ServiceStatus::RESET) {
+            // Créer une nouvelle demande d'activation
+            // $this->createDemande('whatsapp');
+            $this->createDemande('whatsapp', null);
+            $abonnement->update([
+                'whatsapp' => $whatsappNumber, 
+                'whatsapp_status' => ServiceStatus::PENDING // Statut en attente
+            ]);
+            
             return response()->json([
                 'status' => 'success',
-                'whatsapp_status' => 1,
-                'message' => 'votre numéro whatsapp a été enregistré'
+                'whatsapp_status' => ServiceStatus::PENDING,
+                'message' => 'Votre numéro WhatsApp a été enregistré.'
             ], 200);
         }
-        if ($abonnement->first()->whatsapp_status == 2) {
-            $abonnement->update(['whatsapp' => $whatsappNumber, 'whatsapp_status' => 1]);
-            // (new SendMailService)->submitMail($this->mailAdmin, 'Modification whatsapp', Param::getEmailAwt());
+
+        // Si le service est rejeté, on réinitialise
+        if ($abonnementData->whatsapp_status == ServiceStatus::REJECTED) {
+            $abonnement->update([
+                'whatsapp' => $whatsappNumber, 
+                'whatsapp_status' => ServiceStatus::PENDING // Statut en attente
+            ]);
+            
+            // Créer une nouvelle demande d'activation
+            // $this->createDemande('whatsapp');
+            $this->createDemande('whatsapp', null);
+
             return response()->json([
                 'status' => 'success',
-                'message' => 'votre nouvelle demande a été enregistrée'
+                'message' => 'Votre nouvelle demande a été enregistrée.'
             ], 200);
         }
-        if ($abonnement->first()->whatsapp_status == 1) {
+
+        // Si le service est déjà en attente, on informe l'utilisateur
+        if ($abonnementData->whatsapp_status == ServiceStatus::PENDING) {
             return response()->json([
                 'status' => 'success',
-                'message' => 'votre demande de validation de votre numéro whatsapp est en cours de traitement'
+                'message' => 'Votre demande de validation de votre numéro WhatsApp est en cours de traitement.'
+            ], 200);
+        }
+
+        // Si le service est déjà accepté
+        if ($abonnementData->whatsapp_status == ServiceStatus::ACCEPTED) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Votre service WhatsApp est déjà accepté.'
             ], 200);
         }
     }
+
+    // new
+    public function requestService($service, Request $request)
+    {
+        $userId = auth()->user()->id; 
+
+        // Vérifie si le service existe dans l'abonnement de l'utilisateur
+        $abonnement = Abonnement::where('user_id', $userId)->first();
+
+        if (!$abonnement) {
+            return response()->json([
+                'status' => 'echec',
+                'message' => "Aucun service trouvé pour cet utilisateur."
+            ], 404);
+        }
+
+        // Vérifie si la demande pour ce service existe déjà
+        if ($abonnement->{$service . '_status'} == ServiceStatus::PENDING) {
+            return response()->json([
+                'status' => 'success',
+                'message' => "Votre demande pour le service $service est déjà en attente."
+            ]);
+        }
+
+        if ($abonnement->{$service . '_status'} == ServiceStatus::ACCEPTED) {
+            return response()->json([
+                'status' => 'success',
+                'message' => "Le service $service est déjà activé."
+            ]);
+        }
+
+        // Si le service est rejeté ou réinitialisé, on peut recréer la demande
+        if ($abonnement->{$service . '_status'} == ServiceStatus::REJECTED || $abonnement->{$service . '_status'} == ServiceStatus::RESET) {
+            // Créer une nouvelle demande pour ce service
+            Demande::create([
+                'user_id' => $userId,
+                'service' => $service,
+                'status' => ServiceStatus::PENDING,
+            ]);
+
+            // Mettre à jour l'abonnement avec le statut "En attente"
+            $abonnement->update([
+                $service => $request->input('numero_service', null),  // On ajoute le numéro de service, comme WhatsApp
+                $service . '_status' => ServiceStatus::PENDING,
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => "Votre demande pour le service $service a été enregistrée et est en attente."
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => "Une erreur est survenue. Veuillez réessayer."
+        ]);
+    }
+
 
     public function getEnterpriseName(Request $request)
     {
@@ -430,12 +562,161 @@ class AbonnementController extends Controller
     {
         return Demande::leftJoin('users', 'users.id', '=', 'demandes.user_id')
             ->select('demandes.service', 'users.name', 'users.email', 'users.phone')
-            ->where('demandes.status', 1)
-            ->orWhere('demandes.status', 2)
+            ->where('demandes.status', ServiceStatus::PENDING)
+            // ->orWhere('demandes.status', 2)
+            ->orWhere('demandes.status', ServiceStatus::REJECTED)
             ->orderBy('demandes.created_at', 'DESC')
             ->paginate(25);
+    } // old
+
+
+    public function getDemandesByService($service)
+    {
+        // Récupérer les demandes par service avec une jointure sur la table 'users' et 'abonnement'
+        $demandes = Demande::leftJoin('users', 'users.id', '=', 'demandes.user_id')
+            ->leftJoin('abonnements', 'abonnements.user_id', '=', 'demandes.user_id')  // Jointure sur la table abonnements
+            ->select(
+                'demandes.id as demande_id',  // Récupérer l'ID de la demande
+                'demandes.service',           // Le service de la demande
+                'demandes.status',            // Le statut de la demande
+                'users.id as user_id',        // ID de l'utilisateur
+                'users.name',                 // Nom de l'utilisateur
+                'users.email',                // Email de l'utilisateur
+                'users.phone',                // Téléphone de l'utilisateur
+                'abonnements.whatsapp',       // Colonne whatsapp de la table abonnements
+                'abonnements.sms',            // Colonne sms de la table abonnements
+                'abonnements.email as abonnement_email'  // Colonne email de la table abonnements
+            )
+            ->where('demandes.service', $service)  // Filtrer par service
+            ->whereIn('demandes.status', [ServiceStatus::PENDING, ServiceStatus::REJECTED])  // Filtrer les statuts
+            ->orderBy('demandes.created_at', 'DESC')  // Trier par date de création
+            ->paginate(10);  // Pagination à 10 demandes par page
+
+        // Structurer la réponse pour avoir l'objet "user" et "abonnement" imbriqué
+        $demandes->getCollection()->transform(function ($demande) use ($service) {
+            // Ajouter les informations de l'utilisateur dans l'objet 'user'
+            $demande->client = [
+                'id' => $demande->user_id,
+                'name' => $demande->name,
+                'email' => $demande->email,
+                // 'phone' => $demande->phone,
+            ];
+
+            // Filtrer les informations d'abonnement en fonction du service
+            switch ($service) {
+                case 'whatsapp':
+                    $demande->request_submit = [
+                        'whatsapp' => $demande->whatsapp,
+                    ];
+                    break;
+
+                case 'sms':
+                    $demande->request_submit = [
+                        'sms' => $demande->sms,
+                    ];
+                    break;
+
+                case 'email':
+                    $demande->request_submit = [
+                        'email' => $demande->abonnement_email,
+                    ];
+                    break;
+
+                default:
+                    $demande->request_submit = null;
+                    break;
+            }
+
+            // Supprimer les champs inutiles qui ont été intégrés dans 'user' et 'abonnement'
+            unset($demande->user_id, $demande->name, $demande->email, $demande->phone);
+            unset($demande->whatsapp, $demande->sms, $demande->abonnement_email);
+
+            return $demande;
+        });
+
+        // Retourner la réponse avec la pagination et les informations imbriquées
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Demandes récupérées avec succès',
+            'data' => $demandes,  // Contient les demandes paginées avec les informations utilisateurs et abonnements imbriquées
+        ], 200);
     }
 
+
+    public function getDemandesByService_v2($service, $status)
+    {
+        // Vérifier que le statut est valide
+        $validStatuses = [
+            ServiceStatus::PENDING,
+            ServiceStatus::ACCEPTED,
+            ServiceStatus::REJECTED,
+            ServiceStatus::RESET,
+        ];
+
+        if (!in_array($status, $validStatuses)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Statut de demande invalide.',
+            ], 400);
+        }
+
+        // Récupérer les demandes avec les infos de l'utilisateur et de l'abonnement
+        $demandes = Demande::leftJoin('users', 'users.id', '=', 'demandes.user_id')
+            ->leftJoin('abonnements', 'abonnements.user_id', '=', 'demandes.user_id')
+            ->select(
+                'demandes.id as demande_id',
+                'demandes.service',
+                'demandes.status',
+                'users.id as user_id',
+                'users.name',
+                'users.email',
+                'users.phone',
+                'abonnements.whatsapp',
+                'abonnements.sms',
+                'abonnements.email as abonnement_email'
+            )
+            ->where('demandes.service', $service)
+            ->where('demandes.status', $status)
+            ->orderBy('demandes.created_at', 'DESC')
+            ->paginate(10);
+
+        // Transformation des données
+        $demandes->getCollection()->transform(function ($demande) use ($service) {
+            $demande->client = [
+                'id' => $demande->user_id,
+                'name' => $demande->name,
+                'email' => $demande->email,
+            ];
+
+            // Ajouter les infos du service demandé
+            switch ($service) {
+                case 'whatsapp':
+                    $demande->request_submit = ['whatsapp' => $demande->whatsapp];
+                    break;
+                case 'sms':
+                    $demande->request_submit = ['sms' => $demande->sms];
+                    break;
+                case 'email':
+                    $demande->request_submit = ['email' => $demande->abonnement_email];
+                    break;
+                default:
+                    $demande->request_submit = null;
+            }
+
+            unset($demande->user_id, $demande->name, $demande->email, $demande->phone);
+            unset($demande->whatsapp, $demande->sms, $demande->abonnement_email);
+
+            return $demande;
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Demandes récupérées avec succès.',
+            'data' => $demandes,
+        ]);
+    }
+
+    
     public function listDemandeReject()
     {
         return Demande::leftJoin('users', 'users.id', '=', 'demandes.user_id')

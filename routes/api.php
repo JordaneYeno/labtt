@@ -91,7 +91,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         Route::post('checkpass', [ApiController::class, 'checkPassword']);
         Route::put('upadate_pass', [ApiController::class, 'upadatePass']);
     });
-    Route::put('reset', [AbonnementController::class, 'resetService']);
+    Route::put('reset', [AbonnementController::class, 'resetService']); // old
     Route::post('status/callback', [PaymentConroller::class, 'verifyPayment']);
     Route::get('logout', [ApiController::class, 'logout']);
     Route::get('authuser', [ApiController::class, 'getUserAuth']);
@@ -157,6 +157,16 @@ Route::group(['middleware' => ['jwt.verify']], function () {
                     Route::put('reject/email', [AdminAbonnementController::class, 'rejectEmail']);
                     Route::put('reject/whatsapp', [AdminAbonnementController::class, 'rejectWhatsapp']);
                     Route::delete('service', [AdminAbonnementController::class, 'deleteService']);
+
+
+                    // new
+                    Route::put('update', [AdminAbonnementController::class, 'updateServiceStatus']);
+                    Route::put('accept/{service}/{userId}', [AdminAbonnementController::class, 'acceptService']);
+                    Route::put('reject/{service}/{userId}', [AdminAbonnementController::class, 'rejectService']);
+                    Route::put('reset/{service}/{userId}', [AdminAbonnementController::class, 'resetService']);
+
+                    Route::get('user/{userId}/active-services', [AdminAbonnementController::class, 'getActiveServices']);
+
                 });
             });
 
@@ -175,7 +185,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
 
                 Route::prefix('client')->group(function () {
                         Route::get('cash/{id}', [Abonnement::class, 'isAdminGetCashClient_v1']); // new
-                        // Route::put('cash/{id}', [Abonnement::class, 'isAdminSetCashClient']); // new
+                        Route::post('cash/{id}', [Abonnement::class, 'isAdminGetCashClientAppro_v1']); // new
                     Route::prefix('wa')->group(function () {                
                         Route::get('device/{id}', [Abonnement::class, 'isAdminGetWaDeviceClient']);
                         Route::put('device/{id}', [Abonnement::class, 'isAdminSetWaDeviceClient']);
@@ -214,7 +224,11 @@ Route::group(['middleware' => ['jwt.verify']], function () {
                 Route::get('wid-device', [Param::class, 'getWassengerDevice']);
                 Route::put('wid-device', [Param::class, 'setWassengerDevice']);
             });
-            Route::get('demandes', [AbonnementController::class, 'listDemande']);
+            // Route::get('demandes', [AbonnementController::class, 'listDemande']); // old
+
+            Route::get('demandes/{service}', [AbonnementController::class, 'getDemandesByService']); // new
+            Route::get('demandes/{service}/{status}', [AbonnementController::class, 'getDemandesByService_v2']); // new
+
             Route::get('demandes/reject', [AbonnementController::class, 'listDemandeReject']);
         });
     });
@@ -326,8 +340,10 @@ Route::group(['middleware' => ['jwt.verify']], function () {
             Route::post('email', [AbonnementController::class, 'sendEmailAddress']);
             Route::post('whatsapp', [AbonnementController::class, 'sendWhatsappNumber']);
         });
-    });
 
+        // new
+        // Route::post('service/request/{service}', [AbonnementController::class, 'requestService']); 
+    });
 
     // Route::post('sendMessageSimple', [MessagesController::class, 'sendMessageSimple']);
     // Route::post('mail_all_busi', [NotificationController::class, 'mail_all_busi']);        
