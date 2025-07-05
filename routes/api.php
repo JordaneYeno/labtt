@@ -185,7 +185,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
 
                 Route::prefix('client')->group(function () {
                         Route::get('cash/{id}', [Abonnement::class, 'isAdminGetCashClient_v1']); // new
-                        Route::post('cash/appro{id}', [Abonnement::class, 'isAdminGetCashClientAppro_v1']); // new
+                        Route::post('cash/{id}', [Abonnement::class, 'isAdminGetCashClientAppro_v1']); // new
                     Route::prefix('wa')->group(function () {                
                         Route::get('device/{id}', [Abonnement::class, 'isAdminGetWaDeviceClient']);
                         Route::put('device/{id}', [Abonnement::class, 'isAdminSetWaDeviceClient']);

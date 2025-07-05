@@ -146,8 +146,9 @@ class Abonnement extends Model
             'abonnement_id' => $abonnement->id,
             'amount' => $request->montant
         ]);
+
         return $abonnement ?
-            response()->json(['status' => 'success', 'message' => 'le compte a été crédité!']) :
+            response()->json(['status' => 'success', 'message' => 'le compte a été crédité!', 'solde' => (new Abonnement)->__getSolde($id)]) :
             response()->json(['status' => 'echec', 'message' => 'le compte n\'a pas été crédité!']);
     }
 
