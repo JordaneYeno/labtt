@@ -14,7 +14,7 @@
         "laravel/socialite": "^5.14",
         "laravel/tinker": "^2.5",
         "laravel/ui": "^3.4",
-        "phpoffice/phpspreadsheet": "1.29.10",
+        "phpoffice/phpspreadsheet": "1.29.9",
         "symfony/deprecation-contracts": "^2.2",
         "tymon/jwt-auth": "^1.0"
     },
