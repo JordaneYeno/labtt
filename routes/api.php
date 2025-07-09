@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Route;
 
 
 
-Route::get('dec/recep/outfiles/{encrypted_id}', [ExportController::class, 'downloadEncryptedFile']);
+Route::get('dec/recep/outfiles/{encrypted_id}', [ExportController::class, 'downloadEncryptedFile']); 
 
 Route::get('export', [ExportController::class, 'exportToExcel']);
 
