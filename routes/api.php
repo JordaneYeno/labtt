@@ -22,9 +22,7 @@ use Illuminate\Support\Facades\Route;
 
 
 
-Route::post('recep/outfiles/{message_id}', [ExportController::class, 'exportNotificationsToExcel']);
 Route::get('dec/recep/outfiles/{encrypted_id}', [ExportController::class, 'downloadEncryptedFile']);
-
 
 Route::get('export', [ExportController::class, 'exportToExcel']);
 
@@ -72,11 +70,12 @@ Route::post('init_token', [ApiController::class, 'init_token']);
 Route::post('paiement/callback', [PaymentConroller::class, 'receiveCallback']);
 
 Route::group(['middleware' => ['jwt.verify']], function () {
+    Route::post('recep/outfiles/{message_id}', [ExportController::class, 'exportNotificationsToExcel']); // new
 
     Route::prefix('service')->group(function () {
         Route::post('send', [NotificationController::class, 'gateway']);
         Route::post('message', [NotificationController::class, 'custumGateway']);
-        
+
         Route::prefix('group')->group(function () {
             Route::get('mygroups', [NotificationController::class, 'getAllGroupInfo']);
             Route::post('send', [NotificationController::class, 'multiSendAtGroups']);
@@ -97,12 +96,12 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::get('authuser', [ApiController::class, 'getUserAuth']);
     Route::post('recipients', [ClientMessagesController::class, 'getRecipients']);
     Route::get('tarification/services', [TarificationController::class, 'getPricingClient']);
-    
+
     Route::group(['middleware' => ['admin']], function () {
-        
+
         Route::prefix('admin')->group(function () {
             Route::post('register/agent', [ApiController::class, 'registerAgent']);
-            
+
             Route::prefix('assitance')->group(function () {
                 Route::post('/creatwa-agent', [AssistanceController::class, 'addAgent']);
                 Route::get('/agents', [AssistanceController::class, 'getAgentList']);
@@ -112,7 +111,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
                 Route::post('/asign', [TarificationController::class, 'asignTarification']);
                 Route::get('/', [TarificationController::class, 'getTarification']);
                 Route::put('/', [TarificationController::class, 'updateTarification']);
-                
+
                 Route::get('/sms/{id}', [TarificationController::class, 'getSmsPrice']);
                 Route::get('/email/{id}', [TarificationController::class, 'getEmailPrice']);
                 Route::get('/whatsapp/{id}', [TarificationController::class, 'getWhatsappPrice']);
@@ -147,7 +146,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
                         Route::put('whatsapp', [AdminAbonnementController::class, 'enableWhatsapp']);
                     });
                 });
-                // mail accept and reject  
+                // mail accept and reject
                 Route::prefix('service')->group(function () {
                     Route::get('/request', [AdminAbonnementController::class, 'listRequest']);
                     Route::put('accept/sms', [AdminAbonnementController::class, 'acceptSms']);
@@ -180,13 +179,13 @@ Route::group(['middleware' => ['jwt.verify']], function () {
                 Route::get('agents', [ApiController::class, 'getAgents'])->middleware('admin.super');
                 Route::put('decredit-account', [AbonnementController::class, 'decreditAccount'])->middleware('admin.super');
             });
-            
+
             Route::prefix('params')->group(function () {
 
                 Route::prefix('client')->group(function () {
                         Route::get('cash/{id}', [Abonnement::class, 'isAdminGetCashClient_v1']); // new
                         Route::post('cash/{id}', [Abonnement::class, 'isAdminGetCashClientAppro_v1']); // new
-                    Route::prefix('wa')->group(function () {                
+                    Route::prefix('wa')->group(function () {
                         Route::get('device/{id}', [Abonnement::class, 'isAdminGetWaDeviceClient']);
                         Route::put('device/{id}', [Abonnement::class, 'isAdminSetWaDeviceClient']);
                         Route::get('cash/{id}', [Abonnement::class, 'isAdminGetCashClient']); // old
@@ -198,7 +197,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
                 Route::put('location', [Param::class, 'setApp']);
                 Route::get('address', [Param::class, 'apiUrl']);
                 Route::put('address', [Param::class, 'setApiUrl']);
-                
+
                 Route::get('mineprice', [Param::class, 'getMinPrice']);
                 Route::put('mineprice', [Param::class, 'setMinPrice']);
                 Route::get('wassenger', [Param::class, 'getTokenWhatsapp']);
@@ -246,8 +245,8 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         Route::delete('revoke', [WaGroupController::class, 'revokeMembers']);
         Route::get('wagroups', [WaGroupController::class, 'getStore']);
         Route::post('sendmessage', [WaGroupController::class, 'sendAtGroups']); //send message in a group
-        
-        Route::post('send', [NotificationController::class, 'multiSendAtGroups']); //bulk 
+
+        Route::post('send', [NotificationController::class, 'multiSendAtGroups']); //bulk
 
         Route::get('searchbyname', [WaGroupController::class, 'getStoreByName']);
         Route::post('addxmembers', [WaGroupController::class, 'addMembers']);
@@ -274,14 +273,14 @@ Route::group(['middleware' => ['jwt.verify']], function () {
             });
             Route::get('/email', [AbonnementController::class, 'getEmail']);
             Route::get('/whatsapp', [AbonnementController::class, 'getWhatsappNumber']);
-            
+
             Route::prefix('template')->group(function () {
                 Route::get('color', [AbonnementController::class, 'getThemeColor']);
                 Route::put('color', [AbonnementController::class, 'setThemeColor']);
             });
         });
-        
-        
+
+
         Route::get('region', [AbonnementController::class, 'getInternational']);
         Route::put('region', [AbonnementController::class, 'setInternational']);
 
@@ -342,11 +341,11 @@ Route::group(['middleware' => ['jwt.verify']], function () {
         });
 
         // new
-        // Route::post('service/request/{service}', [AbonnementController::class, 'requestService']); 
+        // Route::post('service/request/{service}', [AbonnementController::class, 'requestService']);
     });
 
     // Route::post('sendMessageSimple', [MessagesController::class, 'sendMessageSimple']);
-    // Route::post('mail_all_busi', [NotificationController::class, 'mail_all_busi']);        
+    // Route::post('mail_all_busi', [NotificationController::class, 'mail_all_busi']);
     // Route::post('create_msg_masse', [NotificationController::class, 'create_msg_masse']);
 
 });

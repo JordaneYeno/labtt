@@ -5,7 +5,7 @@
     "keywords": ["framework", "laravel"],
     "license": "MIT",
     "require": {
-        "php": "^7.4",
+        "php": "^7.4 || ^8.0",
         "facebook/graph-sdk": "^5.7",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.8",
@@ -14,7 +14,7 @@
         "laravel/socialite": "^5.14",
         "laravel/tinker": "^2.5",
         "laravel/ui": "^3.4",
-        "phpoffice/phpspreadsheet": "^1.28",
+        "phpoffice/phpspreadsheet": "1.29.10",
         "tymon/jwt-auth": "^1.0"
     },
     "require-dev": {
