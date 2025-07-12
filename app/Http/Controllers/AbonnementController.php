@@ -10,6 +10,7 @@ use App\Models\Demande;
 use App\Models\Paiement;
 use App\Models\Param;
 use App\Models\Transaction;
+use App\Services\PaginationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
@@ -35,7 +36,7 @@ class AbonnementController extends Controller
             'solde' => $abonnement->getSolde()
         ]);
     }
-    
+
     // start International
     public function getIsCustomTemplate()
     {
@@ -57,9 +58,9 @@ class AbonnementController extends Controller
             'status' => 'echec',
             'message' => 'erreur lors de la mise à jour'
         ], 200);
-    }    
+    }
     // end International
-    
+
     // start International
     public function getInternational()
     {
@@ -106,8 +107,8 @@ class AbonnementController extends Controller
         $existingRequest = Demande::where('user_id', $id)
             ->where('service', $service)
             ->whereIn('status', [
-                ServiceStatus::ACCEPTED, 
-                ServiceStatus::REJECTED, 
+                ServiceStatus::ACCEPTED,
+                ServiceStatus::REJECTED,
                 ServiceStatus::PENDING,
                 ServiceStatus::RESET,
             ])  // Recherche uniquement dans les statuts acceptés, rejetés, en attente ou réinitialisés
@@ -125,12 +126,12 @@ class AbonnementController extends Controller
             // Si une demande existe déjà, mettre à jour la demande si nécessaire
             // Si la demande est acceptée, rejetée ou réinitialisée, on la remet en statut "En attente"
             if (in_array($existingRequest->status, [
-                ServiceStatus::ACCEPTED, 
-                ServiceStatus::REJECTED, 
-                ServiceStatus::PENDING, 
+                ServiceStatus::ACCEPTED,
+                ServiceStatus::REJECTED,
+                ServiceStatus::PENDING,
                 ServiceStatus::RESET
             ])) {
-                if($status == null) { 
+                if($status == null) {
                     $existingRequest->update([
                         'status' => ServiceStatus::PENDING  // Remettre en statut "En attente" si accepté, rejeté ou réinitialisé
                     ]);
@@ -275,10 +276,10 @@ class AbonnementController extends Controller
             // $this->createDemande('whatsapp');
             $this->createDemande('whatsapp', null);
             $abonnement->update([
-                'whatsapp' => $whatsappNumber, 
+                'whatsapp' => $whatsappNumber,
                 'whatsapp_status' => ServiceStatus::PENDING // Statut en attente
             ]);
-            
+
             return response()->json([
                 'status' => 'success',
                 'whatsapp_status' => ServiceStatus::PENDING,
@@ -289,10 +290,10 @@ class AbonnementController extends Controller
         // Si le service est rejeté, on réinitialise
         if ($abonnementData->whatsapp_status == ServiceStatus::REJECTED) {
             $abonnement->update([
-                'whatsapp' => $whatsappNumber, 
+                'whatsapp' => $whatsappNumber,
                 'whatsapp_status' => ServiceStatus::PENDING // Statut en attente
             ]);
-            
+
             // Créer une nouvelle demande d'activation
             // $this->createDemande('whatsapp');
             $this->createDemande('whatsapp', null);
@@ -323,7 +324,7 @@ class AbonnementController extends Controller
     // new
     public function requestService($service, Request $request)
     {
-        $userId = auth()->user()->id; 
+        $userId = auth()->user()->id;
 
         // Vérifie si le service existe dans l'abonnement de l'utilisateur
         $abonnement = Abonnement::where('user_id', $userId)->first();
@@ -481,7 +482,7 @@ class AbonnementController extends Controller
                 'messages.status',
                 'messages.finish',
                 'messages.created_at',
-                'transactions.montant', 
+                'transactions.montant',
                 'transactions.nouveau_solde',
                 'messages.message',
                 'transactions.created_at', 'transactions.message_id'
@@ -642,10 +643,270 @@ class AbonnementController extends Controller
         ], 200);
     }
 
+    /**
+     *  version !1! du filtre
+    */
+
+    // public function getDemandesByService_v2($service, $status)
+    // {
+    //     // Vérifier que le statut est valide (sauf si 'all' est passé)
+    //     $validStatuses = [
+    //         ServiceStatus::PENDING,
+    //         ServiceStatus::ACCEPTED,
+    //         ServiceStatus::REJECTED,
+    //         ServiceStatus::RESET,
+    //     ];
+
+    //     if ($status !== 'all' && !in_array($status, $validStatuses)) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Statut de demande invalide.',
+    //         ], 400);
+    //     }
+
+    //     // Construire la requête de base
+    //     $query = Demande::leftJoin('users', 'users.id', '=', 'demandes.user_id')
+    //         ->leftJoin('abonnements', 'abonnements.user_id', '=', 'demandes.user_id')
+    //         ->select(
+    //             'demandes.id as demande_id',
+    //             'demandes.service',
+    //             'demandes.status',
+    //             'users.id as user_id',
+    //             'users.name',
+    //             'users.email',
+    //             'users.phone',
+    //             'abonnements.whatsapp',
+    //             'abonnements.sms',
+    //             'abonnements.email as abonnement_email'
+    //         );
+
+    //     // Si le service n'est pas 'all', appliquer le filtre sur le service
+    //     if ($service !== 'all') {
+    //         $query->where('demandes.service', $service);
+    //     }
+
+    //     // Si le statut n'est pas 'all', appliquer le filtre sur le statut
+    //     if ($status !== 'all') {
+    //         $query->where('demandes.status', $status);
+    //     }
+
+    //     // Paginée les résultats
+    //     $demandes = $query->orderBy('demandes.created_at', 'DESC')->paginate(10);
+
+    //     // Transformation des données
+    //     $demandes->getCollection()->transform(function ($demande) use ($service) {
+    //         $demande->client = [
+    //             'id' => $demande->user_id,
+    //             'name' => $demande->name,
+    //             'email' => $demande->email,
+    //         ];
+
+    //         // Ajouter les infos du service demandé
+    //         switch ($service) {
+    //             case 'whatsapp':
+    //                 $demande->request_submit = ['whatsapp' => $demande->whatsapp];
+    //                 break;
+    //             case 'sms':
+    //                 $demande->request_submit = ['sms' => $demande->sms];
+    //                 break;
+    //             case 'email':
+    //                 $demande->request_submit = ['email' => $demande->abonnement_email];
+    //                 break;
+    //             default:
+    //                 $demande->request_submit = null;
+    //         }
+
+    //         unset($demande->user_id, $demande->name, $demande->email, $demande->phone);
+    //         unset($demande->whatsapp, $demande->sms, $demande->abonnement_email);
+
+    //         return $demande;
+    //     });
+
+    //     return response()->json([
+    //         'status' => 'success',
+    //         'message' => 'Demandes récupérées avec succès.',
+    //         'data' => $demandes,
+    //     ]);
+    // }
+
+
+    /**
+     *  version !old! du filtre
+    */
+
+    // public function getDemandesByService_v2($service, $status)
+    // {
+    //     // Vérifier que le statut est valide
+    //     $validStatuses = [
+    //         ServiceStatus::PENDING,
+    //         ServiceStatus::ACCEPTED,
+    //         ServiceStatus::REJECTED,
+    //         ServiceStatus::RESET,
+    //     ];
+
+    //     if (!in_array($status, $validStatuses)) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Statut de demande invalide.',
+    //         ], 400);
+    //     }
+
+    //     // Récupérer les demandes avec les infos de l'utilisateur et de l'abonnement
+    //     $demandes = Demande::leftJoin('users', 'users.id', '=', 'demandes.user_id')
+    //         ->leftJoin('abonnements', 'abonnements.user_id', '=', 'demandes.user_id')
+    //         ->select(
+    //             'demandes.id as demande_id',
+    //             'demandes.service',
+    //             'demandes.status',
+    //             'users.id as user_id',
+    //             'users.name',
+    //             'users.email',
+    //             'users.phone',
+    //             'abonnements.whatsapp',
+    //             'abonnements.sms',
+    //             'abonnements.email as abonnement_email'
+    //         )
+    //         ->where('demandes.service', $service)
+    //         ->where('demandes.status', $status)
+    //         ->orderBy('demandes.created_at', 'DESC')
+    //         ->paginate(10);
+
+    //     // Transformation des données
+    //     $demandes->getCollection()->transform(function ($demande) use ($service) {
+    //         $demande->client = [
+    //             'id' => $demande->user_id,
+    //             'name' => $demande->name,
+    //             'email' => $demande->email,
+    //         ];
+
+    //         // Ajouter les infos du service demandé
+    //         switch ($service) {
+    //             case 'whatsapp':
+    //                 $demande->request_submit = ['whatsapp' => $demande->whatsapp];
+    //                 break;
+    //             case 'sms':
+    //                 $demande->request_submit = ['sms' => $demande->sms];
+    //                 break;
+    //             case 'email':
+    //                 $demande->request_submit = ['email' => $demande->abonnement_email];
+    //                 break;
+    //             default:
+    //                 $demande->request_submit = null;
+    //         }
+
+    //         unset($demande->user_id, $demande->name, $demande->email, $demande->phone);
+    //         unset($demande->whatsapp, $demande->sms, $demande->abonnement_email);
+
+    //         return $demande;
+    //     });
+
+    //     return response()->json([
+    //         'status' => 'success',
+    //         'message' => 'Demandes récupérées avec succès.',
+    //         'data' => $demandes,
+    //     ]);
+    // }
+
+
+    // public function getDemandesByService_v2($service, $status)
+    // {
+    //     // Récupérer les paramètres de pagination depuis la requête
+    //     $page = request('page', 1);  // Page courante (défaut: 1)
+    //     $perPage = request('perPage', 10);  // Nombre d'éléments par page (défaut: 10)
+
+    //     // Vérification du statut si ce n'est pas 'all'
+    //     $validStatuses = [
+    //         ServiceStatus::PENDING,
+    //         ServiceStatus::ACCEPTED,
+    //         ServiceStatus::REJECTED,
+    //         ServiceStatus::RESET,
+    //     ];
+
+    //     if ($status !== 'all' && !in_array($status, $validStatuses)) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Statut de demande invalide.',
+    //         ], 400);
+    //     }
+
+    //     // Construire la requête de base
+    //     $query = Demande::leftJoin('users', 'users.id', '=', 'demandes.user_id')
+    //         ->leftJoin('abonnements', 'abonnements.user_id', '=', 'demandes.user_id')
+    //         ->select(
+    //             'demandes.id as demande_id',
+    //             'demandes.service',
+    //             'demandes.status',
+    //             'users.id as user_id',
+    //             'users.name',
+    //             'users.email',
+    //             'users.phone',
+    //             'abonnements.whatsapp',
+    //             'abonnements.sms',
+    //             'abonnements.email as abonnement_email'
+    //         );
+
+    //     // Si le service n'est pas 'all', on applique le filtre sur le service
+    //     if ($service !== 'all') {
+    //         $query->where('demandes.service', $service);
+    //     }
+
+    //     // Si le statut n'est pas 'all', on applique le filtre sur le statut
+    //     if ($status !== 'all') {
+    //         $query->where('demandes.status', $status);
+    //     } else {
+    //         // Si le statut est 'all', on récupère toutes les demandes pour tous les statuts possibles
+    //         $query->whereIn('demandes.status', $validStatuses);
+    //     }
+
+    //     // Paginée les résultats
+    //     $demandes = $query->orderBy('demandes.created_at', 'DESC')->paginate(10);
+
+    //     // Transformation des données
+    //     $demandes->getCollection()->transform(function ($demande) use ($service) {
+    //         $demande->client = [
+    //             'id' => $demande->user_id,
+    //             'name' => $demande->name,
+    //             'email' => $demande->email,
+    //         ];
+
+    //         // Ajouter les infos du service demandé
+    //         switch ($demande->service) {
+    //             case 'whatsapp':
+    //                 $demande->request_submit = ['whatsapp' => $demande->whatsapp];
+    //                 break;
+    //             case 'sms':
+    //                 $demande->request_submit = ['sms' => $demande->sms];
+    //                 break;
+    //             case 'email':
+    //                 $demande->request_submit = ['email' => $demande->abonnement_email];
+    //                 break;
+    //             default:
+    //                 $demande->request_submit = null;
+    //         }
+
+    //         unset($demande->user_id, $demande->name, $demande->email, $demande->phone);
+    //         unset($demande->whatsapp, $demande->sms, $demande->abonnement_email);
+
+    //         return $demande;
+    //     });
+
+    //     return response()->json([
+    //         'status' => 'success',
+    //         'message' => 'Demandes récupérées avec succès.',
+    //         'data' => $demandes,
+    //     ]);
+    // }
+
+
+
 
     public function getDemandesByService_v2($service, $status)
     {
-        // Vérifier que le statut est valide
+        // Récupérer les paramètres de pagination depuis la requête
+        $page = request('page', 1);  // Page courante (défaut: 1)
+        $perPage = request('perPage', 10);  // Nombre d'éléments par page (défaut: 10)
+
+        // Vérification du statut si ce n'est pas 'all'
         $validStatuses = [
             ServiceStatus::PENDING,
             ServiceStatus::ACCEPTED,
@@ -653,15 +914,15 @@ class AbonnementController extends Controller
             ServiceStatus::RESET,
         ];
 
-        if (!in_array($status, $validStatuses)) {
+        if ($status !== 'all' && !in_array($status, $validStatuses)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Statut de demande invalide.',
             ], 400);
         }
 
-        // Récupérer les demandes avec les infos de l'utilisateur et de l'abonnement
-        $demandes = Demande::leftJoin('users', 'users.id', '=', 'demandes.user_id')
+        // Construire la requête de base
+        $query = Demande::leftJoin('users', 'users.id', '=', 'demandes.user_id')
             ->leftJoin('abonnements', 'abonnements.user_id', '=', 'demandes.user_id')
             ->select(
                 'demandes.id as demande_id',
@@ -674,14 +935,30 @@ class AbonnementController extends Controller
                 'abonnements.whatsapp',
                 'abonnements.sms',
                 'abonnements.email as abonnement_email'
-            )
-            ->where('demandes.service', $service)
-            ->where('demandes.status', $status)
-            ->orderBy('demandes.created_at', 'DESC')
-            ->paginate(10);
+            );
+
+        // Si le service n'est pas 'all', on applique le filtre sur le service
+        if ($service !== 'all') {
+            $query->where('demandes.service', $service);
+        }
+
+        // Si le statut n'est pas 'all', on applique le filtre sur le statut
+        if ($status !== 'all') {
+            $query->where('demandes.status', $status);
+        } else {
+            // Si le statut est 'all', on récupère toutes les demandes pour tous les statuts possibles
+            $query->whereIn('demandes.status', $validStatuses);
+        }
+
+        // Récupérer toutes les données sans pagination
+        $demandes = $query->orderBy('demandes.created_at', 'DESC')->get(); // Utiliser `get()` pour récupérer toutes les demandes
+
+        // Appliquer la pagination manuellement à la collection
+        $paginate = new PaginationService();
+        $paginatedDemandes = $paginate->paginateCollection($demandes, $perPage);
 
         // Transformation des données
-        $demandes->getCollection()->transform(function ($demande) use ($service) {
+        $paginatedDemandes->getCollection()->transform(function ($demande) use ($service) {
             $demande->client = [
                 'id' => $demande->user_id,
                 'name' => $demande->name,
@@ -689,7 +966,7 @@ class AbonnementController extends Controller
             ];
 
             // Ajouter les infos du service demandé
-            switch ($service) {
+            switch ($demande->service) {
                 case 'whatsapp':
                     $demande->request_submit = ['whatsapp' => $demande->whatsapp];
                     break;
@@ -712,11 +989,11 @@ class AbonnementController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Demandes récupérées avec succès.',
-            'data' => $demandes,
+            'data' => $paginatedDemandes,
         ]);
     }
 
-    
+
     public function listDemandeReject()
     {
         return Demande::leftJoin('users', 'users.id', '=', 'demandes.user_id')
