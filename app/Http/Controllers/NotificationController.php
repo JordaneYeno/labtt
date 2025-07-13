@@ -978,7 +978,8 @@ class NotificationController extends Controller
         ]);
 
         // Facturer la campagne WhatsApp
-        Abonnement::factureGroupWhatsapp(count($groupes), $total, $message->id);
+        // Abonnement::factureGroupWhatsapp(count($groupes), $total, $message->id);
+        Abonnement::__factureWhatsapp(count($groupes), $total, 0, $message->id);
 
         // Débiter le solde de l'utilisateur
         (new Transaction)->__addTransactionAfterSendMessage($user->id, 'debit', $total, $message->id, count($groupes), Abonnement::__getSolde($user->id), null, 'whatsapp');
