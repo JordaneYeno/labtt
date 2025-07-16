@@ -9,6 +9,10 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
+
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable;
@@ -19,7 +23,7 @@ class User extends Authenticatable implements JWTSubject
      * @var array
      */
     protected $fillable = [
-        'name', 'password', 'statut', 'role_id', 'admin', 'init_token', 'altern_key', 'email', 'phone', 'slug'
+        'name', 'password', 'statut', 'role_id', 'admin', 'init_token', 'altern_key', 'email', 'phone', 'slug', 'owner_id'
     ];
 
     /**
@@ -40,6 +44,28 @@ class User extends Authenticatable implements JWTSubject
         'email_verified_at' => 'datetime',
         'created_at' => 'datetime:d M Y h:i:s',
     ];
+
+    public function subUsers(): HasMany
+    {
+        return $this->hasMany(User::class, 'owner_id', 'id');
+    }
+
+    public function owner(): ?BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_id', 'id');
+    }
+
+    public function isOwner(): bool
+    {
+        return $this->id === $this->owner_id;
+    }
+
+
+    // public function isOwner(): bool
+    // {
+    //     return $this->owner_id === null;
+    // }
+
 
     public function contacts()
     {

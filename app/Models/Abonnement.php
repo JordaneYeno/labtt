@@ -29,7 +29,7 @@ class Abonnement extends Model
     ];
 
     protected $fillable = ['user_id'];
-    
+
     public static function getAbo($id)
     {
         return Abonnement::where('user_id', $id)->first();
@@ -126,9 +126,9 @@ class Abonnement extends Model
         $lasttime = Carbon::create(1970, 1, 1, 0, 0, 0)->diffInSeconds(Carbon::now());
 
         $refKeyGen = "K" . $_year . "C" . str_pad($shuffle + 1, 3, 'T', STR_PAD_LEFT) . $lasttime;
-       
+
         $reference = $refKeyGen;
-        
+
         $abonnement = Abonnement::where('user_id', $id)->first();
         $credit = $abonnement->increment('solde', $request->montant);
         $paiement = Paiement::create([
@@ -137,7 +137,7 @@ class Abonnement extends Model
             'interface_id' => "admin",
             'reference_marchand' => 'NA',
             'type' => 'backoffice',
-            'statut' => 200, 
+            'statut' => 200,
             'final_status' => 200,
             'operateur' => 'NA',
             'numero_client' => 'NA',
@@ -303,7 +303,7 @@ class Abonnement extends Model
                 return 'Statut inconnu';
         }
     }
-
+    
     public function getSmsStatus($requestUserId)
     {
         $userId = $requestUserId;
@@ -311,6 +311,7 @@ class Abonnement extends Model
         return response()->json([
             'status' => 'success',
             'message' => 'statut du sms récupéré',
+            'abo' => $abonnement->sms_status,
             'sms_status' => $this->setAttributes($abonnement->sms_status)
         ]);
     }
@@ -468,14 +469,14 @@ class Abonnement extends Model
             $credit->save();
         }
     }
-    
+
     public static function creditMessageAndMediaWhatsapp($destinataires, $messageId, $files)
     {
         if (User::isSuperAdmin()) : return  null;
         endif;
         $user = auth()->user();
         $facturemessage = (new Tarifications)->getWhatsappPrice() * $destinataires;
-        $facturemedia = ($files * (new Tarifications)->getWhatsappMediaPrice('media')) * $destinataires; 
+        $facturemedia = ($files * (new Tarifications)->getWhatsappMediaPrice('media')) * $destinataires;
         $totalcredit = $facturemessage + $facturemedia;
         $credit = Message::where('user_id', $user->id)->where('id', $messageId)->first();
 
@@ -484,16 +485,16 @@ class Abonnement extends Model
             $credit->save();
         }
     }
-    
+
     public static function creditMessageAndMediaWhatsappWithoutAuth($destinataires, $messageId, $files, $user)
     {
         $facturemessage = (new Tarifications)->getPriceList('default','prix_whatsapp') * $destinataires;
-        $facturemedia = ($files * (new Tarifications)->getPriceList('media','prix_whatsapp')) * $destinataires; 
+        $facturemedia = ($files * (new Tarifications)->getPriceList('media','prix_whatsapp')) * $destinataires;
         $totalcredit = $facturemessage + $facturemedia;
         $credit = Message::where('user_id', $user)->where('id', $messageId)->first();
 
         if ($credit) {
-            $credit->credit += $totalcredit; 
+            $credit->credit += $totalcredit;
             $credit->save();
         }
     }
@@ -584,10 +585,10 @@ class Abonnement extends Model
         if (User::isSuperAdmin()) : return  null;
         endif;
         $user = auth()->user();
-        $totalSold = (new Tarifications)->getWhatsappPrice() * $destinataires + $factureMedia; 
+        $totalSold = (new Tarifications)->getWhatsappPrice() * $destinataires + $factureMedia;
         $solde = Abonnement::where('user_id', $user->id)->decrement('solde', $totalSold);
         return $solde;
-    }   
+    }
 
     public static function __factureNotification($destinataires, $totalSold, $messageId, $roleUser, $userID, $tarifId, $pricing, $myMessage, $isSms)
     {
@@ -605,7 +606,7 @@ class Abonnement extends Model
     }
 
     // change isTemplate
-    
+
     public function setIsCustomTemplate($auth, $status)
     {
         $templateCustom = Abonnement::where('user_id', $auth)->update(['has_custom_template' => $status]);
@@ -620,7 +621,7 @@ class Abonnement extends Model
             'status' => 'echec',
             'message' => 'erreur lors de la mise à jour'
         ], 200);
-    }    
+    }
 
     public function getIsCustomTemplate($auth)
     {

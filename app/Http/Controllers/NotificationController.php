@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ServiceStatus;
 use App\Exports\NotificationExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Notifications\CustumGateway;
@@ -56,14 +57,14 @@ class NotificationController extends Controller
     // public function custumGateway(CustumGateway $request)
     public function custumGateway(Request $request)
     {
-        
+
         $perPage = $request->perPage ? $request->perPage : 9;
         $paginate = new PaginationService();
 
         $contacts = $request->recipients;
 
         if ($request->canalkey === null) {
-            return response()->json([ 
+            return response()->json([
                 'status' => 'error',
                 'message' => 'Veuillez indiquer le canal de diffusion.',
             ], 400);
@@ -91,7 +92,7 @@ class NotificationController extends Controller
                         'status' => 'error',
                         'message' => 'Device introuvable.',
                     ], 400); // Code 400 : Bad Request
-                }                
+                }
 
                 // if ((Abonnement::getAbo($user->id))->whatsapp_status == 0) {
                 if ((Abonnement::getAbo($user->id))->whatsapp_status === 0 || (Abonnement::getAbo($user->id))->whatsapp_status !== 3) {
@@ -107,7 +108,7 @@ class NotificationController extends Controller
 
                 // Vérification de tous les numéros avant la facturation
                 foreach ($destinatairesWhatsapp as $destinataire) {
-                    if (!is_numeric($destinataire)) 
+                    if (!is_numeric($destinataire))
                     {
                         return response()->json([
                             'statut' => 'error',
@@ -127,7 +128,7 @@ class NotificationController extends Controller
                                 'destinataire' => $destinataire,
                             ], 400);
                         }
-                    
+
                     }
                 }
 
@@ -146,7 +147,7 @@ class NotificationController extends Controller
                     'title' => $request->title,
                     'message' => $request->message,
                     'canal' => 'api whatsapp',
-                    'status' => 4,  // status en de depart 
+                    'status' => 4,  // status en de depart
                 ]);
 
                 if ($request->hasFile('file')) {
@@ -174,40 +175,40 @@ class NotificationController extends Controller
                 }
 
                 // Facturer les media WhatsApp
-                $totalMedia = count($destinatairesWhatsapp) * (count(Fichier::where('message_id', $message->id)->pluck('lien')) * (new Tarifications)->getWhatsappMediaPrice('media')); 
+                $totalMedia = count($destinatairesWhatsapp) * (count(Fichier::where('message_id', $message->id)->pluck('lien')) * (new Tarifications)->getWhatsappMediaPrice('media'));
                 // Facturer la campagne WhatsApp
                 Abonnement::__factureWhatsapp(count($destinatairesWhatsapp), $total,$totalMedia, $message->id);
-                
+
                 // Débiter le solde de l'utilisateur
                 $Pprice = $total + $totalMedia;
                 (new Transaction)->__addTransactionAfterSendMessage($user->id, 'debit', $Pprice, $message->id, count($destinatairesWhatsapp), Abonnement::__getSolde($user->id), null, 'whatsapp');
-                
+
                 $errors = false;
 
                 foreach ($destinatairesWhatsapp as $destinataire) {
-                    if((new Abonnement)->getInternaltional($user->id) == 0) 
+                    if((new Abonnement)->getInternaltional($user->id) == 0)
                     {
-                        $conv = new Convertor();                        
+                        $conv = new Convertor();
                         $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
                     }
 
                     $notification = Notification::create([
                         'destinataire' => $destinataire,
                         'canal' => 'whatsapp',
-                        'notify' => 4,  // api direct #without cron 
+                        'notify' => 4,  // api direct #without cron
                         'chrone' => 4,  // envoi direct #without cron
                         'message_id' => $message->id,
                     ]);
-                    
-                    $isWa = (new WaGroupController())->isExistOnWa(((new Abonnement)->getInternaltional($user->id) == 0) ? $interphone :$destinataire); //check phone wa_number! 
-                    $files = Fichier::where('message_id', $notification->message_id)->pluck('lien'); 
-                    
-                    if ($isWa != false) 
+
+                    $isWa = (new WaGroupController())->isExistOnWa(((new Abonnement)->getInternaltional($user->id) == 0) ? $interphone :$destinataire); //check phone wa_number!
+                    $files = Fichier::where('message_id', $notification->message_id)->pluck('lien');
+
+                    if ($isWa != false)
                     {
                         if (count($files) >= 1) { // isExistFile
                             sleep(1);
                             $fileUrl = route('files.show', ['folder' => $user->id, 'filename'=> basename($files[0])]); //url
-                            
+
                             if (strpos($files[0], '.mp4') !== false) {
                                 $data = [
                                     "phone" => (new Abonnement)->getInternaltional($user->id) == 0 ? $interphone : $destinataire,
@@ -349,7 +350,7 @@ class NotificationController extends Controller
                                 // credit
                                 sleep(1);Abonnement::creditWhatsapp(1, $message->id);
                                 // Abonnement::creditMediaWhatsapp(1, $message->id, count($files));
-                                                            
+
                                 $responses[] = [
                                     'status' => 'error',
                                     'message' => 'Message non envoyé',
@@ -359,8 +360,8 @@ class NotificationController extends Controller
                                 ];
                             }
                         }
-                    } 
-                    else 
+                    }
+                    else
                     {
                         $responses[] = [
                             'status' => 'error',
@@ -373,22 +374,22 @@ class NotificationController extends Controller
                         $notification->save();
                         // credit
                         sleep(1);Abonnement::creditMessageAndMediaWhatsapp(1, $message->id, count($files)); //rembourse en cas d'echec
-                                
+
                         if ($request->rescue == 'sms_fallback' && $isWa == false) {
-                                                            
+
                             if (Param::getStatusSms() == 0) {
                                 return response()->json([
                                     'status' => 'échec',
                                     'message' => 'Service SMS désactivé',
                                 ], 422);
                             }
-                        
+
                             $smsCount = (new SmsCount)->countSmsSend(strip_tags($request->message));
                             $destinatairesSms = explode(',', $destinataire);
                             $total += $smsTotal = ((new Tarifications)->getSmsPrice() * $smsCount) * count($destinatairesSms);
-                        
+
                             //______??_______//
-                        
+
                             foreach ($destinatairesSms as $destinataire) {
                                 if (!is_numeric($destinataire)) {
                                     return response()->json([
@@ -398,7 +399,7 @@ class NotificationController extends Controller
                                     ], 400);
                                 }
                             }
-                        
+
                             if ($total > $solde) {
                                 return response()->json([
                                     'status' => 'échec',
@@ -407,30 +408,30 @@ class NotificationController extends Controller
                                     'solde' => $solde,
                                 ], 400);
                             }
-                        
+
                             //______??_______//
-                        
+
                             Abonnement::factureSms(count($destinatairesSms), $smsTotal, $message->id, $message->message);
-                        
+
                             $rescue = Message::where('id', $message->id)->first();  //______ disable !
                             $rescue->canal = $rescue->canal .= ' rescue sms+ ';
                             $rescue->save();  //______ disable !
-                        
+
                             $notification = Notification::create([
                                 'destinataire' => $destinataire,
                                 'canal' => 'sms+',
-                                'notify' => 4,  // api direct #without cron 
+                                'notify' => 4,  // api direct #without cron
                                 'chrone' => 4,  // envoi direct #without cron
                                 'message_id' => $message->id,
                             ]);
                             // send sms if error sent whatsapp
-                        
-                            if((new Abonnement)->getInternaltional($user->id) == 0) 
+
+                            if((new Abonnement)->getInternaltional($user->id) == 0)
                             {
                                 $conv = new Convertor();
                                 $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
                             }
-                                    
+
                             $text = strip_tags($message->message);
                             $data =
                                 [
@@ -457,17 +458,17 @@ class NotificationController extends Controller
                                     'Content-Type: application/json',
                                 ],
                             ]);
-                        
+
                             $response = curl_exec($curl);
                             $err = curl_error($curl);
                             curl_close($curl);
-                        
+
                             sleep(1);
                             if ($err) {
                                 $errors = true;
                                 $notification->delivery_status = 'echec';
                                 $notification->save();
-                        
+
                                 // credit
                                 sleep(1);Abonnement::creditSms(1, $message->id);
                                 $responses[] = [
@@ -503,10 +504,10 @@ class NotificationController extends Controller
                 $mydebit = Transaction::get(); $debitClient = $mydebit->where('message_id', $message->id)->first();
                 $current_credit = Message::get()->where('id', $message->id)->pluck('credit')->first();
 
-                if ($addCredit && $current_credit) 
+                if ($addCredit && $current_credit)
                 {
                     $message->credit = 0; $message->save();
-                    $addCredit->solde += $current_credit; $addCredit->save(); 
+                    $addCredit->solde += $current_credit; $addCredit->save();
                     $debitClient->montant = $total-$current_credit+$totalMedia; $debitClient->save();
                 }
 
@@ -522,7 +523,7 @@ class NotificationController extends Controller
                     'details' => $paginator,
                     'total_paye' => $total-$current_credit+$totalMedia,
                     'ancien_solde' => $solde,
-                    'nouveau_solde' => Abonnement::__getSolde($user->id), 
+                    'nouveau_solde' => Abonnement::__getSolde($user->id),
                 ], 200);
 
             case "email":
@@ -636,7 +637,7 @@ class NotificationController extends Controller
                 }
 
                 $signature = $allAbonnements->where('user_id', $message->user_id)->first();
-                
+
                 $data["expediteur"] = $expediteur;
                 $data["title"] = $request->title;
                 $data["body"] = $request->message;
@@ -673,8 +674,8 @@ class NotificationController extends Controller
                     ]);
 
                     $files = Fichier::where('message_id', $notification->message_id)->pluck('lien');
-    
-                    $data["email"] = $destinataire; 
+
+                    $data["email"] = $destinataire;
 
                     Mail::send('mail.campagne', $data, function ($objet_mail) use ($data, $files, $message) {
                         $objet_mail->to($data["email"])
@@ -682,9 +683,9 @@ class NotificationController extends Controller
                             ->from($data['from_email'], $data ['from_name']);
                         if (count($files) > 0) {
 
-                            $totalMedia = /*count($files)*/ 1 * (new Tarifications)->getWhatsappMediaPrice('media'); 
-                            foreach ($files as $file) 
-                            {                                    
+                            $totalMedia = /*count($files)*/ 1 * (new Tarifications)->getWhatsappMediaPrice('media');
+                            foreach ($files as $file)
+                            {
                                 $filename = basename($file);
                                 $folder = $message->user_id;
                                 $file_path = public_path("storage/banner/{$folder}/{$filename}");
@@ -731,11 +732,11 @@ class NotificationController extends Controller
                 $myAbonnements = Abonnement::get(); $addCredit = $myAbonnements->where('user_id', $message->user_id)->first();
                 $mydebit = Transaction::get(); $debitClient = $mydebit->where('message_id', $message->id)->first();
                 $current_credit = Message::get()->where('id', $message->id)->pluck('credit')->first();
-        
-                if ($addCredit && $current_credit) 
+
+                if ($addCredit && $current_credit)
                 {
                     $message->credit = 0; $message->save();
-                    $addCredit->solde += $current_credit; $addCredit->save(); 
+                    $addCredit->solde += $current_credit; $addCredit->save();
                     $debitClient->montant = $total-$current_credit-$totalMedia; $debitClient->save();
                 }
 
@@ -755,7 +756,7 @@ class NotificationController extends Controller
                 ], 200);
 
             case "sms":
-                
+
                 if (Param::getStatusSms() == 0) {
                     return response()->json([
                         'status' => 'échec',
@@ -785,7 +786,7 @@ class NotificationController extends Controller
                     }
                 }
 
-                
+
                 if ($total > $solde) {
                     return response()->json([
                         'status' => 'échec',
@@ -818,11 +819,11 @@ class NotificationController extends Controller
                         'message_id' => $message->id,
                     ]);
 
-                    // if((new Abonnement)->getInternaltional($user->id) == 0) 
+                    // if((new Abonnement)->getInternaltional($user->id) == 0)
                     // {
                     //     // $conv = new Convertor();
                     //     // $interphone = $conv->internationalisation($destinataire, request('country', 'GA'));
-                        
+
                     //     $conv = new Convertor();
                     //     // $numerosFormattes = []; // Tableau pour stocker les numéros valides
 
@@ -930,11 +931,11 @@ class NotificationController extends Controller
                 $myAbonnements = Abonnement::get(); $addCredit = $myAbonnements->where('user_id', $message->user_id)->first();
                 $mydebit = Transaction::get(); $debitClient = $mydebit->where('message_id', $message->id)->first();
                 $current_credit = Message::get()->where('id', $message->id)->pluck('credit')->first();
-        
-                if ($addCredit && $current_credit) 
+
+                if ($addCredit && $current_credit)
                 {
                     $message->credit = 0; $message->save();
-                    $addCredit->solde += $current_credit; $addCredit->save(); 
+                    $addCredit->solde += $current_credit; $addCredit->save();
                     $debitClient->montant = $total-$current_credit; $debitClient->save();
                 }
 
@@ -986,7 +987,7 @@ class NotificationController extends Controller
                 'message' => 'Service WhatsApp désactivé',
             ], 422);
         }
-        
+
         if ($userDeviceId === null) {
             return response()->json([
                 'status' => 'error',
@@ -995,7 +996,7 @@ class NotificationController extends Controller
         }
 
         $API_KEY_WHATSAPP = Param::getTokenWhatsapp(); //dd($API_KEY_WHATSAPP);
-        $groupes = explode(',', $request->wid); 
+        $groupes = explode(',', $request->wid);
         $total = count($groupes) * (new Tarifications)->getWhatsappPrice();
 
         if ($total > $solde) {
@@ -1013,7 +1014,7 @@ class NotificationController extends Controller
             'title' => 'WA' . '_GROUP ™',
             'message' => $request->message,
             'canal' => 'api group whatsapp',
-            'status' => 4,  // status en de depart 
+            'status' => 4,  // status en de depart
         ]);
 
         // Facturer la campagne WhatsApp
@@ -1031,7 +1032,7 @@ class NotificationController extends Controller
             $notification = Notification::create([
                 'destinataire' => $groupe,
                 'canal' => 'whatsapp',
-                'notify' => 4,  // api direct #without cron 
+                'notify' => 4,  // api direct #without cron
                 'chrone' => 4,  // envoi direct #without cron
                 'message_id' => $message->id,
             ]);
@@ -1096,16 +1097,16 @@ class NotificationController extends Controller
                     ];
                 }
             }
-        } 
+        }
 
         $myAbonnements = Abonnement::get(); $addCredit = $myAbonnements->where('user_id', $message->user_id)->first();
         $mydebit = Transaction::get(); $debitClient = $mydebit->where('message_id', $message->id)->first();
         $current_credit = Message::get()->where('id', $message->id)->pluck('credit')->first();
 
-        if ($addCredit && $current_credit) 
+        if ($addCredit && $current_credit)
         {
             $message->credit = 0; $message->save();
-            $addCredit->solde += $current_credit; $addCredit->save(); 
+            $addCredit->solde += $current_credit; $addCredit->save();
             $debitClient->montant = $total-$current_credit; $debitClient->save();
         }
 
@@ -1160,7 +1161,7 @@ class NotificationController extends Controller
                 Notification::create([
                     'destinataire' => $dest,
                     'canal' => $canal,
-                    'notify' => 2,  //  gateway api  #partenaires 
+                    'notify' => 2,  //  gateway api  #partenaires
                     'message_id' => $message->id,
                 ]);
         }
@@ -1273,15 +1274,15 @@ class NotificationController extends Controller
         $allabonnements = Abonnement::get();
         $signature = $allabonnements->where('user_id', $message->user_id);
         $userDeviceId = (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id);
-        
+
         try {
             $destinatairesWhatsapp = explode(',', $contacts['whatsapp']);
             $destinatairesEmail = explode(',', $contacts['emails']);
             $destinatairesSms = explode(',', $contacts['sms']);
-            
+
             // Facturer les media WhatsApp
-            $totalMedia = count($destinatairesWhatsapp) * (count(Fichier::where('message_id', $message->id)->pluck('lien')) * (new Tarifications)->getWhatsappMediaPrice('media')); 
-            
+            $totalMedia = count($destinatairesWhatsapp) * (count(Fichier::where('message_id', $message->id)->pluck('lien')) * (new Tarifications)->getWhatsappMediaPrice('media'));
+
             if ($contacts['whatsapp'] != '') {
 
                 if (Param::getStatusWhatsapp() == 0) {
@@ -1398,7 +1399,7 @@ class NotificationController extends Controller
                 Message::where('id', $message->id)->update(['canal' => $canal]);
                 if ($whatsapp) :
                     // Abonnement::factureWhatsapp(count($destinatairesWhatsapp), $whatsappTotal, $message->id);
-                    Abonnement::__factureWhatsapp(count($destinatairesWhatsapp), $total,$totalMedia, $message->id);                
+                    Abonnement::__factureWhatsapp(count($destinatairesWhatsapp), $total,$totalMedia, $message->id);
                 endif;
                 if ($sms) :
                     Abonnement::factureSms(count($destinatairesSms), $smsTotal, $message->id, $message->message);
@@ -1434,7 +1435,7 @@ class NotificationController extends Controller
 
     public function createEmail($destinataires, $message, $email_awt)
     {
-        if (!User::isSuperAdmin() && (new Abonnement)->getEmailStatus(auth()->user()->id)->getData()->email_status != 'accepté') {
+        if (!User::isSuperAdmin() && (new Abonnement)->getEmailStatus(auth()->user()->id)->getData()->email_status != Abonnement::setAttributes(ServiceStatus::ACCEPTED)) {
             return response()->json([
                 'status' => 'echec',
                 'message' => 'Veuillez configurer votre adresse email de campagne',
@@ -1473,7 +1474,7 @@ class NotificationController extends Controller
 
     public function createWhatsapp($dests, $message) //see
     {
-        if (!User::isSuperAdmin() && (new Abonnement)->getWhatsappStatus(auth()->user()->id)->getData()->whatsapp_status != 'accepté') {
+        if (!User::isSuperAdmin() && (new Abonnement)->getWhatsappStatus(auth()->user()->id)->getData()->whatsapp_status != Abonnement::setAttributes(ServiceStatus::ACCEPTED)) {
             return response()->json([
                 'status' => 'echec',
                 'message' => 'Veuillez configurer votre numéro whatsapp de campagne',
@@ -1511,7 +1512,7 @@ class NotificationController extends Controller
 
     public function createSms($destinataires, $message, $code_textopro)
     {
-        if (!User::isSuperAdmin() && (new Abonnement)->getSmsStatus(auth()->user()->id)->getData()->sms_status != 'accepté') {
+        if (!User::isSuperAdmin() && (new Abonnement)->getSmsStatus(auth()->user()->id)->getData()->sms_status != Abonnement::setAttributes(ServiceStatus::ACCEPTED)) {
             return response()->json([
                 'status' => 'echec',
                 'message' => 'Veuillez configurer votre code sms de campagne',
@@ -1870,21 +1871,21 @@ class NotificationController extends Controller
                                   ->where('chrone', 0)
                                   ->orderBy('created_at', 'asc')
                                   ->take(15)
-                            
+
                                 //   ->lockForUpdate()
                                   ->get();
 
-        if ($notifications->isEmpty()) 
-        { 
+        if ($notifications->isEmpty())
+        {
             return response()->json([
                 'statut' => 'error',
                 'message' => 'Aucune notifications disponible pour le moment',
             ], Response::HTTP_OK);
         }
         $errors = false;
-        foreach ($notifications as $notification) { 
+        foreach ($notifications as $notification) {
             $notification->chrone = 1; $notification->save(); // initialise le status cron d'envoi de messages
-            
+
             $message = $allmessages->where('id', $notification->message_id)->first();
             $files = Fichier::where('message_id', $notification->message_id)->pluck('lien');
             $messageToUpdate = $allmessages->where('id', $message->id)->first();
@@ -1906,12 +1907,12 @@ class NotificationController extends Controller
                 $data["ville"] = $signature->pluck('entreprese_ville')->first();
                 $data["mail"] = $signature->pluck('email')->first();
 
-                if (count($files) > 0) 
+                if (count($files) > 0)
                 {
-                    $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]); 
+                    $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]);
                     $data["file"] = $url;
                 }
-                 
+
                 $templateExists = (new Abonnement)->checkIsCustomTemplate($message->user_id) == 1;
                 $name_template = '';
                 if($templateExists){$name_template = Template::where('user_id', $message->user_id)->pluck('name')->first();}
@@ -1930,7 +1931,7 @@ class NotificationController extends Controller
                     $notification->save();
                 } catch (\Exception $e) {
 
-                    $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron 
+                    $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron
                     $notification->save();
                     $notification->delivery_status = 'echec';
                     $notification->save();
@@ -1945,24 +1946,24 @@ class NotificationController extends Controller
                 {
                     $conv = new Convertor();
                     $interphone = $conv->internationalisation($notification->destinataire, request('country', 'GA'));
-                    
-                    if ($interphone === 'invalid number') 
+
+                    if ($interphone === 'invalid number')
                     {
                         $notification->destinataire = '0' . $notification->destinataire;
                         $notification->save();
                         $interphone = $conv->internationalisation($notification->destinataire, request('country', 'GA'));
                     }
                 }
-                
-                $isWa = (new WaGroupController())->isExistOnWaWithoutAuth(((new Abonnement)->getInternaltional($message->user_id) == 0) ? $interphone : $notification->destinataire, $message->user_id); //check phone wa_number! 
+
+                $isWa = (new WaGroupController())->isExistOnWaWithoutAuth(((new Abonnement)->getInternaltional($message->user_id) == 0) ? $interphone : $notification->destinataire, $message->user_id); //check phone wa_number!
                 if ($isWa != false) {
 
                     if (count($files) > 0) {
                         // sleep(2);
 
                         if (strpos($files, '.mp4') != false) {
-                            $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]); 
-                        
+                            $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]);
+
                             $data = ["phone" => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire, "message" => strip_tags($message->message), "media" => ["url" => $url], "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
                             $curl = curl_init();
                             curl_setopt_array($curl, [
@@ -1987,7 +1988,7 @@ class NotificationController extends Controller
 
                             if ($err) {
                                 $errors = true;
-                                $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron 
+                                $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron
                                 $notification->save();
 
                                 $notification->delivery_status = 'echec';
@@ -2008,8 +2009,8 @@ class NotificationController extends Controller
                                 }
                             }
                         } else {
-                            $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]); 
-                        
+                            $url = route('files.show', ['folder' => $message->user_id, 'filename'=> basename($files[0])]);
+
                             $data = ["url" => $url];
                             $curl = curl_init();
                             curl_setopt_array($curl, [
@@ -2067,7 +2068,7 @@ class NotificationController extends Controller
                                 curl_close($curl);
                                 if ($err) {
                                     $errors = true;
-                                    $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron 
+                                    $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron
                                     $notification->save();
                                     $notification->delivery_status = 'echec';
                                     $notification->save();
@@ -2075,14 +2076,14 @@ class NotificationController extends Controller
                                     // credit
                                     sleep(1);Abonnement::creditMessageAndMediaWhatsappWithoutAuth(1, $message->id, count($files), $message->user_id);
 
-                                    $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire; 
+                                    $tel = ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire;
                                     $responses[] = [
                                         'statut' => 'error',
                                         'message' => "Erreur lors de l'envoi du message à $tel",
                                     ];
                                     // echo "cURL Error #:" . $err;
-                                } 
-                                else 
+                                }
+                                else
                                 {
                                     $reponse = json_decode($response);
                                     if (!empty($reponse->id)) {
@@ -2091,10 +2092,10 @@ class NotificationController extends Controller
                                         $this->update_notification_wassenger($notification->id, $reponse->id);
                                     }
                                 }
-                            } 
+                            }
                         }
                     } else if (count($files) == 0) {
-                        // sleep(2); 
+                        // sleep(2);
                         $data = ["phone" => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire, "message" => strip_tags($message->message), "device" => (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id)];
                         $curl = curl_init();
                         curl_setopt_array($curl, [
@@ -2116,10 +2117,10 @@ class NotificationController extends Controller
                         $response = curl_exec($curl); //dd($response);
                         $err = curl_error($curl);
                         curl_close($curl);
-                        if ($err) 
+                        if ($err)
                         {
                             $errors = true;
-                            $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron 
+                            $notification->notify = 3; // echec envoi message ?? notify = 3 extrait du passage de la cron
                             $notification->save();
                             $notification->delivery_status = 'echec';
                             $notification->save();
@@ -2145,12 +2146,12 @@ class NotificationController extends Controller
                         return 'nulled';
                     }
                 }
-                else 
+                else
                 {
                     $notification->delivery_status = 'echec';
                     $notification->save();
                     // credit
-                    sleep(1);Abonnement::creditMessageAndMediaWhatsappWithoutAuth(1, $message->id, count($files), $message->user_id); //rembourse en cas d'echec           
+                    sleep(1);Abonnement::creditMessageAndMediaWhatsappWithoutAuth(1, $message->id, count($files), $message->user_id); //rembourse en cas d'echec
                 }
 
             } else if (strpos($message->canal, 'sms') !== false && $notification->canal === 'sms') { // Utilise `!== false` pour éviter les erreurs avec des positions `0`.
@@ -2175,7 +2176,7 @@ class NotificationController extends Controller
                     'receiver' => ((new Abonnement)->getInternaltional($message->user_id) == 0) ?$interphone :$notification->destinataire,
                     'sender' => $sender,
                 ];
-                
+
                 // if ($notification->has_final_status == 1 && $notification->notify == 0 && $notification->chrone == 1) {
                 if ($notification->notify == 0 && $notification->chrone == 1) {
                     $curl = curl_init();
@@ -2242,11 +2243,11 @@ class NotificationController extends Controller
                     'status' => 'error',
                     'message' => 'Des erreurs sont survenues lors de l\'envoi de certains messages.',
                     'details' => $responses,
-                ], 500); 
+                ], 500);
             }
         }
         sleep(1);
-        $this->update_msg_finish($message->id); 
+        $this->update_msg_finish($message->id);
     }
 
     public function getUsers()

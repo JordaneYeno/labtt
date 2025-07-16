@@ -18,7 +18,7 @@ class UpdateSuperAdmin extends Command
      * The console command description.
      *
      * @var string
-     */ 
+     */
     protected $description = 'Met à jour le statut admin du superadmin';
 
     /**

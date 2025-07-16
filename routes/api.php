@@ -15,6 +15,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentConroller;
 use App\Http\Controllers\SocialiteController;
 use App\Http\Controllers\TarificationController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\WaGroupController;
 use App\Models\Abonnement;
 use App\Models\Param;
@@ -22,7 +23,7 @@ use Illuminate\Support\Facades\Route;
 
 
 
-Route::get('dec/recep/outfiles/{encrypted_id}', [ExportController::class, 'downloadEncryptedFile']); 
+Route::get('dec/recep/outfiles/{encrypted_id}', [ExportController::class, 'downloadEncryptedFile']);
 
 Route::get('export', [ExportController::class, 'exportToExcel']);
 
@@ -70,6 +71,14 @@ Route::post('init_token', [ApiController::class, 'init_token']);
 Route::post('paiement/callback', [PaymentConroller::class, 'receiveCallback']);
 
 Route::group(['middleware' => ['jwt.verify']], function () {
+
+    Route::get('/sub-users', [UserController::class, 'index']); // Liste des users secondaires
+    Route::post('/sub-users', [UserController::class, 'store']); // Création d'un user secondaire
+    Route::get('/sub-users/{user}', [UserController::class, 'show']); // Détail
+    Route::put('/sub-users/{user}', [UserController::class, 'update']); // Mise à jour
+    Route::delete('/sub-users/{user}', [UserController::class, 'destroy']); // Suppression
+
+
     Route::post('recep/outfiles/{message_id}', [ExportController::class, 'exportNotificationsToExcel']); // new
 
     Route::prefix('service')->group(function () {
