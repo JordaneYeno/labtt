@@ -72,11 +72,29 @@ Route::post('paiement/callback', [PaymentConroller::class, 'receiveCallback']);
 
 Route::group(['middleware' => ['jwt.verify']], function () {
 
-    Route::get('/sub-users', [UserController::class, 'index']); // Liste des users secondaires
-    Route::post('/sub-users', [UserController::class, 'store']); // Création d'un user secondaire
-    Route::get('/sub-users/{user}', [UserController::class, 'show']); // Détail
+    // Route::get('/sub-users', [UserController::class, 'index']); // Liste des users secondaires
+    // Route::post('/sub-users', [UserController::class, 'store']); // Création d'un user secondaire
+    // Route::get('/sub-users/{user}', [UserController::class, 'show']); // Détail
+    // Route::put('/sub-users/{user}', [UserController::class, 'update']); // Mise à jour
+    // Route::delete('/sub-users/{user}', [UserController::class, 'destroy']); // Suppression
+
+
+    Route::get('/sub-users', [UserController::class, 'index']);       // Liste des users secondaires
+    Route::post('/sub-users', [UserController::class, 'store']);     // Créer un user secondaire
+    Route::get('/sub-users/{user}', [UserController::class, 'show']); // Détail d’un user
     Route::put('/sub-users/{user}', [UserController::class, 'update']); // Mise à jour
     Route::delete('/sub-users/{user}', [UserController::class, 'destroy']); // Suppression
+
+
+    Route::get('/sub-user/solde', [UserController::class, 'solde']);
+    Route::get('/sub-user/etat/whatsapp', [UserController::class, 'etatWhatsApp']);
+    Route::get('/sub-user/etat/sms', [UserController::class, 'etatSms']);
+    Route::get('/sub-user/etat/email', [UserController::class, 'etatEmail']);
+    Route::get('/sub-user/etat/services', [UserController::class, 'etatServices']);
+
+
+    Route::post('/sub-user/canal/messages', [UserController::class, 'getMessagesByCanal']);
+    Route::get('/sub-user/all/messages', [UserController::class, 'getMessages']);
 
 
     Route::post('recep/outfiles/{message_id}', [ExportController::class, 'exportNotificationsToExcel']); // new

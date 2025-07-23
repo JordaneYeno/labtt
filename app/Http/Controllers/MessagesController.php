@@ -785,7 +785,7 @@ class MessagesController extends Controller
         $expediteur = 'noreply@pvitservice.com';
         $mail_copie = [];
         $token = $this->_getToken();
-        
+
         if (!empty($request->mail_copie)) {
             $mail_copie = explode(",", $request->mail_copie);
         }
@@ -913,7 +913,7 @@ class MessagesController extends Controller
     }
 
 
-    public function getAllMessages(Request $request)
+    public function getAllMessages(Request $request) 
     {
         try {
             $paginate = new PaginationService();
@@ -948,7 +948,7 @@ class MessagesController extends Controller
         }
     }
 
-    
+
     public function getMessagesByReferenceId(Request $request)
     {
         if (!empty($request->refkey)) :
@@ -1064,7 +1064,7 @@ class MessagesController extends Controller
                         $query->orwhere('messages.title', 'like', '%' . $searchCanal . '%')
                             ->orwhere('messages.destinataires', 'like', '%' . $searchCanal . '%')
                             ->orwhere('messages.message', 'like', '%' . $searchCanal . '%');
-                    }) 
+                    })
                     ->select(
                         'messages.id',
                         'messages.message',

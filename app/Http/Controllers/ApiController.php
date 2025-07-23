@@ -101,7 +101,7 @@ class ApiController extends Controller
         $isEmail = filter_var($useremail, FILTER_VALIDATE_EMAIL);
         if (!$isEmail) {
             return response()->json([
-                'status' => 'error', 
+                'status' => 'error',
                 'message' => 'Email non valide',
             ], Response::HTTP_OK);
         }
@@ -381,17 +381,18 @@ class ApiController extends Controller
                 'message' => 'Impossible de créer le jeton.',
             ], 500);
         }
- 
-        $user = Auth::user(); 
+
+        $user = Auth::user();
 
         if($user->status===0) {
             $response = [
-                'status' => 'success',
+                'status' => 'echec',
                 'message' => 'Accès refusé \ compte désactivé',
                 'state' => $user->status,
             ];
 
-            return response()->json($response);
+            return response()->json($response, 403);
+            // return response()->json($response);
         }else{
 
             $response = [
@@ -410,7 +411,124 @@ class ApiController extends Controller
             return response()->json($response);
         }
     }
-    
+
+    // public function authenticate(Request $request)
+    // {
+    //     $credentials = $request->only('email', 'password');
+
+    //     $validator = Validator::make($credentials, [
+    //         'email' => 'required|email',
+    //         'password' => 'required|string|min:6|max:50',
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return response()->json([
+    //             'message' => $validator->messages()->first(),
+    //             'status' => 'error'
+    //         ], 200);
+    //     }
+
+    //     try {
+    //         if (!$token = JWTAuth::attempt($credentials)) {
+    //             return response()->json([
+    //                 'status' => 'error',
+    //                 'message' => 'Les identifiants de connexion ne sont pas valides.',
+    //             ], 400);
+    //         }
+    //     } catch (JWTException $e) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Impossible de créer le jeton.',
+    //         ], 500);
+    //     }
+
+    //     $user = Auth::user();
+
+    //     if ($user->status === 0) {
+    //         return response()->json([
+    //             'status' => 'echec',
+    //             'message' => 'Accès refusé : compte désactivé',
+    //             'state' => $user->status,
+    //         ], 403);
+    //     }
+
+    //     // Récupère les données de l'abonnement (du propriétaire si secondaire)
+    //     $abonnement = $user->getAbonnement();
+
+    //     $response = [
+    //         'status' => 'success',
+    //         'message' => 'Connexion effectuée avec succès',
+    //         'token' => $token,
+    //         'user' => $user,
+    //         'abonnement' => $abonnement ? [
+    //             'solde' => $abonnement->solde,
+    //             'sms' => $abonnement->sms,
+    //             'email' => $abonnement->email,
+    //             'whatsapp_status' => $abonnement->whatsapp_status,
+    //             'sms_status' => $abonnement->sms_status,
+    //             'email_status' => $abonnement->email_status,
+    //         ] : null,
+    //     ];
+
+    //     // Si c'est un compte secondaire, on peut ajouter un flag
+    //     if ($user->owner_id !== null) {
+    //         $response['user']['is_secondary'] = true;
+    //         $response['user']['owner_id'] = $user->owner_id;
+    //     }
+
+    //     return response()->json($response);
+    // }
+
+
+    // public function getUserAuth()
+    // {
+    //     $user = auth()->user();
+
+    //     // Cacher le champ 'admin' comme avant
+    //     $user->makeHidden(['admin']);
+
+    //     // Récupère l'abonnement
+    //     if ($user->owner_id !== null) {
+    //         // Si c'est un utilisateur secondaire, on récupère l'abonnement du propriétaire
+    //         $abonnement = $user->owner->abonnement;
+    //     } else {
+    //         // Si c'est un compte principal, on récupère son propre abonnement
+    //         $abonnement = $user->abonnement;
+    //     }
+
+    //     // Construire la réponse
+    //     $response = [
+    //         'user' => $user,
+    //     ];
+
+    //     // // Ajouter l'abonnement si disponible
+    //     // if ($abonnement) {
+    //     //     $response['abonnement'] = [
+    //     //         'id' => $abonnement->id,
+    //     //         'entreprese_name' => $abonnement->entreprese_name,
+    //     //         'entreprese_contact' => $abonnement->entreprese_contact,
+    //     //         'entreprese_localisation' => $abonnement->entreprese_localisation,
+    //     //         'entreprese_ville' => $abonnement->entreprese_ville,
+    //     //         'whatsapp' => $abonnement->whatsapp,
+    //     //         'sms' => $abonnement->sms,
+    //     //         'email' => $abonnement->email,
+    //     //         'whatsapp_status' => $abonnement->whatsapp_status,
+    //     //         'sms_status' => $abonnement->sms_status,
+    //     //         'email_status' => $abonnement->email_status,
+    //     //         'solde' => $abonnement->solde,
+    //     //         'status' => $abonnement->status,
+    //     //         'logo' => $abonnement->logo,
+    //     //         'wa_device_secret' => $abonnement->wa_device_secret,
+    //     //         'cs_color' => $abonnement->cs_color,
+    //     //         'has_custom_template' => $abonnement->has_custom_template,
+    //     //         'international' => $abonnement->international,
+    //     //     ];
+    //     // }
+
+    //     return response()->json($response, Response::HTTP_OK);
+    // }
+
+
     public function getUserAuth()
     {
         $user = auth()->user(); $user->makeHidden(['admin']);
@@ -419,6 +537,65 @@ class ApiController extends Controller
             'user' => $user,
         ], Response::HTTP_OK);
     }
+
+
+    // public function getUserAuth()
+    // {
+    //     $user = auth()->user();
+    //     $user->makeHidden(['admin']);
+
+    //     if ($user->owner_id !== null) {
+    //         $abonnement = $user->owner->abonnement;
+    //     } else {
+    //         $abonnement = null;
+    //     }
+
+    //     // Construit la réponse utilisateur
+    //     $responseData = [
+    //         'user' => [
+    //             'id' => $user->id,
+    //             'owner_id' => $user->owner_id,
+    //             'role_id' => $user->role_id,
+    //             'name' => $user->name,
+    //             'email' => $user->email,
+    //             'phone' => $user->phone,
+    //             'status' => $user->status,
+    //             'slug' => $user->slug,
+    //             'email_verified_at' => $user->email_verified_at,
+    //             'created_at' => $user->created_at,
+    //             'updated_at' => $user->updated_at,
+    //         ]
+    //     ];
+
+    //     // Si c'est un compte secondaire et que l'abonnement existe, on l'ajoute
+    //     if ($user->owner_id !== null && $abonnement) {
+    //         $responseData['user']['abonnement'] = [
+    //             'id' => $abonnement->id,
+    //             'entreprese_name' => $abonnement->entreprese_name,
+    //             'entreprese_contact' => $abonnement->entreprese_contact,
+    //             'entreprese_localisation' => $abonnement->entreprese_localisation,
+    //             'entreprese_ville' => $abonnement->entreprese_ville,
+    //             'whatsapp' => $abonnement->whatsapp,
+    //             'sms' => $abonnement->sms,
+    //             'email' => $abonnement->email,
+    //             'whatsapp_status' => $abonnement->whatsapp_status,
+    //             'sms_status' => $abonnement->sms_status,
+    //             'email_status' => $abonnement->email_status,
+    //             'solde' => $abonnement->solde,
+    //             'status' => $abonnement->status,
+    //             'logo' => $abonnement->logo,
+    //             'wa_device_secret' => $abonnement->wa_device_secret,
+    //             'cs_color' => $abonnement->cs_color,
+    //             'has_custom_template' => $abonnement->has_custom_template,
+    //             'user_id' => $abonnement->user_id,
+    //             'created_at' => $abonnement->created_at,
+    //             'updated_at' => $abonnement->updated_at,
+    //             'international' => $abonnement->international,
+    //         ];
+    //     }
+
+    //     return response()->json($responseData, Response::HTTP_OK);
+    // }
 
     public function logout(Request $request)
     {

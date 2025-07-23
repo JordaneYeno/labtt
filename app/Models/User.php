@@ -60,11 +60,16 @@ class User extends Authenticatable implements JWTSubject
         return $this->id === $this->owner_id;
     }
 
+    public function getAbonnement()
+    {
+        // Si c'est un compte secondaire, on récupère l'abonnement du propriétaire
+        if ($this->owner_id !== null) {
+            return $this->owner->abonnement;
+        }
 
-    // public function isOwner(): bool
-    // {
-    //     return $this->owner_id === null;
-    // }
+        // Sinon, on récupère son propre abonnement
+        return $this->abonnement;
+    }
 
 
     public function contacts()
