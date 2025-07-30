@@ -944,10 +944,11 @@ class AbonnementController extends Controller
 
         // Si le statut n'est pas 'all', on applique le filtre sur le statut
         if ($status !== 'all') {
-            $query->where('demandes.status', $status);
+            $query->where('demandes.status', $status)/*->where('demandes.status', '!=', 0)*/;
+
         } else {
             // Si le statut est 'all', on récupère toutes les demandes pour tous les statuts possibles
-            $query->whereIn('demandes.status', $validStatuses);
+            $query->whereIn('demandes.status', $validStatuses)->where('demandes.status', '!=', ServiceStatus::RESET);
         }
 
         // Récupérer toutes les données sans pagination
