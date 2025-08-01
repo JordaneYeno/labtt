@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use App\Http\Requests\UserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
@@ -162,7 +163,7 @@ class ApiController extends Controller
             'email' => $useremail,
             'phone' => $userphone,
             'password' => bcrypt($request->password),
-            'role_id' => 0,
+            'role_id' => UserRole::USER,
         ]);
 
         $abonnement = Abonnement::create([
@@ -276,7 +277,7 @@ class ApiController extends Controller
             'email' => $useremail,
             'phone' => $userphone,
             'password' => bcrypt($request->password),
-            'role_id' => 1,
+            'role_id' => UserRole::MANAGER,
             'init_token' => $initToken,
             'altern_key' => $otp,
             // 'password' => bcrypt('123456'),
@@ -636,7 +637,7 @@ class ApiController extends Controller
 
     // public function getClients(Request $request)
     // {
-    //     $clients = User::where('role_id', 0)
+    //     $clients = User::where('role_id', UserRole::USER)->where('owner_id', null)
     //         ->orderBy('created_at', 'DESC')
     //         ->select('id', 'name', 'phone', 'email', 'status', 'owner_id', 'created_at')
     //         ->paginate(25);
@@ -645,58 +646,103 @@ class ApiController extends Controller
     //         "message" => "tous les clients",
     //         "clients" => $clients
     //     ]);
+    // } // old
+
+    // public function getClients(Request $request)
+    // {
+    //     $validStatuses = [
+    //         UserRole::USER,
+    //         UserRole::BETA_TESTER,
+    //     ];
+
+    //     $allClients = User::whereIn('role_id', $validStatuses)
+    //         ->orderBy('created_at', 'DESC')
+    //         ->select('id', 'name', 'phone', 'email', 'status', 'owner_id', 'created_at')
+    //         ->get();
+
+    //     // Sous-comptes groupés par owner_id
+    //     $subAccountsGrouped = $allClients
+    //         ->whereNotNull('owner_id')
+    //         ->groupBy('owner_id');
+
+    //     // Clients principaux
+    //     $mainClients = $allClients->whereNull('owner_id')->values();
+
+    //     // Ajouter les sous-comptes + le count à chaque client principal
+    //     $mainClients->transform(function ($client) use ($subAccountsGrouped) {
+    //         $subAccounts = $subAccountsGrouped->get($client->id)?->values() ?? collect();
+    //         $client->sub_accounts = $subAccounts;
+    //         $client->sous_comptes_count = $subAccounts->count();
+    //         return $client;
+    //     });
+
+    //     // Paginer
+    //     $perPage = 25;
+    //     $currentPage = $request->input('page', 1);
+    //     $paginatedClients = new \Illuminate\Pagination\LengthAwarePaginator(
+    //         $mainClients->forPage($currentPage, $perPage),
+    //         $mainClients->count(),
+    //         $perPage,
+    //         $currentPage,
+    //         ['path' => $request->url(), 'query' => $request->query()]
+    //     );
+
+    //     return response()->json([
+    //         "status" => "success",
+    //         "message" => "tous les clients",
+    //         "clients" => $paginatedClients
+    //     ]);
     // }
 
 
     public function getClients(Request $request)
-{
-    $validStatuses = [0, 3];
+    {
+        $validStatuses = [0, 3];
 
-    $allClients = User::whereIn('role_id', $validStatuses)
-        ->orderBy('created_at', 'DESC')
-        ->select('id', 'name', 'phone', 'email', 'status', 'owner_id', 'created_at')
-        ->get();
+        $allClients = User::whereIn('role_id', $validStatuses)
+            ->orderBy('created_at', 'DESC')
+            ->select('id', 'name', 'phone', 'email', 'status', 'owner_id', 'created_at')
+            ->get();
 
-    $subAccountsGrouped = $allClients
-        ->whereNotNull('owner_id')
-        ->groupBy('owner_id');
+        $subAccountsGrouped = $allClients
+            ->whereNotNull('owner_id')
+            ->groupBy('owner_id');
 
-    $mainClients = $allClients->whereNull('owner_id')->values();
+        $mainClients = $allClients->whereNull('owner_id')->values();
 
-    $mainClients = $mainClients->map(function ($client) use ($subAccountsGrouped) {
-        $subAccounts = $subAccountsGrouped->get($client->id)?->values() ?? collect();
+        $mainClients = $mainClients->map(function ($client) use ($subAccountsGrouped) {
+            $subAccounts = $subAccountsGrouped->get($client->id)?->values() ?? collect();
 
-        $clientArray = $client->toArray();
-        $clientArray['sub_accounts'] = $subAccounts->toArray();
-        $clientArray['sous_comptes_count'] = $subAccounts->count();
+            $clientArray = $client->toArray();
+            $clientArray['sub_accounts'] = $subAccounts->toArray();
+            $clientArray['sous_comptes_count'] = $subAccounts->count();
 
-        return $clientArray;
-    });
+            return $clientArray;
+        });
 
-    $perPage = 25;
-    $currentPage = $request->input('page', 1);
-    $itemsForCurrentPage = $mainClients->slice(($currentPage - 1) * $perPage, $perPage)->values();
+        $perPage = 25;
+        $currentPage = $request->input('page', 1);
+        $itemsForCurrentPage = $mainClients->slice(($currentPage - 1) * $perPage, $perPage)->values();
 
-    $paginatedClients = new \Illuminate\Pagination\LengthAwarePaginator(
-        $itemsForCurrentPage,
-        $mainClients->count(),
-        $perPage,
-        $currentPage,
-        ['path' => $request->url(), 'query' => $request->query()]
-    );
+        $paginatedClients = new \Illuminate\Pagination\LengthAwarePaginator(
+            $itemsForCurrentPage,
+            $mainClients->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
-    return response()->json([
-        "status" => "success",
-        "message" => "tous les clients",
-        "clients" => $paginatedClients
-    ]);
-}
-
+        return response()->json([
+            "status" => "success",
+            "message" => "tous les clients",
+            "clients" => $paginatedClients
+        ]);
+    }
 
 
     public function getAgents(Request $request)
     {
-        $agents = User::where('role_id', 1)
+        $agents = User::where('role_id', UserRole::MANAGER)
             ->orderBy('created_at', 'DESC')
             ->select('id', 'name', 'phone', 'email', 'status', 'created_at')
             ->paginate(25);
