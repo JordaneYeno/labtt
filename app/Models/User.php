@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Models\Abonnement;
-use Carbon\Carbon;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -45,12 +44,6 @@ class User extends Authenticatable implements JWTSubject
         'email_verified_at' => 'datetime',
         'created_at' => 'datetime:d M Y h:i:s',
     ];
-
-    // public function getCreatedAtAttribute($value)
-    // {
-    //     Carbon::setLocale('fr');
-    //     return Carbon::parse($value)->translatedFormat('d F Y à H:i');
-    // } // fr
 
     public function subUsers(): HasMany
     {
