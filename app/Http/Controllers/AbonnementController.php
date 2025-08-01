@@ -948,7 +948,8 @@ class AbonnementController extends Controller
 
         } else {
             // Si le statut est 'all', on récupère toutes les demandes pour tous les statuts possibles
-            $query->whereIn('demandes.status', $validStatuses)->where('demandes.status', '!=', ServiceStatus::RESET);
+            $query->whereIn('demandes.status', $validStatuses)->where('demandes.status', '!=', ServiceStatus::RESET
+        );
         }
 
         // Récupérer toutes les données sans pagination

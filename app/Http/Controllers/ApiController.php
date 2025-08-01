@@ -638,7 +638,7 @@ class ApiController extends Controller
     {
         $clients = User::where('role_id', 0)
             ->orderBy('created_at', 'DESC')
-            ->select('id', 'name', 'phone', 'email', 'status', 'created_at')
+            ->select('id', 'name', 'phone', 'email', 'status', 'owner_id', 'created_at')
             ->paginate(25);
         return response()->json([
             "status" => "success",
