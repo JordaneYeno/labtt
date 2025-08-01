@@ -634,18 +634,68 @@ class ApiController extends Controller
         return response()->json(['user' => $user]);
     }
 
+    // public function getClients(Request $request)
+    // {
+    //     $clients = User::where('role_id', 0)
+    //         ->orderBy('created_at', 'DESC')
+    //         ->select('id', 'name', 'phone', 'email', 'status', 'owner_id', 'created_at')
+    //         ->paginate(25);
+    //     return response()->json([
+    //         "status" => "success",
+    //         "message" => "tous les clients",
+    //         "clients" => $clients
+    //     ]);
+    // }
+
+
     public function getClients(Request $request)
     {
-        $clients = User::where('role_id', 0)
+        $validStatuses = [
+            // UserRole::USER,
+            // UserRole::BETA_TESTER,
+            0,
+            3
+        ];
+
+        $allClients = User::whereIn('role_id', $validStatuses)
             ->orderBy('created_at', 'DESC')
             ->select('id', 'name', 'phone', 'email', 'status', 'owner_id', 'created_at')
-            ->paginate(25);
+            ->get();
+
+        // Sous-comptes groupés par owner_id
+        $subAccountsGrouped = $allClients
+            ->whereNotNull('owner_id')
+            ->groupBy('owner_id');
+
+        // Clients principaux
+        $mainClients = $allClients->whereNull('owner_id')->values();
+
+        // Ajouter les sous-comptes + le count à chaque client principal
+        $mainClients->transform(function ($client) use ($subAccountsGrouped) {
+            $subAccounts = $subAccountsGrouped->get($client->id)?->values() ?? collect();
+            $client->sub_accounts = $subAccounts;
+            $client->sous_comptes_count = $subAccounts->count();
+            return $client;
+        });
+
+        // Paginer
+        $perPage = 25;
+        $currentPage = $request->input('page', 1);
+        $paginatedClients = new \Illuminate\Pagination\LengthAwarePaginator(
+            $mainClients->forPage($currentPage, $perPage),
+            $mainClients->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
         return response()->json([
             "status" => "success",
             "message" => "tous les clients",
-            "clients" => $clients
+            "clients" => $paginatedClients
         ]);
     }
+
 
     public function getAgents(Request $request)
     {
