@@ -46,11 +46,11 @@ class User extends Authenticatable implements JWTSubject
         'created_at' => 'datetime:d M Y h:i:s',
     ];
 
-    public function getCreatedAtAttribute($value)
-    {
-        Carbon::setLocale('fr');
-        return Carbon::parse($value)->translatedFormat('d F Y à H:i');
-    } // fr
+    // public function getCreatedAtAttribute($value)
+    // {
+    //     Carbon::setLocale('fr');
+    //     return Carbon::parse($value)->translatedFormat('d F Y à H:i');
+    // } // fr
 
     public function subUsers(): HasMany
     {
