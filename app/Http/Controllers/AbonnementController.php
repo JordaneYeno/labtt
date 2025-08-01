@@ -910,7 +910,7 @@ class AbonnementController extends Controller
         $validStatuses = [
             ServiceStatus::PENDING,
             ServiceStatus::ACCEPTED,
-            ServiceStatus::REJECTED,
+            ServiceStatus::REJECTED, 
             ServiceStatus::RESET,
         ];
 
