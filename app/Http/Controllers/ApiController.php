@@ -635,18 +635,18 @@ class ApiController extends Controller
         return response()->json(['user' => $user]);
     }
 
-    // public function getClients(Request $request)
-    // {
-    //     $clients = User::where('role_id', UserRole::USER)->where('owner_id', null)
-    //         ->orderBy('created_at', 'DESC')
-    //         ->select('id', 'name', 'phone', 'email', 'status', 'owner_id', 'created_at')
-    //         ->paginate(25);
-    //     return response()->json([
-    //         "status" => "success",
-    //         "message" => "tous les clients",
-    //         "clients" => $clients
-    //     ]);
-    // } // old
+    public function getClients(Request $request)
+    {
+        $clients = User::where('role_id', UserRole::USER)->where('owner_id', null)
+            ->orderBy('created_at', 'DESC')
+            ->select('id', 'name', 'phone', 'email', 'status', 'owner_id', 'created_at')
+            ->paginate(25);
+        return response()->json([
+            "status" => "success",
+            "message" => "tous les clients",
+            "clients" => $clients
+        ]);
+    } // old
 
     // public function getClients(Request $request)
     // {
@@ -695,49 +695,49 @@ class ApiController extends Controller
     // }
 
 
-    public function getClients(Request $request)
-    {
-        $validStatuses = [0, 3];
+    // public function getClients(Request $request)
+    // {
+    //     $validStatuses = [0, 3];
 
-        $allClients = User::whereIn('role_id', $validStatuses)
-            ->orderBy('created_at', 'DESC')
-            ->select('id', 'name', 'phone', 'email', 'status', 'owner_id', 'created_at')
-            ->get();
+    //     $allClients = User::whereIn('role_id', $validStatuses)
+    //         ->orderBy('created_at', 'DESC')
+    //         ->select('id', 'name', 'phone', 'email', 'status', 'owner_id', 'created_at')
+    //         ->get();
 
-        $subAccountsGrouped = $allClients
-            ->whereNotNull('owner_id')
-            ->groupBy('owner_id');
+    //     $subAccountsGrouped = $allClients
+    //         ->whereNotNull('owner_id')
+    //         ->groupBy('owner_id');
 
-        $mainClients = $allClients->whereNull('owner_id')->values();
+    //     $mainClients = $allClients->whereNull('owner_id')->values();
 
-        $mainClients = $mainClients->map(function ($client) use ($subAccountsGrouped) {
-            $subAccounts = $subAccountsGrouped->get($client->id)?->values() ?? collect();
+    //     $mainClients = $mainClients->map(function ($client) use ($subAccountsGrouped) {
+    //         $subAccounts = $subAccountsGrouped->get($client->id)?->values() ?? collect();
 
-            $clientArray = $client->toArray();
-            $clientArray['sub_accounts'] = $subAccounts->toArray();
-            $clientArray['sous_comptes_count'] = $subAccounts->count();
+    //         $clientArray = $client->toArray();
+    //         $clientArray['sub_accounts'] = $subAccounts->toArray();
+    //         $clientArray['sous_comptes_count'] = $subAccounts->count();
 
-            return $clientArray;
-        });
+    //         return $clientArray;
+    //     });
 
-        $perPage = 25;
-        $currentPage = $request->input('page', 1);
-        $itemsForCurrentPage = $mainClients->slice(($currentPage - 1) * $perPage, $perPage)->values();
+    //     $perPage = 25;
+    //     $currentPage = $request->input('page', 1);
+    //     $itemsForCurrentPage = $mainClients->slice(($currentPage - 1) * $perPage, $perPage)->values();
 
-        $paginatedClients = new \Illuminate\Pagination\LengthAwarePaginator(
-            $itemsForCurrentPage,
-            $mainClients->count(),
-            $perPage,
-            $currentPage,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
+    //     $paginatedClients = new \Illuminate\Pagination\LengthAwarePaginator(
+    //         $itemsForCurrentPage,
+    //         $mainClients->count(),
+    //         $perPage,
+    //         $currentPage,
+    //         ['path' => $request->url(), 'query' => $request->query()]
+    //     );
 
-        return response()->json([
-            "status" => "success",
-            "message" => "tous les clients",
-            "clients" => $paginatedClients
-        ]);
-    }
+    //     return response()->json([
+    //         "status" => "success",
+    //         "message" => "tous les clients",
+    //         "clients" => $paginatedClients
+    //     ]);
+    // }
 
 
     public function getAgents(Request $request)
