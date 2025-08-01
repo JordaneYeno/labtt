@@ -649,52 +649,49 @@ class ApiController extends Controller
 
 
     public function getClients(Request $request)
-    {
-        $validStatuses = [
-            // UserRole::USER,
-            // UserRole::BETA_TESTER,
-            0,
-            3
-        ];
+{
+    $validStatuses = [0, 3];
 
-        $allClients = User::whereIn('role_id', $validStatuses)
-            ->orderBy('created_at', 'DESC')
-            ->select('id', 'name', 'phone', 'email', 'status', 'owner_id', 'created_at')
-            ->get();
+    $allClients = User::whereIn('role_id', $validStatuses)
+        ->orderBy('created_at', 'DESC')
+        ->select('id', 'name', 'phone', 'email', 'status', 'owner_id', 'created_at')
+        ->get();
 
-        // Sous-comptes groupés par owner_id
-        $subAccountsGrouped = $allClients
-            ->whereNotNull('owner_id')
-            ->groupBy('owner_id');
+    $subAccountsGrouped = $allClients
+        ->whereNotNull('owner_id')
+        ->groupBy('owner_id');
 
-        // Clients principaux
-        $mainClients = $allClients->whereNull('owner_id')->values();
+    $mainClients = $allClients->whereNull('owner_id')->values();
 
-        // Ajouter les sous-comptes + le count à chaque client principal
-        $mainClients->transform(function ($client) use ($subAccountsGrouped) {
-            $subAccounts = $subAccountsGrouped->get($client->id)?->values() ?? collect();
-            $client->sub_accounts = $subAccounts;
-            $client->sous_comptes_count = $subAccounts->count();
-            return $client;
-        });
+    $mainClients = $mainClients->map(function ($client) use ($subAccountsGrouped) {
+        $subAccounts = $subAccountsGrouped->get($client->id)?->values() ?? collect();
 
-        // Paginer
-        $perPage = 25;
-        $currentPage = $request->input('page', 1);
-        $paginatedClients = new \Illuminate\Pagination\LengthAwarePaginator(
-            $mainClients->forPage($currentPage, $perPage),
-            $mainClients->count(),
-            $perPage,
-            $currentPage,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
+        $clientArray = $client->toArray();
+        $clientArray['sub_accounts'] = $subAccounts->toArray();
+        $clientArray['sous_comptes_count'] = $subAccounts->count();
 
-        return response()->json([
-            "status" => "success",
-            "message" => "tous les clients",
-            "clients" => $paginatedClients
-        ]);
-    }
+        return $clientArray;
+    });
+
+    $perPage = 25;
+    $currentPage = $request->input('page', 1);
+    $itemsForCurrentPage = $mainClients->slice(($currentPage - 1) * $perPage, $perPage)->values();
+
+    $paginatedClients = new \Illuminate\Pagination\LengthAwarePaginator(
+        $itemsForCurrentPage,
+        $mainClients->count(),
+        $perPage,
+        $currentPage,
+        ['path' => $request->url(), 'query' => $request->query()]
+    );
+
+    return response()->json([
+        "status" => "success",
+        "message" => "tous les clients",
+        "clients" => $paginatedClients
+    ]);
+}
+
 
 
     public function getAgents(Request $request)
