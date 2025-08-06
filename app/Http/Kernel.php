@@ -69,5 +69,7 @@ class Kernel extends HttpKernel
         'admin.super' => \App\Http\Middleware\SuperAdminMiddleware::class,
         'client.activate' => \App\Http\Middleware\ClientMiddleware::class,
         'status.client' => \App\Http\Middleware\StatusMiddleware::class,
+        // 'restrict.to.subuser.type' => \App\Http\Middleware\RestrictToSubUser::class,
+        'subuser' => \App\Http\Middleware\RestrictToSubUser::class,
     ];
 }

@@ -442,7 +442,8 @@ class NotificationController extends Controller
 
                             $curl = curl_init();
                             curl_setopt_array($curl, [
-                                CURLOPT_URL => 'https://devdocks.bakoai.pro/api/smpp/send',
+
+                                CURLOPT_URL => env('GATEWAYAPI_SMS', 'https://devdocks.bakoai.pro/api/smpp/send'),
                                 CURLOPT_RETURNTRANSFER => true,
                                 CURLOPT_SSL_VERIFYPEER => false, // off ssl
                                 CURLOPT_ENCODING => '',
@@ -870,7 +871,8 @@ class NotificationController extends Controller
 // dd($data);
                     $curl = curl_init();
                     curl_setopt_array($curl, [
-                        CURLOPT_URL => 'https://devdocks.bakoai.pro/api/smpp/send',
+
+                                CURLOPT_URL => env('GATEWAYAPI_SMS', 'https://devdocks.bakoai.pro/api/smpp/send'),
                         CURLOPT_RETURNTRANSFER => true,
                         CURLOPT_SSL_VERIFYPEER => false, // off ssl
                         CURLOPT_ENCODING => '',
@@ -2181,7 +2183,8 @@ class NotificationController extends Controller
                 if ($notification->notify == 0 && $notification->chrone == 1) {
                     $curl = curl_init();
                     curl_setopt_array($curl, [
-                        CURLOPT_URL => 'https://devdocks.bakoai.pro/api/smpp/send',
+
+                                CURLOPT_URL => env('GATEWAYAPI_SMS', 'https://devdocks.bakoai.pro/api/smpp/send'),
                         CURLOPT_RETURNTRANSFER => true,
                         CURLOPT_SSL_VERIFYPEER => false, // off ssl
                         CURLOPT_ENCODING => "",

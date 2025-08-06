@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\ServiceStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Abonnement;
 use App\Models\Message;
 use App\Models\User;
 use App\Services\PaginationService;
@@ -145,7 +146,6 @@ class UserController extends Controller
         $owner = $this->getOwnerOrSelf($request);
         return $owner->abonnement;
     }
-
     // Retourne le solde
     public function solde(Request $request)
     {
@@ -156,8 +156,15 @@ class UserController extends Controller
         ], Response::HTTP_OK);
     }
 
+    // Retourne le statut abonnement
+    public function sub_userStatusSubscription(Request $request)
+    {
+        $abonnement = $this->getAbonnement($request);
+        return $abonnement && ServiceStatus::getStatusText($abonnement->status);
+    }
+
     // Retourne l'état de WhatsApp
-    public function etatWhatsApp(Request $request)
+    public function sub_userStatusWhatsApp(Request $request)
     {
         $abonnement = $this->getAbonnement($request);
 
@@ -168,7 +175,7 @@ class UserController extends Controller
     }
 
     // Retourne l'état de SMS
-    public function etatSms(Request $request)
+    public function sub_userStatusSms(Request $request)
     {
         $abonnement = $this->getAbonnement($request);
 
@@ -179,7 +186,7 @@ class UserController extends Controller
     }
 
     // Retourne l'état de Email
-    public function etatEmail(Request $request)
+    public function sub_userStatusEmail(Request $request)
     {
         $abonnement = $this->getAbonnement($request);
 
@@ -190,7 +197,7 @@ class UserController extends Controller
     }
 
     // Retourne tous les états en une seule fois
-    public function etatServices(Request $request)
+    public function sub_userStatusServices(Request $request)
     {
         $abonnement = $this->getAbonnement($request);
 

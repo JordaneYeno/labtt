@@ -207,6 +207,7 @@ class Abonnement extends Model
             ], 200);
         }
     }
+    
 
     public function getStatut()
     {
@@ -303,7 +304,7 @@ class Abonnement extends Model
                 return 'Statut inconnu';
         }
     }
-    
+
     public function getSmsStatus($requestUserId)
     {
         $userId = $requestUserId;
