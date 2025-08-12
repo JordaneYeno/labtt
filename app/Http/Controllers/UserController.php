@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Enums\ServiceStatus;
 use App\Http\Controllers\Controller;
-use App\Models\Abonnement;
 use App\Models\Message;
 use App\Models\User;
 use App\Services\PaginationService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
@@ -244,43 +245,102 @@ class UserController extends Controller
         ], 200);
     }
 
+    // public function getMessages(Request $request)
+    // {
+    //     $user = Auth::user();
+
+    //     // Récupère le compte principal si l'utilisateur est secondaire
+    //     $userId = $user->owner_id !== null ? $user->owner->id : $user->id;
+
+    //     try {
+    //         $paginate = new PaginationService();
+    //             $messages = Message::leftJoin('users', 'users.id', '=', 'messages.user_id')
+    //             ->where('messages.user_id', $userId)  // Filtrage des messages par utilisateur
+    //             ->select(
+    //                 'messages.id',
+    //                 'users.name',
+    //                 'messages.message',
+    //                 'messages.created_at',
+    //                 'messages.canal',
+    //                 'messages.date_envoie',
+    //                 'messages.title',
+    //                 'messages.destinataires',
+    //             )
+    //             ->orderBy('created_at', 'DESC');
+    //         if ($messages->get()->isEmpty()) {
+    //             return response()->json([
+    //                 'statut' => 'result error',
+    //                 'message' => 'no result found'
+    //             ], 200);
+    //         }
+    //         return response()->json([
+    //             'statut' => 'success',
+    //             "response" => $paginate->setPaginate($messages, $request->perPage),
+    //         ], 200);
+    //     } catch (Throwable $th) {
+    //         return response()->json([
+    //             'statut' => 'error',
+    //             'message error' => $th
+    //         ], 500);
+    //     }
+    // } // old
+
+
     public function getMessages(Request $request)
     {
-        $user = Auth::user();
-
-        // Récupère le compte principal si l'utilisateur est secondaire
-        $userId = $user->owner_id !== null ? $user->owner->id : $user->id;
-
+        $paginate = new PaginationService();
         try {
-            $paginate = new PaginationService();
-                $messages = Message::leftJoin('users', 'users.id', '=', 'messages.user_id')
-                ->where('messages.user_id', $userId)  // Filtrage des messages par utilisateur
+            $user = Auth::user();
+            $userId = $user->owner_id !== null ? $user->owner->id : $user->id;
+
+            $perPage = $request->perPage ? $request->perPage : 25;
+
+            $messages = Message::leftJoin('users', 'users.id', '=', 'messages.user_id')
+                ->where('messages.user_id', $userId)
                 ->select(
                     'messages.id',
-                    'users.name',
+                    'messages.ed_reference',
+                    'messages.credit',
+                    'messages.credit',
+                    'messages.status',
+                    'messages.finish',
                     'messages.message',
-                    'messages.created_at',
                     'messages.canal',
-                    'messages.date_envoie',
                     'messages.title',
                     'messages.destinataires',
+                    'messages.created_at',
+                    'messages.start',
+                    'messages.date_envoie'
                 )
-                ->orderBy('created_at', 'DESC');
-            if ($messages->get()->isEmpty()) {
+                ->orderBy('created_at', 'DESC')
+                ->paginate($perPage);
+
+            $messages->transform(function ($mess) {
+                $recipients = DB::table('notifications')
+                    ->where('message_id', $mess->id)
+                    ->select('destinataire', 'delivery_status', 'canal')->get();
+                $mess->destinataires = $recipients;
+                return $mess;
+            });
+
+            // return $messages;
+            if (!$messages) {
                 return response()->json([
-                    'statut' => 'result error',
-                    'message' => 'no result found'
+                    'statut' => 'error',
+                    'message' => 'Aucun résultat trouvé'
+                ], 200);
+            } else {
+                return response()->json([
+                    'statut' => 'success',
+                    'userName' => $user->name,
+                    "response" => $messages,
                 ], 200);
             }
+        } catch (Exception $th) {
             return response()->json([
-                'statut' => 'success',
-                "response" => $paginate->setPaginate($messages, $request->perPage),
-            ], 200);
-        } catch (Throwable $th) {
-            return response()->json([
-                'statut' => 'error',
-                'message error' => $th
-            ], 500);
+                'statut' => $th,
+                'message' => 'une erreur s\'est produite veuillez reessayer'
+            ]);
         }
     }
 }

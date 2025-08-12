@@ -1257,21 +1257,204 @@ class NotificationController extends Controller
         Message::where('id', $messageId)->delete();
     }
 
+    // public function verifySolde(Request $request)
+    // {
+    //     if (!User::isActivate() && !User::isSuperAdmin()) :
+    //         return response()->json(['status' => 'echec', 'message' => 'Vérifier que votre compte est activé et que vous avez enregistré au moins un service.'], 200);
+    //     endif;
+    //     $solde = (new Abonnement)->getSolde();
+    //     $total = 0;
+    //     $contacts = $request->contacts;
+    //     $whatsapp = $email = $sms = false;
+    //     $smsTotal = $emailTotal = $whatsappTotal = $totalMedia = 0;
+    //     $user = User::getCurrentUSer();
+    //     $canal = '';
+
+    //     $message = $this->createMessage($user->id, $request->title, $request->message, $request->canal, $request->date_envoie);
+    //     $request->hasFile('banner') ? $this->storeFile($message->id, $request->file('banner'), $user->id, false) : null;
+
+    //     $allabonnements = Abonnement::get();
+    //     $signature = $allabonnements->where('user_id', $message->user_id);
+    //     $userDeviceId = (new Abonnement)->getCurrentWassengerDeviceWithoutAuth($message->user_id);
+
+    //     try {
+    //         $destinatairesWhatsapp = explode(',', $contacts['whatsapp']);
+    //         $destinatairesEmail = explode(',', $contacts['emails']);
+    //         $destinatairesSms = explode(',', $contacts['sms']);
+
+    //         // Facturer les media WhatsApp
+    //         $totalMedia = count($destinatairesWhatsapp) * (count(Fichier::where('message_id', $message->id)->pluck('lien')) * (new Tarifications)->getWhatsappMediaPrice('media'));
+
+    //         if ($contacts['whatsapp'] != '') {
+
+    //             if (Param::getStatusWhatsapp() == 0) {
+    //                 $this->deleteMessage($message->id);
+    //                 return response()->json([
+    //                     'status' => 'echec',
+    //                     'service' => 'error',
+    //                     'message' => 'Service whatsapp désactivé',
+    //                 ]);
+    //             }
+
+    //             if ($userDeviceId === null) {
+    //                 return response()->json([
+    //                     'status' => 'error',
+    //                     'message' => 'Device introuvable.',
+    //                 ]);
+    //             }
+
+    //             // $total += $whatsappTotal = count($destinatairesWhatsapp) * (new Tarifications)->getWhatsappPrice();
+    //             $total += $whatsappTotal = count($destinatairesWhatsapp) * (new Tarifications)->getWhatsappPrice() + $totalMedia;
+    //             $isSendWhatsapp = $this->createWhatsapp($destinatairesWhatsapp, $message);
+    //             if (gettype($isSendWhatsapp) == 'boolean') :
+    //                 $canal .= ' whatsapp ';
+    //                 $whatsapp = true;
+    //                 $this->canSend = true;
+    //             else :
+    //                 $this->deleteMessage($message->id);
+    //                 return $isSendWhatsapp;
+    //             endif;
+    //         }
+
+    //         if ($contacts['sms'] != '') {
+
+    //             if (Param::getStatusSms() == 0) {
+    //                 $this->deleteMessage($message->id);
+    //                 return response()->json([
+    //                     'status' => 'echec',
+    //                     'service' => 'error',
+    //                     'message' => 'Service sms désactivé',
+    //                 ]);
+    //             }
+
+    //             $smsCount = (new SmsCount)->countSmsSend(strip_tags($request->message));
+    //             $total += $smsTotal = ((new Tarifications)->getSmsPrice() * $smsCount) * count($destinatairesSms);
+    //             $isSendSms = $this->createSms($destinatairesSms, $message, $signature->pluck('sms')->first());
+    //             if (gettype($isSendSms) == 'boolean') :
+    //                 $canal .= ' sms ';
+    //                 $sms = true;
+    //                 $this->canSend = true;
+    //             else :
+    //                 $this->deleteMessage($message->id);
+    //                 return $isSendSms;
+    //             endif;
+    //         }
+
+    //         if ($contacts['emails'] != '') {
+    //             if (Param::getStatusEmail() == 0) {
+    //                 $this->deleteMessage($message->id);
+    //                 return response()->json([
+    //                     'status' => 'echec',
+    //                     'service' => 'error',
+    //                     'message' => 'Service email désactivé',
+    //                 ]);
+    //             }
+
+    //             if ((Abonnement::getAbo($user->id))->email_status == 0) {
+    //                 $this->deleteMessage($message->id);
+    //                 return response()->json([
+    //                     'status' => 'echec',
+    //                     'service' => 'error',
+    //                     'message' => 'Service email désactivé',
+    //                 ]);
+    //             }
+
+    //             $data["title"] = $request->title;
+    //             $data["body"] = $request->message;
+    //             $data['template'] = $request->template ?? 0;
+    //             $data['from_name'] = 'BAKOAI';
+
+    //             $data["localisation"] = $signature->pluck('entreprese_localisation')->first();
+    //             $data["contact"] = $signature->pluck('entreprese_contact')->first();
+    //             $data["from_name"] = $signature->pluck('entreprese_name')->first();
+    //             $data["ville"] = $signature->pluck('entreprese_ville')->first();
+    //             $data["from_email"] = $signature->pluck('email')->first();
+    //             $data["imagePath"] = $signature->pluck('logo')->first();
+    //             $data["mail"] = $signature->pluck('email')->first();
+
+    //             if ($data["imagePath"] == null || $data["contact"] == null || $data["ville"] == null || $data["mail"] == null || $data["from_name"] == null) {
+    //                 $this->deleteMessage($message->id);
+    //                 return response()->json([
+    //                     'status' => 'echec',
+    //                     'signature' => 'error',
+    //                     'message' => 'paramètre signature vide',
+    //                 ]);
+    //             }
+
+    //             $total += $emailTotal = count($destinatairesEmail) * (new Tarifications)->getEmailPrice();
+    //             $isSendMail = $this->createEmail($destinatairesEmail, $message, $signature->pluck('email')->first());
+    //             if (gettype($isSendMail) == 'boolean') :
+    //                 $canal .= ' email ';
+    //                 $email = true;
+    //                 $this->canSend = true;
+    //             else :
+    //                 $this->deleteMessage($message->id);
+    //                 return $isSendMail;
+    //             endif;
+    //         }
+
+    //         $solde = User::isSuperAdmin() ? 10000000000 : $solde;
+    //         if (!$this->canSend) :
+    //             return response()->json(['status' => 'echec', 'message' => 'aucun contacts trouvé']);
+    //         endif;
+    //         if ($total <= $solde) { //ici
+    //             Message::where('id', $message->id)->update(['canal' => $canal]);
+    //             if ($whatsapp) :
+    //                 // Abonnement::factureWhatsapp(count($destinatairesWhatsapp), $whatsappTotal, $message->id);
+    //                 Abonnement::__factureWhatsapp(count($destinatairesWhatsapp), $total,$totalMedia, $message->id);
+    //             endif;
+    //             if ($sms) :
+    //                 Abonnement::factureSms(count($destinatairesSms), $smsTotal, $message->id, $message->message);
+    //             endif;
+    //             if ($email) :
+    //                 Abonnement::factureEmail(count($destinatairesEmail), $emailTotal, $message->id);
+    //             endif;
+    //             $transaction = (new Transaction)->addTransactionAfterSendMessage('debit', $total, $message->id, $emailTotal, $smsTotal, $whatsappTotal, Abonnement::getSolde());
+    //             return response()->json([
+    //                 'status' => 'success',
+    //                 'message' => 'Votre campagne a été lancée avec succès',
+    //                 'idx' => $message->ed_reference,
+    //                 'total_paye' => $total,
+    //                 'ancien_solde' => $solde,
+    //                 'nouveau_solde' => Abonnement::getSolde(),
+    //             ], 200);
+    //         }
+
+    //         $this->deleteMessage($message->id);
+    //         return response()->json([
+    //             'status' => 'echec',
+    //             'message' => 'Votre solde est insuffisant pour effectuer cette campagne',
+    //             'prix_whatsapp' => $whatsappTotal,
+    //             'prix_email' => $emailTotal,
+    //             'prix_sms' => $smsTotal,
+    //             'total' => $total,
+    //             'solde' => $solde,
+    //         ]);
+    //     } catch (Exception $th) {
+    //         return $th;
+    //     }
+    // } // old
+
+
+    // public function verifySolde_sub(Request $request)
     public function verifySolde(Request $request)
     {
-        if (!User::isActivate() && !User::isSuperAdmin()) :
+        $user = User::getCurrentUSer();
+        $clientId = $user->owner_id === null ? $user->id : $user->owner_id;
+
+        if (!User::isActivate_sub($clientId) && !User::isSuperAdmin()) :
             return response()->json(['status' => 'echec', 'message' => 'Vérifier que votre compte est activé et que vous avez enregistré au moins un service.'], 200);
         endif;
-        $solde = (new Abonnement)->getSolde();
+        // $solde = (new Abonnement)->getSolde();
+        $solde = (new Abonnement)->__getSolde($clientId);
         $total = 0;
         $contacts = $request->contacts;
         $whatsapp = $email = $sms = false;
         $smsTotal = $emailTotal = $whatsappTotal = $totalMedia = 0;
-        $user = User::getCurrentUSer();
         $canal = '';
 
-        $message = $this->createMessage($user->id, $request->title, $request->message, $request->canal, $request->date_envoie);
-        $request->hasFile('banner') ? $this->storeFile($message->id, $request->file('banner'), $user->id, false) : null;
+        $message = $this->createMessage($clientId, $request->title, $request->message, $request->canal, $request->date_envoie);
+        $request->hasFile('banner') ? $this->storeFile($message->id, $request->file('banner'), $clientId, false) : null;
 
         $allabonnements = Abonnement::get();
         $signature = $allabonnements->where('user_id', $message->user_id);
@@ -1304,7 +1487,7 @@ class NotificationController extends Controller
                 }
 
                 // $total += $whatsappTotal = count($destinatairesWhatsapp) * (new Tarifications)->getWhatsappPrice();
-                $total += $whatsappTotal = count($destinatairesWhatsapp) * (new Tarifications)->getWhatsappPrice() + $totalMedia;
+                $total += $whatsappTotal = count($destinatairesWhatsapp) * (new Tarifications)->getWhatsappPrice(/*User::getTarification_sub($clientId)*/) + $totalMedia;
                 $isSendWhatsapp = $this->createWhatsapp($destinatairesWhatsapp, $message);
                 if (gettype($isSendWhatsapp) == 'boolean') :
                     $canal .= ' whatsapp ';
@@ -1328,7 +1511,7 @@ class NotificationController extends Controller
                 }
 
                 $smsCount = (new SmsCount)->countSmsSend(strip_tags($request->message));
-                $total += $smsTotal = ((new Tarifications)->getSmsPrice() * $smsCount) * count($destinatairesSms);
+                $total += $smsTotal = ((new Tarifications)->getSmsPrice(/*User::getTarification_sub($clientId)*/) * $smsCount) * count($destinatairesSms);
                 $isSendSms = $this->createSms($destinatairesSms, $message, $signature->pluck('sms')->first());
                 if (gettype($isSendSms) == 'boolean') :
                     $canal .= ' sms ';
@@ -1350,7 +1533,8 @@ class NotificationController extends Controller
                     ]);
                 }
 
-                if ((Abonnement::getAbo($user->id))->email_status == 0) {
+                // if ((Abonnement::getAbo($clientId))->email_status == 0) {
+                if ((Abonnement::getAbo($message->user_id))->email_status == 0) {
                     $this->deleteMessage($message->id);
                     return response()->json([
                         'status' => 'echec',
@@ -1381,7 +1565,7 @@ class NotificationController extends Controller
                     ]);
                 }
 
-                $total += $emailTotal = count($destinatairesEmail) * (new Tarifications)->getEmailPrice();
+                $total += $emailTotal = count($destinatairesEmail) * (new Tarifications)->getEmailPrice(/*User::getTarification_sub($clientId)*/);
                 $isSendMail = $this->createEmail($destinatairesEmail, $message, $signature->pluck('email')->first());
                 if (gettype($isSendMail) == 'boolean') :
                     $canal .= ' email ';
@@ -1409,14 +1593,15 @@ class NotificationController extends Controller
                 if ($email) :
                     Abonnement::factureEmail(count($destinatairesEmail), $emailTotal, $message->id);
                 endif;
-                $transaction = (new Transaction)->addTransactionAfterSendMessage('debit', $total, $message->id, $emailTotal, $smsTotal, $whatsappTotal, Abonnement::getSolde());
+                // $transaction = (new Transaction)->addTransactionAfterSendMessage('debit', $total, $message->id, $emailTotal, $smsTotal, $whatsappTotal, Abonnement::getSolde());
+                $transaction = (new Transaction)->addTransactionAfterSendMessage($clientId, 'debit', $total, $message->id, $emailTotal, $smsTotal, $whatsappTotal, Abonnement::__getSolde($clientId));
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Votre campagne a été lancée avec succès',
                     'idx' => $message->ed_reference,
                     'total_paye' => $total,
                     'ancien_solde' => $solde,
-                    'nouveau_solde' => Abonnement::getSolde(),
+                    'nouveau_solde' => Abonnement::__getSolde($clientId),
                 ], 200);
             }
 
@@ -1435,9 +1620,51 @@ class NotificationController extends Controller
         }
     }
 
+    // public function createEmail($destinataires, $message, $email_awt)
+    // {
+    //     if (!User::isSuperAdmin() && (new Abonnement)->getEmailStatus(auth()->user()->id)->getData()->email_status != Abonnement::setAttributes(ServiceStatus::ACCEPTED)) {
+    //         return response()->json([
+    //             'status' => 'echec',
+    //             'message' => 'Veuillez configurer votre adresse email de campagne',
+    //         ]);
+    //     }
+    //     Message::where('id', $message->id)->update(['email_awt' => $email_awt]);
+    //     foreach ($destinataires as $dest) {
+    //         $verify_mail = filter_var($dest, FILTER_VALIDATE_EMAIL);
+    //         if (!$verify_mail) {
+    //             $this->canSend = false;
+    //             return response()->json([
+    //                 'status' => 'echec',
+    //                 'message' => 'Email non valide',
+    //                 'email' => $dest,
+    //             ], Response::HTTP_OK);
+    //         }
+
+    //         $message->date_envoie === null
+    //             ?
+    //             Notification::create([
+    //                 'destinataire' => $dest,
+    //                 'canal' => 'email',
+    //                 'message_id' => $message->id,
+    //             ])
+    //             :
+    //             Notification::create([
+    //                 'destinataire' => $dest,
+    //                 'canal' => 'email',
+    //                 'notify' => 2,  //  gateway api  #partenaires
+    //                 'message_id' => $message->id,
+    //             ]);
+    //     }
+
+    //     return true;
+    // } // old
+
     public function createEmail($destinataires, $message, $email_awt)
     {
-        if (!User::isSuperAdmin() && (new Abonnement)->getEmailStatus(auth()->user()->id)->getData()->email_status != Abonnement::setAttributes(ServiceStatus::ACCEPTED)) {
+        $user = User::getCurrentUSer();
+        $clientId = $user->owner_id === null ? $user->id : $user->owner_id;
+
+        if (!User::isSuperAdmin() && (new Abonnement)->getEmailStatus($clientId)->getData()->email_status != Abonnement::setAttributes(ServiceStatus::ACCEPTED)) {
             return response()->json([
                 'status' => 'echec',
                 'message' => 'Veuillez configurer votre adresse email de campagne',
@@ -1474,9 +1701,50 @@ class NotificationController extends Controller
         return true;
     }
 
+    // public function createWhatsapp($dests, $message) //see
+    // {
+    //     if (!User::isSuperAdmin() && (new Abonnement)->getWhatsappStatus(auth()->user()->id)->getData()->whatsapp_status != Abonnement::setAttributes(ServiceStatus::ACCEPTED)) {
+    //         return response()->json([
+    //             'status' => 'echec',
+    //             'message' => 'Veuillez configurer votre numéro whatsapp de campagne',
+    //         ]);
+    //     }
+
+    //     foreach ($dests as $dest) {
+    //         if (!is_numeric($dest)) {
+    //             $this->canSend = false;
+    //             return response()->json([
+    //                 'status' => 'error',
+    //                 'message' => 'numéro non valide',
+    //                 'numéro' => $this->verifymNumber($dest),
+    //             ], Response::HTTP_OK);
+    //         }
+
+    //         $message->date_envoie === null
+    //             ?
+    //             Notification::create([
+    //                 'destinataire' => $dest,
+    //                 'canal' => 'whatsapp',
+    //                 'message_id' => $message->id,
+    //             ])
+    //             :
+    //             Notification::create([
+    //                 'destinataire' => $dest,
+    //                 'canal' => 'whatsapp',
+    //                 'notify' => 2,  //  gateway api  #partenaires
+    //                 'message_id' => $message->id,
+    //             ]);
+    //     }
+
+    //     return true;
+    // }
+
     public function createWhatsapp($dests, $message) //see
     {
-        if (!User::isSuperAdmin() && (new Abonnement)->getWhatsappStatus(auth()->user()->id)->getData()->whatsapp_status != Abonnement::setAttributes(ServiceStatus::ACCEPTED)) {
+        $user = User::getCurrentUSer();
+        $clientId = $user->owner_id === null ? $user->id : $user->owner_id;
+
+        if (!User::isSuperAdmin() && (new Abonnement)->getWhatsappStatus($clientId)->getData()->whatsapp_status != Abonnement::setAttributes(ServiceStatus::ACCEPTED)) {
             return response()->json([
                 'status' => 'echec',
                 'message' => 'Veuillez configurer votre numéro whatsapp de campagne',
@@ -1512,9 +1780,51 @@ class NotificationController extends Controller
         return true;
     }
 
+    // public function createSms($destinataires, $message, $code_textopro)
+    // {
+    //     if (!User::isSuperAdmin() && (new Abonnement)->getSmsStatus(auth()->user()->id)->getData()->sms_status != Abonnement::setAttributes(ServiceStatus::ACCEPTED)) {
+    //         return response()->json([
+    //             'status' => 'echec',
+    //             'message' => 'Veuillez configurer votre code sms de campagne',
+    //         ]);
+    //     }
+
+    //     Message::where('id', $message->id)->update(['code_textopro' => $code_textopro]);
+    //     foreach ($destinataires as $dest) {
+    //         if (!is_numeric($dest) || (strlen($dest)) > 12 || strlen($dest) < 8) {
+    //             $this->canSend = false;
+    //             return response()->json([
+    //                 'status' => 'error',
+    //                 'message' => 'numéro non valide',
+    //                 'numéro' => $this->verifymNumber($dest),
+    //             ], Response::HTTP_OK);
+    //         }
+
+    //         $message->date_envoie === null
+    //             ?
+    //             Notification::create([
+    //                 'destinataire' => $dest,
+    //                 'canal' => 'sms',
+    //                 'message_id' => $message->id,
+    //             ])
+    //             :
+    //             Notification::create([
+    //                 'destinataire' => $dest,
+    //                 'canal' => 'sms',
+    //                 'notify' => 2,  //  gateway api  #partenaires
+    //                 'message_id' => $message->id,
+    //             ]);
+    //     }
+
+    //     return true;
+    // }
+
     public function createSms($destinataires, $message, $code_textopro)
     {
-        if (!User::isSuperAdmin() && (new Abonnement)->getSmsStatus(auth()->user()->id)->getData()->sms_status != Abonnement::setAttributes(ServiceStatus::ACCEPTED)) {
+        $user = User::getCurrentUSer();
+        $clientId = $user->owner_id === null ? $user->id : $user->owner_id;
+
+        if (!User::isSuperAdmin() && (new Abonnement)->getSmsStatus($clientId)->getData()->sms_status != Abonnement::setAttributes(ServiceStatus::ACCEPTED)) {
             return response()->json([
                 'status' => 'echec',
                 'message' => 'Veuillez configurer votre code sms de campagne',

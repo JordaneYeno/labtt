@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\FileController;
 use App\Http\Controllers\Auth\FacebookController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\SocialiteController;
 use App\Services\SendMailService;
 use Illuminate\Support\Facades\Route;
@@ -41,9 +42,9 @@ Route::get('/clear-cache', function() {
     $exitCode = Artisan::call('view:clear');
     $exitCode = Artisan::call('route:clear');
     $exitCode = Artisan::call('clear-compiled');
-    
+
      // Appel de la méthode dans FileController
-    (new FileController)->deleteFolderContents();     
+    (new FileController)->deleteFolderContents();
     return "Cache is cleared and optimise";
 });
 Route::get('emails', [SendMailService::class, 'submitMail']);
@@ -56,3 +57,8 @@ Route::get('/email' , function () {
 
 // Auth::routes();
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+
+Route::get('/download/{encrypted_id}', [ExportController::class, 'downloadEncryptedFile'])
+    ->name('download.encrypted.file')
+    ->middleware('signed'); // Important !

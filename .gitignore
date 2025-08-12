@@ -16,3 +16,10 @@ yarn-error.log
 /.vscode
 note.txt
 vendor.zip
+
+
+# dev not prod
+routes/api_old.php
+app/Models/ApiToken.php
+app/Http/Controllers/ApiTokenController.php
+database/migrations/2025_08_08_120248_create_api_tokens_table.php

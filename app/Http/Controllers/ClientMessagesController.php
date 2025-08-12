@@ -34,7 +34,7 @@ class ClientMessagesController extends Controller
                     'messages.date_envoie'
                 )
                 ->orderBy('created_at', 'DESC')
-                ->paginate($perPage);
+                ->paginate($perPage); 
 
             $messages->transform(function ($mess) {
                 $recipients = DB::table('notifications')

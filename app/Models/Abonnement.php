@@ -207,11 +207,18 @@ class Abonnement extends Model
             ], 200);
         }
     }
-    
+
 
     public function getStatut()
     {
         $status = Abonnement::where('user_id', auth()->user()->id)->pluck('status')->first();
+        return $status;
+    } // old
+
+
+    public function getStatut_sub($client_id)
+    {
+        $status = Abonnement::where('user_id', $client_id)->pluck('status')->first();
         return $status;
     }
 
@@ -312,7 +319,6 @@ class Abonnement extends Model
         return response()->json([
             'status' => 'success',
             'message' => 'statut du sms récupéré',
-            'abo' => $abonnement->sms_status,
             'sms_status' => $this->setAttributes($abonnement->sms_status)
         ]);
     }
@@ -550,44 +556,100 @@ class Abonnement extends Model
         }
     }
 
+    // public static function factureEmail($destinataires, $totalSold, $messageId)
+    // {
+    //     if (User::isSuperAdmin()) : return  null;
+    //     endif;
+    //     $user = auth()->user();
+    //     $totalSold = (new Tarifications)->getEmailPrice() * $destinataires;
+    //     $solde = Abonnement::where('user_id', $user->id)->decrement('solde', $totalSold);
+    //     return $solde;
+    // } // old
+
     public static function factureEmail($destinataires, $totalSold, $messageId)
     {
         if (User::isSuperAdmin()) : return  null;
         endif;
-        $user = auth()->user();
+        // $user = auth()->user();
+
+        $user = User::getCurrentUSer();
+        $clientId = $user->owner_id === null ? $user->id : $user->owner_id;
+
         $totalSold = (new Tarifications)->getEmailPrice() * $destinataires;
-        $solde = Abonnement::where('user_id', $user->id)->decrement('solde', $totalSold);
+        $solde = Abonnement::where('user_id', $clientId)->decrement('solde', $totalSold);
         return $solde;
     }
+
+    // public static function factureSms($destinataires, $totalSold, $messageId, $message)
+    // {
+    //     if (User::isSuperAdmin()) : return  null;
+    //     endif;
+    //     $smsCount = (new SmsCount)->countSmsSend(strip_tags($message));
+    //     $user = auth()->user();
+    //     $totalSold = ((new Tarifications)->getSmsPrice() * $smsCount) * $destinataires;
+    //     $solde = Abonnement::where('user_id', $user->id)->decrement('solde', $totalSold);
+    //     return $solde;
+    // } // old
 
     public static function factureSms($destinataires, $totalSold, $messageId, $message)
     {
         if (User::isSuperAdmin()) : return  null;
         endif;
         $smsCount = (new SmsCount)->countSmsSend(strip_tags($message));
-        $user = auth()->user();
+        // $user = auth()->user();
+
+        $user = User::getCurrentUSer();
+        $clientId = $user->owner_id === null ? $user->id : $user->owner_id;
+
         $totalSold = ((new Tarifications)->getSmsPrice() * $smsCount) * $destinataires;
-        $solde = Abonnement::where('user_id', $user->id)->decrement('solde', $totalSold);
+        $solde = Abonnement::where('user_id', $clientId)->decrement('solde', $totalSold);
         return $solde;
     }
+
+    // public static function factureWhatsapp($destinataires, $totalSold, $messageId)
+    // {
+    //     if (User::isSuperAdmin()) : return  null;
+    //     endif;
+    //     $user = auth()->user();
+    //     $totalSold = (new Tarifications)->getWhatsappPrice() * $destinataires;
+    //     $solde = Abonnement::where('user_id', $user->id)->decrement('solde', $totalSold);
+    //     return $solde;
+    // } // old
 
     public static function factureWhatsapp($destinataires, $totalSold, $messageId)
     {
         if (User::isSuperAdmin()) : return  null;
         endif;
-        $user = auth()->user();
+        // $user = auth()->user();
+
+        $user = User::getCurrentUSer();
+        $clientId = $user->owner_id === null ? $user->id : $user->owner_id;
+
         $totalSold = (new Tarifications)->getWhatsappPrice() * $destinataires;
-        $solde = Abonnement::where('user_id', $user->id)->decrement('solde', $totalSold);
+        $solde = Abonnement::where('user_id', $clientId)->decrement('solde', $totalSold);
         return $solde;
     }
+
+    // public static function __factureWhatsapp($destinataires, $totalSold, $factureMedia,$messageId)
+    // {
+    //     if (User::isSuperAdmin()) : return  null;
+    //     endif;
+    //     $user = auth()->user();
+    //     $totalSold = (new Tarifications)->getWhatsappPrice() * $destinataires + $factureMedia;
+    //     $solde = Abonnement::where('user_id', $user->id)->decrement('solde', $totalSold);
+    //     return $solde;
+    // } // old
 
     public static function __factureWhatsapp($destinataires, $totalSold, $factureMedia,$messageId)
     {
         if (User::isSuperAdmin()) : return  null;
         endif;
-        $user = auth()->user();
+        // $user = auth()->user();
+        $user = User::getCurrentUSer();
+        $clientId = $user->owner_id === null ? $user->id : $user->owner_id;
+
         $totalSold = (new Tarifications)->getWhatsappPrice() * $destinataires + $factureMedia;
-        $solde = Abonnement::where('user_id', $user->id)->decrement('solde', $totalSold);
+        $solde = Abonnement::where('user_id', $clientId)->decrement('solde', $totalSold);
         return $solde;
     }
 

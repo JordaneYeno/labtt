@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
 use App\Models\Abonnement;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -114,7 +115,8 @@ class User extends Authenticatable implements JWTSubject
     public static function isAdmin()
     {
         $user = auth()->user();
-        if ($user->role_id != 1) {
+        // if ($user->role_id != 1) {
+        if ($user->role_id != UserRole::MANAGER) {
             return true;
         }
         return false;
@@ -123,7 +125,8 @@ class User extends Authenticatable implements JWTSubject
     public static function isSuperAdmin(): bool
     {
         $user = auth()->user();
-        if ($user->role_id == 2) {
+        // if ($user->role_id == 2) {
+        if ($user->role_id == UserRole::ADMIN) {
             return true;
         }
         return false;
@@ -132,7 +135,7 @@ class User extends Authenticatable implements JWTSubject
 
     public static function __isSuperAdmin($usr_role): bool
     {
-        if ($usr_role == 2) {
+        if ($usr_role == UserRole::ADMIN) {
             return true;
         }
         return false;
@@ -160,6 +163,18 @@ class User extends Authenticatable implements JWTSubject
             return true;
         }
         return false;
+    } // old
+
+    public static function isActivate_sub($client_id)//: bool
+    {
+        $user = auth()->user();
+        $abonnement = new Abonnement();
+        $solde = $abonnement->getSolde();
+        $tarification = new Tarifications();
+        if ($user->status == 1 && $abonnement->getStatut_sub($client_id) == 1) {
+            return true;
+        }
+        return false;
     }
 
     public function statusActivate()
@@ -169,5 +184,11 @@ class User extends Authenticatable implements JWTSubject
             return true;
         }
         return false;
+    }
+
+    public static function getTarification_sub($userId)
+    {
+        $tarification = User::where('id', $userId)->pluck('tarification_id')->first(); dd($tarification);
+        return $tarification;
     }
 }

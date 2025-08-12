@@ -926,6 +926,7 @@ class AbonnementController extends Controller
             ->leftJoin('abonnements', 'abonnements.user_id', '=', 'demandes.user_id')
             ->select(
                 'demandes.id as demande_id',
+                'demandes.created_at',
                 'demandes.service',
                 'demandes.status',
                 'users.id as user_id',

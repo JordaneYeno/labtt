@@ -20,10 +20,10 @@ class Transaction extends Model
         'abonnement_id', 'type', 'montant', 'reference', 'message_id', 'paiement_id', 'nouveau_solde'
     ];
 
-    public function addTransactionAfterSendMessage($type, $amount, $messageId = null, $totalEmail, $totalSms, $totalWhatsapp, $newSolde, $paiementId = null)
+    public function addTransactionAfterSendMessage($userId, $type, $amount, $messageId = null, $totalEmail, $totalSms, $totalWhatsapp, $newSolde, $paiementId = null)
     {
         try {
-            $userId = auth()->user()->id;
+            // $userId = auth()->user()->id;
             $abonnementId = Abonnement::where('user_id', $userId)->select('id')->first();
             $paiement = Transaction::create([
                 'type' => $type,
@@ -66,8 +66,8 @@ class Transaction extends Model
     }
 
     // public function getTransactionClient($reference)
-    // {       
-    //     $montant = Tarifications::where('reference', $reference)->pulk('')->first(); 
+    // {
+    //     $montant = Tarifications::where('reference', $reference)->pulk('')->first();
     //     return $montant;
     // }
 }

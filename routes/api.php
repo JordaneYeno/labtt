@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminAbonnementController;
 use App\Http\Controllers\AbonnementController;
 use App\Http\Controllers\Api\FileController;
 use App\Http\Controllers\ApiController;
+use App\Http\Controllers\ApiTokenController;
 use App\Http\Controllers\AssistanceController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ExportController;
@@ -23,13 +24,15 @@ use Illuminate\Support\Facades\Route;
 
 
 
-Route::get('dec/recep/outfiles/{encrypted_id}', [ExportController::class, 'downloadEncryptedFile']);
+// Route::get('dec/recep/outfiles/{encrypted_id}', [ExportController::class, 'downloadEncryptedFile']);
+Route::get('download/encrypted/file/{encrypted_id}', [ExportController::class, 'downloadEncryptedFile'])->name('download.encrypted.file')->middleware('signed');
+
 
 Route::get('export', [ExportController::class, 'exportToExcel']);
 
-Route::post('add', [WaGroupController::class, 'addMembers']);
-Route::get('oauth', [SocialiteController::class, 'authenticate']);
-Route::post('/facebook/page-information', [FacebookPageController::class, 'getPageInformation']);
+// Route::post('add', [WaGroupController::class, 'addMembers']);
+// Route::get('oauth', [SocialiteController::class, 'authenticate']);
+// Route::post('/facebook/page-information', [FacebookPageController::class, 'getPageInformation']);
 
 // Route::group([
 //     'middleware' => 'api',
@@ -72,13 +75,14 @@ Route::post('paiement/callback', [PaymentConroller::class, 'receiveCallback']);
 
 Route::group(['middleware' => ['jwt.verify']], function () {
 
-    Route::group(['middleware' => ['subuser']], function () {
-        Route::get('/sub-users', [UserController::class, 'index']);       // Liste des users secondaires
-        Route::post('/sub-users', [UserController::class, 'store']);     // Créer un user secondaire
-        Route::get('/sub-users/{user}', [UserController::class, 'show']); // Détail d’un user
-        Route::put('/sub-users/{user}', [UserController::class, 'update']); // Mise à jour
-        Route::delete('/sub-users/{user}', [UserController::class, 'destroy']); // Suppression
 
+    Route::post('/sub-users', [UserController::class, 'store']);     // Créer un user secondaire
+    Route::get('/sub-users', [UserController::class, 'index']);       // Liste des users secondaires
+    // Route::get('/sub-users/{user}', [UserController::class, 'show']); // Détail d’un user
+    // Route::delete('/sub-users/{user}', [UserController::class, 'destroy']); // Suppression
+    Route::put('/sub-users/{user}', [UserController::class, 'update']); // Mise à jour
+
+    Route::group(['middleware' => ['subuser']], function () {
 
         Route::get('/sub-user/solde', [UserController::class, 'solde']);
         Route::prefix('sub-user/status')->group(function () {
@@ -124,6 +128,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::group(['middleware' => ['admin']], function () {
 
         Route::prefix('admin')->group(function () {
+
             Route::post('register/agent', [ApiController::class, 'registerAgent']);
 
             Route::prefix('assitance')->group(function () {
