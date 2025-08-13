@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Route;
 
 
 
-// Route::get('dec/recep/outfiles/{encrypted_id}', [ExportController::class, 'downloadEncryptedFile']);
+Route::get('dec/recep/outfiles/{encrypted_id}', [ExportController::class, 'downloadEncryptedFile']);
 Route::get('download/encrypted/file/{encrypted_id}', [ExportController::class, 'downloadEncryptedFile'])->name('download.encrypted.file')->middleware('signed');
 
 
